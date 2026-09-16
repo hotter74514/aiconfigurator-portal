@@ -6,7 +6,7 @@ from concurrent.futures import Executor, Future, ProcessPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from threading import Lock
+from threading import Lock, Timer
 from typing import Literal
 from uuid import uuid4
 
@@ -32,6 +32,7 @@ class _RunRecord:
     result: RunResult | None = None
     error: str | None = None
     future: Future[RunResult] | None = field(default=None, repr=False)
+    timer: Timer | None = field(default=None, repr=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,9 +59,10 @@ class RunManager:
         executor: Executor | None = None,
         max_active: int = 1,
         max_queued: int = 4,
+        timeout_seconds: float = 900.0,
     ) -> None:
-        if max_active < 1 or max_queued < 0:
-            raise ValueError("run capacity must be positive and queue size non-negative")
+        if max_active < 1 or max_queued < 0 or timeout_seconds <= 0:
+            raise ValueError("run capacity must be positive and timeout must be positive")
         self.root_dir = root_dir
         self.root_dir.mkdir(parents=True, exist_ok=True)
         self._worker = worker or _adapter_worker
@@ -71,6 +73,7 @@ class RunManager:
         self._executor = executor or ProcessPoolExecutor(max_workers=max_active)
         self._max_active = max_active
         self._max_queued = max_queued
+        self._timeout_seconds = timeout_seconds
         self._active = 0
         self._queue: deque[str] = deque()
         self._records: dict[str, _RunRecord] = {}
@@ -124,6 +127,11 @@ class RunManager:
             future = self._executor.submit(self._worker, record.request, str(record.output_dir))
             record.future = future
 
+            timer = Timer(self._timeout_seconds, self._timeout, args=(run_id, future))
+            timer.daemon = True
+            record.timer = timer
+            timer.start()
+
             def complete(completed: Future[RunResult], run_id: str = run_id) -> None:
                 self._complete(run_id, completed)
 
@@ -142,9 +150,27 @@ class RunManager:
             error = None
         with self._lock:
             record = self._records[run_id]
+            if record.status != "running" or record.future is not future:
+                return
+            if record.timer is not None:
+                record.timer.cancel()
             record.status = status
             record.result = result
             record.error = error
+            record.updated_at = datetime.now(UTC)
+            self._active -= 1
+            self._start_next_locked()
+
+    def _timeout(self, run_id: str, future: Future[RunResult]) -> None:
+        """Fail an overdue run and allow the bounded queue to advance."""
+
+        with self._lock:
+            record = self._records[run_id]
+            if record.status != "running" or record.future is not future:
+                return
+            future.cancel()
+            record.status = "failed"
+            record.error = f"run exceeded {self._timeout_seconds:g}s timeout"
             record.updated_at = datetime.now(UTC)
             self._active -= 1
             self._start_next_locked()

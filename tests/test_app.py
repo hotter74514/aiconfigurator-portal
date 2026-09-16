@@ -80,6 +80,28 @@ def test_run_manager_limits_active_and_queued_work(tmp_path: Path) -> None:
         manager.close()
 
 
+def test_run_manager_marks_overdue_work_failed(tmp_path: Path) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(
+        tmp_path,
+        worker=_slow_fake_worker,
+        executor=executor,
+        timeout_seconds=0.01,
+    )
+    try:
+        snapshot = manager.submit(RunRequest("model", "h200_sxm", 1, 1000, 10))
+        deadline = time.monotonic() + 2
+        state = manager.snapshot(snapshot.run_id)
+        while state is not None and state.status == "running" and time.monotonic() < deadline:
+            time.sleep(0.01)
+            state = manager.snapshot(snapshot.run_id)
+        assert state is not None
+        assert state.status == "failed"
+        assert state.error == "run exceeded 0.01s timeout"
+    finally:
+        manager.close()
+
+
 def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
     executor = ThreadPoolExecutor(max_workers=1)
     manager = RunManager(tmp_path, worker=_fake_worker, executor=executor)
