@@ -2,9 +2,8 @@
 
 ## Plan Status
 
-**Blocked on owner acceptance of ADR-001 and ADR-002.** Planning and read-only
-discovery are complete. Do not add application code until both decisions are marked
-Accepted, as required by the repository architecture decision gate.
+**ADR-001 and ADR-002 Accepted; Stage 1 is now in progress.** Planning and
+read-only discovery are complete. TASK-001 is the current active task.
 
 ## Observable Outcome
 
@@ -86,7 +85,7 @@ than working on `main`.
 - `uv run pytest tests/test_app.py` (provisional until Stage 1 configures tooling).
 - `make check` and `git diff --check`.
 
-**Status:** Not Started — blocked on ADR acceptance.
+**Status:** In Progress.
 
 ## Stage 2: Implement the Bounded Run Lifecycle
 

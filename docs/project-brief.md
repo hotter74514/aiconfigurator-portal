@@ -2,9 +2,9 @@
 
 ## Status
 
-**Ready for owner review.** This brief is derived from the Serving Configuration
-Portal take-home assignment. Proposed architecture choices remain subject to ADR
-acceptance.
+**Owner-approved scope.** This brief is derived from the Serving Configuration
+Portal take-home assignment. ADR-001 and ADR-002 are Accepted; implementation may
+proceed within this scope.
 
 ## Problem
 

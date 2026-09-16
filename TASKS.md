@@ -6,7 +6,7 @@ observations, not only a checked box.
 
 ## Active Queue
 
-- [~] **TASK-000 — Approve the project boundary and material decisions**
+- [x] **TASK-000 — Approve the project boundary and material decisions**
   - **Outcome:** The owner confirms the assignment-derived acceptance criteria and
     accepts or revises ADR-001 and ADR-002.
   - **Scope:** Review execution model, async/polling API, SDK/process boundary,
@@ -15,9 +15,10 @@ observations, not only a checked box.
   - **Dependencies:** None.
   - **Verify:** `docs/project-brief.md` contains no unresolved placeholders; accepted
     ADRs have an owner decision and `docs/DESIGN_DECISIONS.md` matches their status.
-  - **Evidence:** Pending owner review.
+  - **Evidence:** Owner accepted ADR-001 and ADR-002; status recorded in
+    `docs/DESIGN_DECISIONS.md`.
 
-- [ ] **TASK-001 — Prove the pinned AIConfigurator contract**
+- [~] **TASK-001 — Prove the pinned AIConfigurator contract**
   - **Outcome:** A Linux x86-64 container completes the documented Qwen/H200 sweep
     through the Python SDK and produces inspectable structured results and artifacts.
   - **Scope:** Pin package/Python versions; smoke `cli_default`; capture schema,

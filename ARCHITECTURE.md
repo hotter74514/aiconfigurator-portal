@@ -2,10 +2,10 @@
 
 ## Status
 
-**Baseline recorded; target architecture is proposed, not accepted.** The repository
-currently contains documentation and workflow scaffolding but no application code,
-package manifest, container image, or deployment manifest. Proposed system choices
-are recorded in ADR-001 and ADR-002.
+**Baseline recorded; ADR-001 and ADR-002 are Accepted.** The repository currently
+contains documentation and workflow scaffolding but no application code, package
+manifest, container image, or deployment manifest. Implementation now proceeds
+against the accepted target.
 
 ## Current System Context
 
@@ -28,8 +28,8 @@ are recorded in ADR-001 and ADR-002.
 
 ## Proposed Data and Control Flow
 
-This is a planning target and does not become the recorded architecture until the
-related ADRs are accepted and verified:
+This is the accepted target; implementation and verification evidence will fill in
+the concrete component names and measured limits:
 
     browser -> web/API -> bounded in-memory queue -> isolated worker process
                 |                                      |
@@ -66,6 +66,6 @@ run metadata would be local and ephemeral for the assignment scope.
 
 ## Decision Links
 
-- `docs/decisions/001-single-pod-async-execution.md` — Proposed.
-- `docs/decisions/002-ephemeral-run-storage.md` — Proposed.
+- `docs/decisions/001-single-pod-async-execution.md` — Accepted.
+- `docs/decisions/002-ephemeral-run-storage.md` — Accepted.
 - `docs/DESIGN_DECISIONS.md` indexes decision status.

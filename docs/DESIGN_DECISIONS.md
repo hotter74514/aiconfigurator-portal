@@ -6,8 +6,8 @@ Create a record from decisions/000-template.md when a choice is consequential, d
 
 | ADR | Decision | Status | Owner |
 |---|---|---|---|
-| [ADR-001](decisions/001-single-pod-async-execution.md) | Single-pod asynchronous execution | Proposed | Repository owner |
-| [ADR-002](decisions/002-ephemeral-run-storage.md) | Ephemeral run and artifact storage | Proposed | Repository owner |
+| [ADR-001](decisions/001-single-pod-async-execution.md) | Single-pod asynchronous execution | Accepted | Repository owner |
+| [ADR-002](decisions/002-ephemeral-run-storage.md) | Ephemeral run and artifact storage | Accepted | Repository owner |
 
 ## Lifecycle
 

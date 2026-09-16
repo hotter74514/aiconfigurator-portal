@@ -10,12 +10,11 @@ The roadmap prioritizes a working, defensible must-have path within the assignme
 - [x] Baseline the repository and local tools without inventing an application stack.
 - [x] Propose the execution/API/worker and artifact lifecycle decisions with
   alternatives, failure modes, and validation plans.
-- [ ] Project owner reviews the brief and marks ADR-001 and ADR-002 Accepted or
-  requests changes.
+- [x] Project owner reviewed the brief and marked ADR-001 and ADR-002 Accepted.
 
 ## P1 — Prove the Riskiest Boundary
 
-- [ ] Build a pinned Linux x86-64 environment and run the documented real
+- [~] Build a pinned Linux x86-64 environment and run the documented real
   AIConfigurator smoke input through its Python API.
 - [ ] Capture the result schema, generated artifacts, SLA behavior, runtime/memory,
   and network/cache requirements.
