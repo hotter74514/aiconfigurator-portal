@@ -9,13 +9,14 @@ TEST_CMD ?=
 BUILD_CMD ?=
 INTEGRATION_CMD ?=
 
-.PHONY: help status docs check dev format lint typecheck test build integration ci
+.PHONY: help status docs check mcp-check dev format lint typecheck test build integration ci
 
 help:
 	@echo "Available targets:"
 	@echo "  make status       Show the current Git branch and working tree"
 	@echo "  make docs         Validate required harness files"
 	@echo "  make check        Run configured static and test checks"
+	@echo "  make mcp-check    Verify Node.js and the Playwright MCP package"
 	@echo "  make dev          Run DEV_CMD"
 	@echo "  make format       Run FORMAT_CMD"
 	@echo "  make lint         Run LINT_CMD"
@@ -50,6 +51,13 @@ check: docs
 	$(if $(strip $(LINT_CMD)),$(LINT_CMD),@echo "LINT_CMD is not configured; skipping.")
 	$(if $(strip $(TYPECHECK_CMD)),$(TYPECHECK_CMD),@echo "TYPECHECK_CMD is not configured; skipping.")
 	$(if $(strip $(TEST_CMD)),$(TEST_CMD),@echo "TEST_CMD is not configured; skipping.")
+
+mcp-check:
+	@command -v node >/dev/null || (echo "Node.js 20+ is required for Playwright MCP."; exit 1)
+	@node -e 'const major = Number(process.versions.node.split(".")[0]); if (major < 20) process.exit(1)'
+	@command -v npx >/dev/null || (echo "npx is required for Playwright MCP."; exit 1)
+	@npx --yes @playwright/mcp@latest --help >/dev/null
+	@echo "Playwright MCP package is available."
 
 dev:
 	@test -n "$(strip $(DEV_CMD))" || (echo "DEV_CMD is not configured."; exit 1)

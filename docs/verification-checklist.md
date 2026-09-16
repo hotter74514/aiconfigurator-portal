@@ -17,6 +17,13 @@ Customize this checklist for the project's actual delivery path. Remove non-appl
 - [ ] Build or packaging checks pass, when configured.
 - [ ] git diff --check passes.
 
+## Browser Validation
+
+- [ ] When browser-based validation is required, use the playwright MCP server configured in .codex/config.toml.
+- [ ] Exercise rendering, responsive viewport, keyboard or accessibility, network-driven states, downloads, or screenshots as applicable.
+- [ ] Record each scenario, viewport or input, and observed result in this checklist or the relevant task.
+- [ ] If playwright MCP is unavailable, record the blocker instead of substituting another browser automation tool.
+
 ## Primary Outcome
 
 - [ ] The shortest end-to-end user or caller path succeeds.

@@ -24,6 +24,12 @@ Look for existing manifests, lockfiles, CI workflows, scripts, and contributor d
 
 The variables may be set in the project Makefile or supplied by the environment. Unconfigured commands fail when called directly; make check skips them with an explicit message so a new scaffold can still validate its harness.
 
+## Browser Validation
+
+The project-scoped Codex configuration registers the Playwright MCP server as playwright. It requires Node.js 20 or newer and npx. Run make mcp-check after setup; restart Codex after changing the MCP configuration so the server is discovered.
+
+When browser-based validation is applicable, use the playwright MCP server for rendering, responsive behavior, keyboard and accessibility flows, network states, downloads, and screenshots. Record the scenarios and observed results in docs/verification-checklist.md or the relevant task.
+
 ## Task Loop
 
 Use one TASKS.md item at a time:
