@@ -42,6 +42,10 @@ Do not create ADRs for routine, local, reversible implementation choices.
 
 Prefer existing project patterns and tools. Add dependencies only when their value and maintenance cost are clear. Never weaken or disable a check to make a change pass.
 
+## Browser Testing
+
+When a task requires browser-based validation, MUST use `playwright-mcp`. This includes page rendering, responsive viewport behavior, keyboard or accessibility flows, network-driven UI states, downloads, and screenshots. Do not substitute another browser automation tool; if `playwright-mcp` is unavailable, report the blocker instead of silently changing the test method. Record the exercised scenarios and observed results in the relevant task or verification report.
+
 ## Safety Boundaries
 
 Never commit credentials, tokens, private data, or local environment files. Require explicit user approval before production changes, destructive operations, permission changes, external messages, spending, or access to sensitive data. Use test doubles only at documented boundaries, and never represent simulated evidence as a real integration result.
@@ -50,7 +54,25 @@ After three materially different failed attempts at the same issue, stop and rep
 
 ## Git
 
-Use a focused branch and small commits that preserve a reviewable history. Follow the repository's existing commit convention; otherwise use concise imperative or Conventional Commit subjects. Do not bypass hooks or rewrite shared history without explicit approval.
+Use feature branches (`feat/run-api`, `feat/artifact-download`) and keep an inspectable, incremental history. Create focused Conventional Commits at approved milestones (`feat: add asynchronous run API`, `infra: add kubernetes deployment`, `docs: record design decisions`); do not squash the assignment into one commit or commit directly to `main` unless explicitly requested.
+
+Every commit must include a descriptive body with a blank line after the subject and a bullet list of the substantive changes, for example:
+
+```text
+feat: refresh serving decision portal UI
+
+- Add the responsive serving-decision console layout.
+- Preserve the self-contained Jinja2 and native JavaScript boundary.
+- Add regression coverage for the refreshed page.
+```
+
+The bullets must describe the actual changes in that commit; do not leave the body empty or rely on the subject alone.
+
+The blank line and bullet separators must be real newline characters in the
+commit message. Do not pass the two-character string `\n` as a substitute
+for a line break. Before handing off a commit, verify its rendered message with
+`git log -1 --format=fuller` (or inspect the raw message with
+`git cat-file -p HEAD`).
 
 ## Completion Gate
 
