@@ -1,8 +1,7 @@
 # Tasks
 
-Work in priority order. Only TASK-000 is active; implementation tasks are blocked
-until the Proposed ADRs are accepted. Evidence must contain exact commands and
-observations, not only a checked box.
+Work in priority order. Only one implementation task is active at a time. Evidence
+must contain exact commands and observations, not only a checked box.
 
 ## Active Queue
 
@@ -18,7 +17,7 @@ observations, not only a checked box.
   - **Evidence:** Owner accepted ADR-001 and ADR-002; status recorded in
     `docs/DESIGN_DECISIONS.md`.
 
-- [~] **TASK-001 — Prove the pinned AIConfigurator contract**
+- [x] **TASK-001 — Prove the pinned AIConfigurator contract**
   - **Outcome:** A Linux x86-64 container completes the documented Qwen/H200 sweep
     through the Python SDK and produces inspectable structured results and artifacts.
   - **Scope:** Pin package/Python versions; smoke `cli_default`; capture schema,
@@ -27,9 +26,11 @@ observations, not only a checked box.
   - **Dependencies:** TASK-000; Accepted ADR-001 and ADR-002; running Docker daemon.
   - **Verify:** Repeatable smoke command exits zero and evidence identifies the exact
     version, result columns, required artifact files, and observed resource use.
-  - **Evidence:** Not started.
+  - **Evidence:** See `docs/evidence/task-001-aiconfigurator-smoke.md`. The pinned
+    Linux x86-64 image completed normal and strict-SLA runs; schema, artifacts,
+    timing, memory, and the required `plotext` compatibility pin are recorded.
 
-- [ ] **TASK-002 — Establish the tested application skeleton**
+- [~] **TASK-002 — Establish the tested application skeleton**
   - **Outcome:** A minimal app and fake AIConfigurator adapter have reproducible
     format, lint, type, unit-test, build, and integration entry points.
   - **Scope:** Package/lockfile, app factory, typed adapter boundary, deterministic

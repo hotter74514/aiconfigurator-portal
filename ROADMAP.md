@@ -14,11 +14,11 @@ The roadmap prioritizes a working, defensible must-have path within the assignme
 
 ## P1 — Prove the Riskiest Boundary
 
-- [~] Build a pinned Linux x86-64 environment and run the documented real
+- [x] Build a pinned Linux x86-64 environment and run the documented real
   AIConfigurator smoke input through its Python API.
-- [ ] Capture the result schema, generated artifacts, SLA behavior, runtime/memory,
+- [x] Capture the result schema, generated artifacts, SLA behavior, runtime/memory,
   and network/cache requirements.
-- [ ] Establish the minimal tested application and fake-adapter seams; configure
+- [~] Establish the minimal tested application and fake-adapter seams; configure
   reproducible project commands.
 
 ## P2 — Deliver the Functional Vertical Slice

@@ -10,10 +10,10 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   Linux x86-64 container build.
 - [ ] README lists required Docker/kubectl/cluster tools, tested versions, startup
   commands, safe example values, and first-run network/cache behavior.
-- [ ] The pinned AIConfigurator version completes the documented
+- [x] The pinned AIConfigurator version completes the documented
   `Qwen/Qwen3-32B-FP8`, 32 × `h200_sxm` SDK smoke run with explicit TTFT/TPOT,
   `top_n`, and `save_dir`.
-- [ ] Evidence records the SDK result keys/columns, generated artifact tree, runtime,
+- [x] Evidence records the SDK result keys/columns, generated artifact tree, runtime,
   peak memory when practical, and SLA-filter behavior.
 - [ ] The image and manifest contain no credentials, private data, local paths,
   generated run output, writable source tree, or floating application dependencies.
