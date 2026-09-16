@@ -78,6 +78,9 @@ class RunManager:
         self._timeout_seconds = timeout_seconds
         self._retention_seconds = retention_seconds
         self._active = 0
+        self._completed_total = 0
+        self._failed_total = 0
+        self._last_duration_seconds = 0.0
         self._queue: deque[str] = deque()
         self._records: dict[str, _RunRecord] = {}
         self._lock = Lock()
@@ -108,6 +111,19 @@ class RunManager:
             record = self._records.get(run_id)
             return None if record is None else self._snapshot_locked(record)
 
+    def stats(self) -> dict[str, int | float | bool]:
+        """Return low-cardinality service state for metrics and readiness."""
+
+        with self._lock:
+            return {
+                "active": self._active,
+                "queued": len(self._queue),
+                "completed": self._completed_total,
+                "failed": self._failed_total,
+                "last_duration_seconds": self._last_duration_seconds,
+                "ready": not self._closing,
+            }
+
     def close(self) -> None:
         """Stop admission and cancel queued work during application shutdown."""
 
@@ -121,6 +137,7 @@ class RunManager:
                 record.status = "failed"
                 record.error = "service shutting down"
                 record.updated_at = datetime.now(UTC)
+                self._failed_total += 1
         self._executor.shutdown(wait=False, cancel_futures=True)
 
     def _remove_orphaned_run_directories(self) -> None:
@@ -184,7 +201,12 @@ class RunManager:
             record.result = result
             record.error = error
             record.updated_at = datetime.now(UTC)
+            self._last_duration_seconds = (record.updated_at - record.created_at).total_seconds()
             self._active -= 1
+            if status == "completed":
+                self._completed_total += 1
+            else:
+                self._failed_total += 1
             self._start_next_locked()
 
     def _timeout(self, run_id: str, future: Future[RunResult]) -> None:
@@ -198,7 +220,9 @@ class RunManager:
             record.status = "failed"
             record.error = f"run exceeded {self._timeout_seconds:g}s timeout"
             record.updated_at = datetime.now(UTC)
+            self._last_duration_seconds = (record.updated_at - record.created_at).total_seconds()
             self._active -= 1
+            self._failed_total += 1
             self._start_next_locked()
 
     @staticmethod

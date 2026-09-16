@@ -20,15 +20,15 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 
 ## Automated Checks
 
-- [ ] `make format` (configure in Stage 1) reports no changes.
-- [ ] `make lint` (configure in Stage 1) passes.
-- [ ] `make typecheck` (configure in Stage 1) passes.
-- [ ] `make test` (configure in Stage 1) passes unit and API integration tests.
-- [ ] `make build` (configure in Stage 1) builds the Linux x86-64 image.
-- [ ] `make integration` (configure in Stage 1) exercises the containerized fake
+- [x] `make format` reports no changes.
+- [x] `make lint` passes.
+- [x] `make typecheck` passes.
+- [x] `make test` passes unit and API integration tests.
+- [x] `make build` builds the Linux x86-64 image.
+- [x] `make integration` exercises the containerized fake
   dependency path and the separately documented real smoke path.
-- [ ] `make check` passes without skipping configured checks.
-- [ ] `git diff --check` passes.
+- [x] `make check` passes without skipping configured checks.
+- [x] `git diff --check` passes.
 
 ## API and Lifecycle Behavior
 
@@ -49,9 +49,9 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 
 - [x] Completed results contain normalized ranked rows; the real smoke dependency
   returns the available top-N rows for this input and the required metrics.
-- [ ] Completed results contain at least five ranked rows when the real dependency
+- [x] Completed results contain at least five ranked rows when the real dependency
   supplies them, with mode, throughput, TTFT, TPOT, and verified topology fields.
-- [ ] SLA-violating rows are excluded or visibly marked according to the behavior
+- [x] SLA-violating rows are excluded or visibly marked according to the behavior
   established in TASK-001.
 - [x] Download before completion returns `409`; unknown/expired returns `404`;
   completed returns a run-scoped ZIP with safe headers and expected generated files.
@@ -64,35 +64,35 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 
 ## Observability and Resource Behavior
 
-- [ ] `/health/live` tests web-process/event-loop health and remains responsive
+- [x] `/health/live` tests web-process/event-loop health and remains responsive
   during a sweep.
-- [ ] `/health/ready` tests initialization/admission lifecycle, becomes false during
+- [x] `/health/ready` tests initialization/admission lifecycle, becomes false during
   shutdown, and does not flap merely because the queue is busy.
-- [ ] `/metrics` exposes low-cardinality submitted/completed/failed/rejected totals,
+- [x] `/metrics` exposes low-cardinality submitted/completed/failed/rejected totals,
   active work, queue depth, and duration without run/model/user labels.
-- [ ] JSON logs include timestamp, level, event, run ID, terminal status, duration,
+- [x] JSON logs include timestamp, level, event, run ID, terminal status, duration,
   and safe error category; stack traces stay server-side and artifact bodies are not
   logged.
-- [ ] Under the manifest CPU/memory limits, repeated live/ready/status probes remain
+- [x] Under the manifest CPU/memory limits, repeated live/ready/status probes remain
   within the recorded latency target during a real sweep; CFS throttling/resource
   observations and any tuning are recorded.
 
 ## Container and Kubernetes
 
-- [ ] Runtime image uses a pinned base/dependencies, non-root user, minimal runtime
+- [x] Runtime image uses a pinned base/dependencies, non-root user, minimal runtime
   contents, explicit writable directories, and a local healthcheck.
-- [ ] `kubectl apply --dry-run=client -f deploy/` succeeds.
-- [ ] Deployment has one replica, `Recreate`, startup/live/ready probes, explicit
+- [x] `kubectl apply --dry-run=client -f deploy/` succeeds (no resources changed).
+- [x] Deployment has one replica, `Recreate`, startup/live/ready probes, explicit
   requests/limits, termination grace, bounded `emptyDir`, and restrictive security
   context compatible with the application.
-- [ ] Service routing, rollout, logs, metrics, real run, result polling, and ZIP
+- [~] Service routing, rollout, logs, metrics, real run, result polling, and ZIP
   download succeed on an available local cluster.
 - [ ] Pod deletion during a run demonstrates the documented loss/`404` behavior
   after restart; no durability claim is made.
 
 ## Browser Validation — Playwright MCP Only
 
-- [ ] Desktop viewport: submit the documented default, observe queued/running,
+- [x] Desktop viewport: submit the documented default, observe queued/running,
   inspect ordered results and estimate warning, and download/inspect the ZIP.
 - [ ] Narrow viewport: all form controls, status, result fields, warning, and download
   remain usable; record viewport and screenshot only if useful for evidence.

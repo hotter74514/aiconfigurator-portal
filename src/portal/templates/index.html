@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
     <title>Serving Configuration Portal</title>
   </head>
   <body>
@@ -29,8 +30,8 @@
           </select>
         </p>
         <p><label for="total_gpus">Total GPUs</label><br><input id="total_gpus" name="total_gpus" type="number" min="1" max="512" value="32" required></p>
-        <p><label for="ttft">TTFT target (ms)</label><br><input id="ttft" name="ttft" type="number" min="0.001" value="1000" required></p>
-        <p><label for="tpot">TPOT target (ms)</label><br><input id="tpot" name="tpot" type="number" min="0.001" value="10" required></p>
+        <p><label for="ttft">TTFT target (ms)</label><br><input id="ttft" name="ttft" type="number" min="0.001" step="any" value="1000" required></p>
+        <p><label for="tpot">TPOT target (ms)</label><br><input id="tpot" name="tpot" type="number" min="0.001" step="any" value="10" required></p>
         <p><label for="isl">Input tokens</label><br><input id="isl" name="isl" type="number" min="1" value="3000" required></p>
         <p><label for="osl">Output tokens</label><br><input id="osl" name="osl" type="number" min="1" value="512" required></p>
         <button id="submit" type="submit">Estimate configurations</button>

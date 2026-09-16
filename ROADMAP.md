@@ -28,17 +28,18 @@ The roadmap prioritizes a working, defensible must-have path within the assignme
   explicit queued/running/completed/failed state.
 - [x] Poll and display ranked throughput/TTFT/TPOT/topology results in the web UI.
 - [x] Download a run-scoped ZIP of generated deployment artifacts.
-- [~] Show unsupported inputs, dependency failures, saturation, and estimate warnings
+- [x] Show unsupported inputs, dependency failures, saturation, and estimate warnings
   honestly.
 
 ## P3 — Make It Operable and Deployable
 
-- [ ] Add correlated structured logs and low-cardinality Prometheus metrics.
-- [ ] Add distinct liveness/readiness behavior and verify responsiveness during CPU
+- [x] Add correlated structured logs and low-cardinality Prometheus metrics.
+- [x] Add distinct liveness/readiness behavior and verify responsiveness during CPU
   work.
-- [ ] Build a pinned non-root container and deploy one replica with sound probes,
+- [x] Build a pinned non-root container and deploy one replica with sound probes,
   resource controls, graceful shutdown, and bounded `emptyDir` storage.
-- [ ] Validate manifests and execute the flow on an available local cluster.
+- [~] Validate manifests and execute the flow on an available local cluster (no
+  usable local cluster; kubeconfig requires unavailable AWS credentials).
 
 ## P4 — Verify and Hand Off
 

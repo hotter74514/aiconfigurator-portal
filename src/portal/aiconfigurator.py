@@ -2,6 +2,8 @@
 
 import importlib.metadata
 import math
+import shutil
+import tempfile
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -49,18 +51,23 @@ def run_ai_configurator(request: RunRequest, output_dir: str) -> RunResult:
 
     destination = Path(output_dir)
     destination.mkdir(parents=True, exist_ok=True)
-    result = cli_default(
-        model_path=request.model,
-        total_gpus=request.total_gpus,
-        system=request.system,
-        ttft=request.ttft_ms,
-        tpot=request.tpot_ms,
-        isl=request.isl,
-        osl=request.osl,
-        strict_sla=True,
-        top_n=5,
-        save_dir=str(destination),
-    )
+    # AIConfigurator's safe_mkdir intentionally restricts output roots to
+    # approved prefixes (including /tmp). Stage there, then copy the generated
+    # tree into the portal-owned per-run directory.
+    with tempfile.TemporaryDirectory(prefix="portal-aiconfigurator-") as staging:
+        result = cli_default(
+            model_path=request.model,
+            total_gpus=request.total_gpus,
+            system=request.system,
+            ttft=request.ttft_ms,
+            tpot=request.tpot_ms,
+            isl=request.isl,
+            osl=request.osl,
+            strict_sla=True,
+            top_n=5,
+            save_dir=staging,
+        )
+        shutil.copytree(staging, destination, dirs_exist_ok=True)
     package_version = importlib.metadata.version("aiconfigurator")
     return RunResult(
         rows=_normalize_rows(result.best_configs),

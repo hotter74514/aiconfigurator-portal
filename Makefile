@@ -6,7 +6,7 @@ FORMAT_CMD ?= uv run ruff format --check .
 LINT_CMD ?= uv run ruff check .
 TYPECHECK_CMD ?= uv run mypy src
 TEST_CMD ?= uv run pytest
-BUILD_CMD ?= uv build
+BUILD_CMD ?= docker build --platform linux/amd64 -t serving-configuration-portal:local .
 INTEGRATION_CMD ?= uv run pytest -m integration
 
 .PHONY: help status docs check mcp-check dev format lint typecheck test build integration ci

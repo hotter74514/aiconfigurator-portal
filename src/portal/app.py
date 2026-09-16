@@ -1,5 +1,6 @@
 """FastAPI application factory and run lifecycle endpoints."""
 
+import logging
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -7,11 +8,13 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
+from prometheus_client import CONTENT_TYPE_LATEST
 
 from portal import __version__
 from portal.artifacts import zip_directory
+from portal.observability import PortalMetrics, configure_logging
 from portal.runs import QueueFullError, RunManager, RunSnapshot
 from portal.schemas import RunSubmission
 
@@ -46,6 +49,9 @@ def create_app(run_manager: RunManager | None = None) -> FastAPI:
         Path(os.getenv("PORTAL_RUN_ROOT", "/tmp/serving-portal-runs"))
     )
     templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+    metrics = PortalMetrics()
+    configure_logging()
+    logger = logging.getLogger("portal")
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -59,6 +65,20 @@ def create_app(run_manager: RunManager | None = None) -> FastAPI:
         """Report that the web process can serve requests."""
 
         return {"status": "ok"}
+
+    @app.get("/health/ready", tags=["health"])
+    def ready() -> JSONResponse:
+        """Report whether the process is initialized and accepting work."""
+
+        if not bool(manager.stats()["ready"]):
+            return JSONResponse(status_code=503, content={"status": "shutting_down"})
+        return JSONResponse(content={"status": "ok"})
+
+    @app.get("/metrics", tags=["health"])
+    def prometheus_metrics() -> Response:
+        """Expose bounded service metrics without run/model labels."""
+
+        return Response(content=metrics.render(manager.stats()), media_type=CONTENT_TYPE_LATEST)
 
     @app.get("/", response_class=HTMLResponse, tags=["meta"])
     def index(request: Request) -> HTMLResponse:
@@ -77,13 +97,25 @@ def create_app(run_manager: RunManager | None = None) -> FastAPI:
         try:
             snapshot = manager.submit(submission.to_request())
         except QueueFullError:
+            metrics.rejected.inc()
+            logger.warning(
+                "run rejected", extra={"event": "run_rejected", "error_category": "capacity"}
+            )
             return JSONResponse(
                 status_code=429,
                 content={"error": "run capacity is full; retry later"},
                 headers={"Retry-After": "2"},
             )
         except RuntimeError as exc:
+            logger.warning(
+                "run rejected", extra={"event": "run_rejected", "error_category": "shutdown"}
+            )
             return JSONResponse(status_code=503, content={"error": str(exc)})
+        metrics.submitted.inc()
+        logger.info(
+            "run accepted",
+            extra={"event": "run_accepted", "run_id": snapshot.run_id, "status": snapshot.status},
+        )
         return JSONResponse(
             status_code=202,
             content={

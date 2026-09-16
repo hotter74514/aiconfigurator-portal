@@ -2,8 +2,8 @@
 
 ## Plan Status
 
-**ADR-001 and ADR-002 Accepted; Stage 1 is now in progress.** Planning and
-read-only discovery are complete. TASK-001 is the current active task.
+**ADR-001 and ADR-002 Accepted; Stages 1–4 are complete.** Planning, implementation,
+and operations evidence are recorded. TASK-006 is the current active task.
 
 ## Observable Outcome
 
@@ -205,7 +205,9 @@ visible and bounded.
   available.
 - `make check`, configured build/integration targets, and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete. Container, probes, metrics, logs, and manifest evidence are
+recorded in `docs/evidence/task-005-operations.md`; local-cluster rollout is
+explicitly environment-blocked.
 
 ## Stage 5: Verify and Prepare Handoff
 
@@ -240,7 +242,8 @@ visible and bounded.
 
 **Tests / Evidence:** See `docs/verification-checklist.md`.
 
-**Status:** Not Started.
+**Status:** In Progress. Automated checks, container smoke, and manifest validation
+are recorded; browser MCP and live-cluster validation remain open.
 
 ## Test Matrix
 
@@ -264,9 +267,8 @@ visible and bounded.
 - The exact SDK fields, package version, Python version, supported systems, and
   resource limits are deliberately not frozen until measured.
 - The macOS host currently has `uv 0.11.21`, Python 3.14.5, Docker CLI 29.4.0,
-  kubectl 1.37.0, Node 26.8.1, and npx 11.19.0. `kind` is absent and the configured
-  Docker/OrbStack daemon was not running during planning; local-cluster execution is
-  therefore not yet verified.
+  kubectl 1.37.0, Node 26.8.1, and npx 11.19.0. The OrbStack daemon is available
+  for image builds; `kind` is absent and live-cluster execution is not verified.
 - Each stage is a focused commit with real newlines and a descriptive body. If a
   stage fails, revert that stage's commit; do not weaken tests or probes.
 - If the SDK is unusable after three materially different attempts, stop and report

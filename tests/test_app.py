@@ -138,6 +138,10 @@ def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
             metrics = results[0]["metrics"]
             assert isinstance(metrics, dict)
             assert metrics["tokens/s"] == 1.0
+            rendered_metrics = client.get("/metrics").text
+            assert "portal_runs_submitted_total 1.0" in rendered_metrics
+            assert "portal_runs_completed_total 1.0" in rendered_metrics
+            assert "portal_run_last_duration_seconds " in rendered_metrics
 
             invalid = client.post(
                 "/api/runs",
@@ -175,6 +179,23 @@ def test_run_api_downloads_only_completed_run_artifacts(tmp_path: Path) -> None:
             assert download.headers["content-type"].startswith("application/zip")
             with ZipFile(BytesIO(download.content)) as archive:
                 assert archive.namelist() == ["fake-k8s-deploy.yaml"]
+    finally:
+        manager.close()
+
+
+def test_health_readiness_and_metrics_are_exposed(tmp_path: Path) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(tmp_path, worker=_fake_worker, executor=executor)
+    try:
+        with TestClient(create_app(manager)) as client:
+            assert client.get("/health/live").status_code == 200
+            assert client.get("/health/ready").json() == {"status": "ok"}
+            metrics = client.get("/metrics")
+            assert metrics.status_code == 200
+            assert "portal_runs_active 0.0" in metrics.text
+            assert "portal_runs_queued 0.0" in metrics.text
+            manager.close()
+            assert client.get("/health/ready").status_code == 503
     finally:
         manager.close()
 

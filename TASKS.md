@@ -69,7 +69,7 @@ must contain exact commands and observations, not only a checked box.
     normalized table, run-scoped ZIP, path containment, TTL, and orphan cleanup are
     implemented and tested.
 
-- [~] **TASK-005 — Add operations and Kubernetes delivery**
+- [x] **TASK-005 — Add operations and Kubernetes delivery**
   - **Outcome:** The portal is observable, containerized, and deployable as one
     resource-bounded Kubernetes replica.
   - **Scope:** JSON logs, Prometheus metrics, live/ready probes, non-root image,
@@ -78,9 +78,11 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** Automated observability/probe tests; Linux image smoke; client-side
     manifest validation; probe latency during real CPU work; local-cluster flow when
     a cluster is available.
-  - **Evidence:** Not started.
+  - **Evidence:** See `docs/evidence/task-005-operations.md`. Observability,
+    non-root image, real container run/download, and manifest shape are recorded;
+    cluster rollout remains environment-blocked by unavailable AWS credentials.
 
-- [ ] **TASK-006 — Verify and document the handoff**
+- [~] **TASK-006 — Verify and document the handoff**
   - **Outcome:** A reviewer can reproduce and understand the solution and run a
     reliable 15-minute demo.
   - **Scope:** Full checklist, Playwright MCP, clean-checkout proof, README,
@@ -90,7 +92,9 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** Every applicable item in `docs/verification-checklist.md` has exact
     evidence; all configured checks, build, integration, and `git diff --check`
     pass; git status contains only intentional files.
-  - **Evidence:** Not started.
+  - **Evidence:** Browser success evidence is in
+    `docs/evidence/task-006-handoff.md`; README, narrow/keyboard cases, and
+    live-cluster behavior remain open.
 
 ## Status Rules
 
