@@ -1,5 +1,6 @@
 """Bounded asynchronous run lifecycle with an isolated production worker."""
 
+import shutil
 from collections import deque
 from collections.abc import Callable
 from concurrent.futures import Executor, Future, ProcessPoolExecutor
@@ -60,9 +61,10 @@ class RunManager:
         max_active: int = 1,
         max_queued: int = 4,
         timeout_seconds: float = 900.0,
+        retention_seconds: float = 3600.0,
     ) -> None:
-        if max_active < 1 or max_queued < 0 or timeout_seconds <= 0:
-            raise ValueError("run capacity must be positive and timeout must be positive")
+        if max_active < 1 or max_queued < 0 or timeout_seconds <= 0 or retention_seconds <= 0:
+            raise ValueError("run capacity, timeout, and retention must be positive")
         self.root_dir = root_dir
         self.root_dir.mkdir(parents=True, exist_ok=True)
         self._worker = worker or _adapter_worker
@@ -74,16 +76,19 @@ class RunManager:
         self._max_active = max_active
         self._max_queued = max_queued
         self._timeout_seconds = timeout_seconds
+        self._retention_seconds = retention_seconds
         self._active = 0
         self._queue: deque[str] = deque()
         self._records: dict[str, _RunRecord] = {}
         self._lock = Lock()
         self._closing = False
+        self._remove_orphaned_run_directories()
 
     def submit(self, request: RunRequest) -> RunSnapshot:
         """Admit a request or raise ``QueueFullError``."""
 
         with self._lock:
+            self._cleanup_expired_locked()
             if self._closing:
                 raise RuntimeError("run service is shutting down")
             if self._active + len(self._queue) >= self._max_active + self._max_queued:
@@ -99,6 +104,7 @@ class RunManager:
         """Return a stable view or ``None`` for an unknown run."""
 
         with self._lock:
+            self._cleanup_expired_locked()
             record = self._records.get(run_id)
             return None if record is None else self._snapshot_locked(record)
 
@@ -116,6 +122,26 @@ class RunManager:
                 record.error = "service shutting down"
                 record.updated_at = datetime.now(UTC)
         self._executor.shutdown(wait=False, cancel_futures=True)
+
+    def _remove_orphaned_run_directories(self) -> None:
+        """Remove only UUID-named directories left by a previous process."""
+
+        for child in self.root_dir.iterdir():
+            if child.is_dir() and _is_run_id(child.name):
+                shutil.rmtree(child)
+
+    def _cleanup_expired_locked(self) -> None:
+        now = datetime.now(UTC)
+        expired = [
+            run_id
+            for run_id, record in self._records.items()
+            if record.status in {"completed", "failed"}
+            and (now - record.updated_at).total_seconds() >= self._retention_seconds
+        ]
+        for run_id in expired:
+            record = self._records.pop(run_id)
+            if record.output_dir.exists():
+                shutil.rmtree(record.output_dir)
 
     def _start_next_locked(self) -> None:
         while self._active < self._max_active and self._queue and not self._closing:
@@ -200,3 +226,7 @@ def _adapter_worker(request: RunRequest, output_dir: str) -> RunResult:
     """Production process entry point."""
 
     return run_ai_configurator(request, output_dir)
+
+
+def _is_run_id(value: str) -> bool:
+    return len(value) == 32 and all(character in "0123456789abcdef" for character in value)

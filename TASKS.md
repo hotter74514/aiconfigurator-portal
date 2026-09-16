@@ -42,7 +42,7 @@ must contain exact commands and observations, not only a checked box.
     lint`, `make typecheck`, `make test`, `make integration`, `make build`, and
     `git diff --check` passed; two upstream TestClient deprecation warnings remain.
 
-- [~] **TASK-003 — Implement bounded asynchronous runs**
+- [x] **TASK-003 — Implement bounded asynchronous runs**
   - **Outcome:** Valid submissions receive `202` and progress through explicit states
     while CPU work runs in one isolated child process.
   - **Scope:** Typed request/result models, run service, process worker, timeout,
@@ -52,9 +52,11 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** Tests cover validation, immediate response, legal transitions,
     successful and failed worker, timeout, unknown ID, queue-full `429`, and web
     responsiveness during CPU work.
-  - **Evidence:** Not started.
+  - **Evidence:** See `docs/evidence/task-003-004-run-flow.md`; lifecycle, bounded
+    queue, timeout, validation, polling, and failure normalization are covered by
+    passing fake-worker API tests.
 
-- [ ] **TASK-004 — Deliver the browser result and download flow**
+- [x] **TASK-004 — Deliver the browser result and download flow**
   - **Outcome:** A user submits the form, watches status, reads ranked estimates, and
     downloads only that run's artifact ZIP.
   - **Scope:** Jinja/native-JS UI, form defaults, polling, results table, warning,
@@ -63,9 +65,11 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** API/UI tests cover success/error states, ordering and required
     metrics, incomplete/unknown/expired download behavior, ZIP isolation, cleanup,
     and path containment.
-  - **Evidence:** Not started.
+  - **Evidence:** See `docs/evidence/task-003-004-run-flow.md`; HTML polling,
+    normalized table, run-scoped ZIP, path containment, TTL, and orphan cleanup are
+    implemented and tested.
 
-- [ ] **TASK-005 — Add operations and Kubernetes delivery**
+- [~] **TASK-005 — Add operations and Kubernetes delivery**
   - **Outcome:** The portal is observable, containerized, and deployable as one
     resource-bounded Kubernetes replica.
   - **Scope:** JSON logs, Prometheus metrics, live/ready probes, non-root image,

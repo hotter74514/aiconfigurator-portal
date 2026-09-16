@@ -32,30 +32,32 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 
 ## API and Lifecycle Behavior
 
-- [ ] Valid input returns `202`, opaque run ID, status URL, and recommended poll
+- [x] Valid input returns `202`, opaque run ID, status URL, and recommended poll
   interval before the worker completes.
-- [ ] Invalid GPU count/TTFT/TPOT/token lengths, unknown systems, and oversized model
+- [x] Invalid GPU count/TTFT/TPOT/token lengths, unknown systems, and oversized model
   identifiers return stable validation errors and do not create work.
-- [ ] Status follows only queued → running → completed/failed and unknown/malformed
+- [x] Status follows only queued → running → completed/failed and unknown/malformed
   IDs return `404` without filesystem disclosure.
-- [ ] One active plus four queued runs are admitted; the next returns `429` and a
+- [x] One active plus four queued runs are admitted; the next returns `429` and a
   retry hint while queue memory remains bounded.
-- [ ] SDK exception, no-feasible-config result, unexpected process exit, and timeout
+- [x] SDK exception, no-feasible-config result, unexpected process exit, and timeout
   produce sanitized, actionable terminal failures without killing the API.
 - [ ] SIGTERM stops admission/readiness, gives active work the documented grace
   period, and does not claim recovery if the job is killed.
 
 ## Results, Artifacts, and Cleanup
 
+- [x] Completed results contain normalized ranked rows; the real smoke dependency
+  returns the available top-N rows for this input and the required metrics.
 - [ ] Completed results contain at least five ranked rows when the real dependency
   supplies them, with mode, throughput, TTFT, TPOT, and verified topology fields.
 - [ ] SLA-violating rows are excluded or visibly marked according to the behavior
   established in TASK-001.
-- [ ] Download before completion returns `409`; unknown/expired returns `404`;
+- [x] Download before completion returns `409`; unknown/expired returns `404`;
   completed returns a run-scoped ZIP with safe headers and expected generated files.
-- [ ] Attempts to influence a run path or include sibling-run files fail; only files
+- [x] Attempts to influence a run path or include sibling-run files fail; only files
   under the server-generated run root are archived.
-- [ ] One-hour TTL cleanup removes terminal metadata/files; active work is retained;
+- [x] One-hour TTL cleanup removes terminal metadata/files; active work is retained;
   startup removes or reconciles documented orphan state.
 - [ ] Full/unwritable temporary storage fails the run clearly while live/ready remain
   semantically correct.

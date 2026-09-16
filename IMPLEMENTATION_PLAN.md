@@ -122,7 +122,7 @@ blocking the HTTP request or starving the web process.
 - Probe loop run concurrently with a CPU-bound test worker.
 - Narrow test command, then `make check` and `git diff --check`.
 
-**Status:** In Progress.
+**Status:** Complete.
 
 ## Stage 3: Complete the Result and Artifact User Path
 
@@ -159,7 +159,7 @@ AIConfigurator documentation.
   substituted.
 - Narrow test command, then `make check` and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete.
 
 ## Stage 4: Add Operability, Container, and Kubernetes Delivery
 

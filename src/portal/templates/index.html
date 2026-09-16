@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Serving Configuration Portal</title>
+  </head>
+  <body>
+    <main>
+      <h1>Serving Configuration Portal</h1>
+      <p>Estimate an LLM serving configuration before spending GPU hours.</p>
+      <p role="note"><strong>Planning estimate:</strong> validate generated artifacts with a real benchmark before production use.</p>
+
+      <form id="run-form">
+        <p><label for="model">Model</label><br><input id="model" name="model" value="Qwen/Qwen3-32B-FP8" required maxlength="256"></p>
+        <p><label for="system">GPU system</label><br>
+          <select id="system" name="system">
+            <option value="h200_sxm" selected>H200 SXM</option>
+            <option value="h100_sxm">H100 SXM</option>
+            <option value="h100_pcie">H100 PCIe</option>
+            <option value="b200_sxm">B200 SXM</option>
+            <option value="gb200">GB200</option>
+            <option value="a100_sxm">A100 SXM</option>
+            <option value="a100_pcie">A100 PCIe</option>
+            <option value="l40s">L40S</option>
+            <option value="l4">L4</option>
+            <option value="a30">A30</option>
+            <option value="gb300">GB300</option>
+          </select>
+        </p>
+        <p><label for="total_gpus">Total GPUs</label><br><input id="total_gpus" name="total_gpus" type="number" min="1" max="512" value="32" required></p>
+        <p><label for="ttft">TTFT target (ms)</label><br><input id="ttft" name="ttft" type="number" min="0.001" value="1000" required></p>
+        <p><label for="tpot">TPOT target (ms)</label><br><input id="tpot" name="tpot" type="number" min="0.001" value="10" required></p>
+        <p><label for="isl">Input tokens</label><br><input id="isl" name="isl" type="number" min="1" value="3000" required></p>
+        <p><label for="osl">Output tokens</label><br><input id="osl" name="osl" type="number" min="1" value="512" required></p>
+        <button id="submit" type="submit">Estimate configurations</button>
+      </form>
+
+      <section aria-live="polite" aria-atomic="true">
+        <h2>Status</h2>
+        <p id="status">Ready.</p>
+        <p id="error" role="alert"></p>
+      </section>
+
+      <section id="results" hidden>
+        <h2>Ranked configurations</h2>
+        <p>These are model estimates, not benchmark results.</p>
+        <table>
+          <thead><tr><th>Rank</th><th>Mode</th><th>Throughput (tokens/s)</th><th>TTFT (ms)</th><th>TPOT (ms)</th><th>GPUs</th></tr></thead>
+          <tbody id="result-rows"></tbody>
+        </table>
+        <p><a id="download" hidden>Download generated artifacts</a></p>
+      </section>
+    </main>
+    <script>
+      const form = document.getElementById('run-form');
+      const submit = document.getElementById('submit');
+      const status = document.getElementById('status');
+      const error = document.getElementById('error');
+      const results = document.getElementById('results');
+      const rows = document.getElementById('result-rows');
+      const download = document.getElementById('download');
+
+      const value = (id) => document.getElementById(id).value;
+      const clearResults = () => {
+        results.hidden = true;
+        download.hidden = true;
+        rows.replaceChildren();
+      };
+      const showError = (message) => {
+        error.textContent = message;
+        status.textContent = 'Unable to complete the request.';
+        submit.disabled = false;
+      };
+      const render = (payload) => {
+        status.textContent = `Completed with ${payload.results.length} configurations.`;
+        rows.replaceChildren();
+        for (const item of payload.results) {
+          const row = document.createElement('tr');
+          const metrics = item.metrics || {};
+          for (const text of [item.rank, item.serving_mode, metrics['tokens/s'] ?? '—', metrics.ttft ?? '—', metrics.tpot ?? '—', metrics.num_total_gpus ?? '—']) {
+            const cell = document.createElement('td');
+            cell.textContent = String(text);
+            row.appendChild(cell);
+          }
+          rows.appendChild(row);
+        }
+        download.href = `/api/runs/${payload.run_id}/artifacts`;
+        download.hidden = false;
+        results.hidden = false;
+        submit.disabled = false;
+      };
+      const poll = async (url) => {
+        const response = await fetch(url);
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Status request failed.');
+        status.textContent = `Run ${payload.status}…`;
+        if (payload.status === 'completed') return render(payload);
+        if (payload.status === 'failed') return showError(payload.error || 'The estimator failed.');
+        window.setTimeout(() => poll(url).catch((e) => showError(e.message)), (payload.poll_after_seconds || 2) * 1000);
+      };
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        clearResults();
+        error.textContent = '';
+        submit.disabled = true;
+        status.textContent = 'Submitting…';
+        const payload = {model: value('model'), system: value('system'), total_gpus: Number(value('total_gpus')), ttft: Number(value('ttft')), tpot: Number(value('tpot')), isl: Number(value('isl')), osl: Number(value('osl'))};
+        try {
+          const response = await fetch('/api/runs', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});
+          const created = await response.json();
+          if (!response.ok) throw new Error(created.error || 'Request was rejected.');
+          status.textContent = `Run ${created.status}…`;
+          await poll(created.status_url);
+        } catch (e) {
+          showError(e.message);
+        }
+      });
+    </script>
+  </body>
+</html>

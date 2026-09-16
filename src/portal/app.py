@@ -6,10 +6,12 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.templating import Jinja2Templates
 
 from portal import __version__
+from portal.artifacts import zip_directory
 from portal.runs import QueueFullError, RunManager, RunSnapshot
 from portal.schemas import RunSubmission
 
@@ -43,6 +45,7 @@ def create_app(run_manager: RunManager | None = None) -> FastAPI:
     manager = run_manager or RunManager(
         Path(os.getenv("PORTAL_RUN_ROOT", "/tmp/serving-portal-runs"))
     )
+    templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -57,11 +60,15 @@ def create_app(run_manager: RunManager | None = None) -> FastAPI:
 
         return {"status": "ok"}
 
-    @app.get("/", tags=["meta"])
-    def index() -> dict[str, str]:
-        """Temporary metadata endpoint until the browser slice is added."""
+    @app.get("/", response_class=HTMLResponse, tags=["meta"])
+    def index(request: Request) -> HTMLResponse:
+        """Render the self-service request form."""
 
-        return {"service": "serving-configuration-portal", "version": __version__}
+        return templates.TemplateResponse(
+            request=request,
+            name="index.html",
+            context={"version": __version__},
+        )
 
     @app.post("/api/runs", status_code=202, tags=["runs"])
     def submit_run(submission: RunSubmission) -> JSONResponse:
@@ -97,6 +104,27 @@ def create_app(run_manager: RunManager | None = None) -> FastAPI:
         if snapshot is None:
             return JSONResponse(status_code=404, content={"error": "run not found"})
         return JSONResponse(content=_snapshot_payload(snapshot))
+
+    @app.get("/api/runs/{run_id}/artifacts", response_model=None, tags=["runs"])
+    def download_artifacts(run_id: str) -> StreamingResponse | JSONResponse:
+        """Download generated files only after a run completes."""
+
+        if not run_id.isascii() or len(run_id) != 32:
+            return JSONResponse(status_code=404, content={"error": "run not found"})
+        snapshot = manager.snapshot(run_id)
+        if snapshot is None:
+            return JSONResponse(status_code=404, content={"error": "run not found"})
+        if snapshot.status != "completed" or snapshot.result is None:
+            return JSONResponse(status_code=409, content={"error": "run is not complete"})
+        try:
+            content = zip_directory(snapshot.result.artifact_dir)
+        except (FileNotFoundError, ValueError) as exc:
+            return JSONResponse(status_code=500, content={"error": str(exc)})
+        return StreamingResponse(
+            iter([content]),
+            media_type="application/zip",
+            headers={"Content-Disposition": f'attachment; filename="run-{run_id}-artifacts.zip"'},
+        )
 
     return app
 

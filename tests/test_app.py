@@ -2,7 +2,9 @@
 
 import time
 from concurrent.futures import ThreadPoolExecutor
+from io import BytesIO
 from pathlib import Path
+from zipfile import ZipFile
 
 import pytest
 from fastapi.testclient import TestClient
@@ -23,10 +25,11 @@ def _slow_fake_worker(request: RunRequest, output_dir: str) -> RunResult:
 
 @pytest.mark.integration
 def test_app_factory_exposes_liveness_and_metadata() -> None:
-    client = TestClient(create_app())
-
-    assert client.get("/health/live").json() == {"status": "ok"}
-    assert client.get("/").json()["service"] == "serving-configuration-portal"
+    with TestClient(create_app()) as client:
+        assert client.get("/health/live").json() == {"status": "ok"}
+        page = client.get("/")
+        assert page.headers["content-type"].startswith("text/html")
+        assert "Serving Configuration Portal" in page.text
 
 
 def test_fake_adapter_returns_stable_rows_and_artifact(tmp_path: Path) -> None:
@@ -142,5 +145,62 @@ def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
             )
             assert invalid.status_code == 422
             assert client.get("/api/runs/not-a-run").status_code == 404
+    finally:
+        manager.close()
+
+
+def test_run_api_downloads_only_completed_run_artifacts(tmp_path: Path) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(tmp_path, worker=_fake_worker, executor=executor)
+    try:
+        with TestClient(create_app(manager)) as client:
+            response = client.post(
+                "/api/runs",
+                json={
+                    "model": "model",
+                    "system": "h200_sxm",
+                    "total_gpus": 1,
+                    "ttft": 1,
+                    "tpot": 1,
+                },
+            )
+            run_id = response.json()["run_id"]
+            deadline = time.monotonic() + 2
+            while time.monotonic() < deadline:
+                if client.get(f"/api/runs/{run_id}").json()["status"] == "completed":
+                    break
+                time.sleep(0.01)
+            download = client.get(f"/api/runs/{run_id}/artifacts")
+            assert download.status_code == 200
+            assert download.headers["content-type"].startswith("application/zip")
+            with ZipFile(BytesIO(download.content)) as archive:
+                assert archive.namelist() == ["fake-k8s-deploy.yaml"]
+    finally:
+        manager.close()
+
+
+def test_run_manager_expires_terminal_runs_and_cleans_orphans(tmp_path: Path) -> None:
+    orphan = tmp_path / ("a" * 32)
+    orphan.mkdir()
+    (orphan / "old.txt").write_text("old", encoding="utf-8")
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(
+        tmp_path,
+        worker=_fake_worker,
+        executor=executor,
+        retention_seconds=0.01,
+    )
+    assert not orphan.exists()
+    try:
+        snapshot = manager.submit(RunRequest("model", "h200_sxm", 1, 1000, 10))
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            state = manager.snapshot(snapshot.run_id)
+            if state is not None and state.status == "completed":
+                break
+            time.sleep(0.01)
+        time.sleep(0.02)
+        assert manager.snapshot(snapshot.run_id) is None
+        assert not (tmp_path / snapshot.run_id).exists()
     finally:
         manager.close()

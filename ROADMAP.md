@@ -23,12 +23,12 @@ The roadmap prioritizes a working, defensible must-have path within the assignme
 
 ## P2 — Deliver the Functional Vertical Slice
 
-- [~] Submit a validated request and receive an opaque run ID immediately.
-- [ ] Execute one sweep in an isolated process with a bounded queue, timeout, and
+- [x] Submit a validated request and receive an opaque run ID immediately.
+- [x] Execute one sweep in an isolated process with a bounded queue, timeout, and
   explicit queued/running/completed/failed state.
-- [ ] Poll and display ranked throughput/TTFT/TPOT/topology results in the web UI.
-- [ ] Download a run-scoped ZIP of generated deployment artifacts.
-- [ ] Show unsupported inputs, dependency failures, saturation, and estimate warnings
+- [x] Poll and display ranked throughput/TTFT/TPOT/topology results in the web UI.
+- [x] Download a run-scoped ZIP of generated deployment artifacts.
+- [~] Show unsupported inputs, dependency failures, saturation, and estimate warnings
   honestly.
 
 ## P3 — Make It Operable and Deployable
