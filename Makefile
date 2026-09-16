@@ -1,13 +1,13 @@
 SHELL := /bin/sh
 
 # Populate these with commands already supported by the project.
-DEV_CMD ?=
-FORMAT_CMD ?=
-LINT_CMD ?=
-TYPECHECK_CMD ?=
-TEST_CMD ?=
-BUILD_CMD ?=
-INTEGRATION_CMD ?=
+DEV_CMD ?= uv run uvicorn portal.app:app --reload
+FORMAT_CMD ?= uv run ruff format --check .
+LINT_CMD ?= uv run ruff check .
+TYPECHECK_CMD ?= uv run mypy src
+TEST_CMD ?= uv run pytest
+BUILD_CMD ?= uv build
+INTEGRATION_CMD ?= uv run pytest -m integration
 
 .PHONY: help status docs check mcp-check dev format lint typecheck test build integration ci
 

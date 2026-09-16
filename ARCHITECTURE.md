@@ -22,8 +22,9 @@ against the accepted target.
 | Component | Responsibility | Interfaces | Owner |
 |---|---|---|---|
 | Engineering harness | Planning, decision, verification, and handoff workflow | Markdown and Make targets | Repository owner |
-| Application | Not implemented | Unknown until ADR acceptance | Repository owner |
-| AIConfigurator adapter | Not implemented | Must be verified against a pinned release | Repository owner |
+| Application | FastAPI app factory, liveness, and metadata boundary | `portal.app:create_app`; `/health/live`; `/` | Repository owner |
+| Adapter boundary | Typed request/result protocol and deterministic fake | `portal.adapters.AiconfiguratorAdapter` | Repository owner |
+| Real AIConfigurator adapter | Not implemented; contract verified by TASK-001 smoke | Must use pinned Linux x86-64 package | Repository owner |
 | Deployment | Not implemented | Kubernetes shape proposed in ADR-001/002 | Repository owner |
 
 ## Proposed Data and Control Flow
@@ -42,8 +43,8 @@ run metadata would be local and ephemeral for the assignment scope.
 
 ## Verified Constraints
 
-- The repository has no selected application language/framework or configured
-  format, lint, type-check, test, build, or integration commands.
+- The application uses Python 3.11, FastAPI, Uvicorn, pytest, Ruff, mypy, and uv;
+  commands are configured in `Makefile` and resolved in `uv.lock`.
 - The assignment requires container and Kubernetes delivery, health/readiness,
   structured logging, metrics, ranked results, and downloadable artifacts.
 - The assignment identifies the AIConfigurator workload as CPU-bound and the

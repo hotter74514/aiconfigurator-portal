@@ -85,8 +85,7 @@ than working on `main`.
 - `uv run pytest tests/test_app.py` (provisional until Stage 1 configures tooling).
 - `make check` and `git diff --check`.
 
-**Status:** In Progress — dependency proof complete; application scaffold is
-TASK-002.
+**Status:** Complete.
 
 ## Stage 2: Implement the Bounded Run Lifecycle
 
@@ -123,7 +122,7 @@ blocking the HTTP request or starving the web process.
 - Probe loop run concurrently with a CPU-bound test worker.
 - Narrow test command, then `make check` and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** In Progress.
 
 ## Stage 3: Complete the Result and Artifact User Path
 

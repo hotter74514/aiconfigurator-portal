@@ -18,12 +18,12 @@ The roadmap prioritizes a working, defensible must-have path within the assignme
   AIConfigurator smoke input through its Python API.
 - [x] Capture the result schema, generated artifacts, SLA behavior, runtime/memory,
   and network/cache requirements.
-- [~] Establish the minimal tested application and fake-adapter seams; configure
+- [x] Establish the minimal tested application and fake-adapter seams; configure
   reproducible project commands.
 
 ## P2 — Deliver the Functional Vertical Slice
 
-- [ ] Submit a validated request and receive an opaque run ID immediately.
+- [~] Submit a validated request and receive an opaque run ID immediately.
 - [ ] Execute one sweep in an isolated process with a bounded queue, timeout, and
   explicit queued/running/completed/failed state.
 - [ ] Poll and display ranked throughput/TTFT/TPOT/topology results in the web UI.

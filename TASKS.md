@@ -30,7 +30,7 @@ must contain exact commands and observations, not only a checked box.
     Linux x86-64 image completed normal and strict-SLA runs; schema, artifacts,
     timing, memory, and the required `plotext` compatibility pin are recorded.
 
-- [~] **TASK-002 — Establish the tested application skeleton**
+- [x] **TASK-002 — Establish the tested application skeleton**
   - **Outcome:** A minimal app and fake AIConfigurator adapter have reproducible
     format, lint, type, unit-test, build, and integration entry points.
   - **Scope:** Package/lockfile, app factory, typed adapter boundary, deterministic
@@ -38,9 +38,11 @@ must contain exact commands and observations, not only a checked box.
   - **Dependencies:** TASK-001 defines the adapter contract.
   - **Verify:** A clean environment can install/import the app; a fake-adapter test
     passes; `make check` invokes configured commands; dependency lock is committed.
-  - **Evidence:** Not started.
+  - **Evidence:** See `docs/evidence/task-002-skeleton.md`. `make format`, `make
+    lint`, `make typecheck`, `make test`, `make integration`, `make build`, and
+    `git diff --check` passed; two upstream TestClient deprecation warnings remain.
 
-- [ ] **TASK-003 — Implement bounded asynchronous runs**
+- [~] **TASK-003 — Implement bounded asynchronous runs**
   - **Outcome:** Valid submissions receive `202` and progress through explicit states
     while CPU work runs in one isolated child process.
   - **Scope:** Typed request/result models, run service, process worker, timeout,
