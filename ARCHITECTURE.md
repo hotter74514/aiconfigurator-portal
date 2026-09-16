@@ -2,37 +2,70 @@
 
 ## Status
 
-This file is a system map, not a source of preselected design. Populate it from repository evidence and accepted decisions. Use **Unknown** where evidence is unavailable instead of guessing.
+**Baseline recorded; target architecture is proposed, not accepted.** The repository
+currently contains documentation and workflow scaffolding but no application code,
+package manifest, container image, or deployment manifest. Proposed system choices
+are recorded in ADR-001 and ADR-002.
 
-## System Context
+## Current System Context
 
-- **Users or callers**: Unknown
-- **Primary outcome**: See docs/project-brief.md
-- **External systems**: Unknown
-- **Trust boundaries**: Unknown
+- **Users or callers:** No implemented callers. The assignment targets ML engineers
+  using a browser and platform operators using Kubernetes/HTTP observability.
+- **Primary outcome:** See `docs/project-brief.md`.
+- **External systems:** AIConfigurator and its packaged/profile data; a Kubernetes
+  API is only a deployment target for the portal and for downloaded artifacts.
+- **Trust boundaries:** Browser input is untrusted; generated files are downloadable
+  output and are never automatically applied to a cluster.
 
-## Components
+## Current Components
 
 | Component | Responsibility | Interfaces | Owner |
 |---|---|---|---|
-| Unknown | To be discovered | To be discovered | Unknown |
+| Engineering harness | Planning, decision, verification, and handoff workflow | Markdown and Make targets | Repository owner |
+| Application | Not implemented | Unknown until ADR acceptance | Repository owner |
+| AIConfigurator adapter | Not implemented | Must be verified against a pinned release | Repository owner |
+| Deployment | Not implemented | Kubernetes shape proposed in ADR-001/002 | Repository owner |
 
-## Data and Control Flow
+## Proposed Data and Control Flow
 
-Document the smallest end-to-end flow that delivers the project's primary outcome:
+This is a planning target and does not become the recorded architecture until the
+related ADRs are accepted and verified:
 
-    [entry point] -> [core behavior] -> [observable result]
+    browser -> web/API -> bounded in-memory queue -> isolated worker process
+                |                                      |
+                +-> status/results <--- normalized result + artifact directory
+                                                         |
+                                                         +-> AIConfigurator SDK
 
-Replace the placeholders only after inspecting the implementation or an accepted ADR.
+The portal would expose polling rather than hold an HTTP request open. Artifacts and
+run metadata would be local and ephemeral for the assignment scope.
 
-## Constraints
+## Verified Constraints
 
-Record verified runtime, compatibility, regulatory, security, cost, and operational constraints here. Link each non-obvious constraint to evidence.
+- The repository has no selected application language/framework or configured
+  format, lint, type-check, test, build, or integration commands.
+- The assignment requires container and Kubernetes delivery, health/readiness,
+  structured logging, metrics, ranked results, and downloadable artifacts.
+- The assignment identifies the AIConfigurator workload as CPU-bound and the
+  published wheels as Linux x86-64 only.
+- Browser validation is required to use the Playwright MCP configured in
+  `.codex/config.toml`.
 
 ## Quality Attributes
 
-List only project-relevant expectations such as availability, latency, consistency, accessibility, privacy, maintainability, or portability. Include a measurable target or validation method when one exists.
+- **Responsiveness:** Status and health requests remain responsive while one sweep
+  runs; verify under the Kubernetes CPU limit.
+- **Bounded resource use:** One active sweep and a small bounded queue; verify that
+  excess work is rejected with a retryable response.
+- **Reproducibility:** Pin dependencies and prove the documented smoke case in the
+  built Linux image.
+- **Operability:** Correlated JSON logs and low-cardinality run/latency/queue metrics.
+- **Safety:** Never shell-interpolate user input or auto-apply generated manifests.
+- **Honest output:** Every result/download view says estimates require real benchmark
+  validation.
 
 ## Decision Links
 
-Accepted architecture choices belong in docs/decisions/ and are indexed by docs/DESIGN_DECISIONS.md. This file summarizes their resulting system shape; it must not introduce unreviewed decisions.
+- `docs/decisions/001-single-pod-async-execution.md` — Proposed.
+- `docs/decisions/002-ephemeral-run-storage.md` — Proposed.
+- `docs/DESIGN_DECISIONS.md` indexes decision status.
