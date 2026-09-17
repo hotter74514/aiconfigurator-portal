@@ -102,6 +102,9 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   inspect ordered results and estimate warning, and download/inspect the ZIP.
 - [ ] Narrow viewport: all form controls, status, result fields, warning, and download
   remain usable; record viewport and screenshot only if useful for evidence.
+- [x] TASK-011 Playwright MCP coverage: two isolated contexts observe the same
+  aggregate pressure, the capacity banner shows saturation, visibility-aware polling
+  pauses and resumes, and keyboard focus reaches and activates submission.
 - [ ] Keyboard-only: labels, focus order, submission, status announcement, result
   navigation, retry, and download are usable.
 - [ ] Client and server validation: invalid field and dependency failure each show a
@@ -110,9 +113,6 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   submissions on repeated clicks.
 - [ ] If Playwright MCP is unavailable, record the blocker and leave these unchecked;
   do not substitute another browser automation tool.
-
-TASK-011-specific browser validation remains unchecked because the configured
-Playwright MCP browser profile was locked by another MCP process during this run.
 
 ## Trust and Product Safety
 
