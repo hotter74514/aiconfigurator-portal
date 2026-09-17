@@ -43,12 +43,12 @@ The roadmap prioritizes a working, defensible must-have path within the assignme
 
 ## P4 — Verify and Hand Off
 
-- [ ] Execute automated, container, browser, overload, restart, and artifact checks
+- [x] Execute automated, container, browser, overload, restart, and artifact checks
   in `docs/verification-checklist.md`.
-- [ ] Verify clean-checkout setup and the 15-minute demo path.
-- [ ] Complete README architecture, design decisions, operations, and known
+- [x] Verify clean-checkout setup and the 15-minute demo path.
+- [x] Complete README architecture, design decisions, operations, and known
   limitations from observed evidence.
-- [ ] Reconcile all planning/architecture documents, inspect commit history, and
+- [x] Reconcile all planning/architecture documents, inspect commit history, and
   confirm the working tree contains only intentional files.
 
 ## P5 — Optional Results Insight and Ephemeral Convenience

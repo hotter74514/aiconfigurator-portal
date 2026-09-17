@@ -82,7 +82,7 @@ must contain exact commands and observations, not only a checked box.
     non-root image, real container run/download, manifest shape, and a live
     Minikube rollout are recorded.
 
-- [~] **TASK-006 — Verify and document the handoff**
+- [x] **TASK-006 — Verify and document the handoff**
   - **Outcome:** A reviewer can reproduce and understand the solution and run a
     reliable 15-minute demo.
   - **Scope:** Full checklist, Playwright MCP, clean-checkout proof, README,
@@ -92,9 +92,9 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** Every applicable item in `docs/verification-checklist.md` has exact
     evidence; all configured checks, build, integration, and `git diff --check`
     pass; git status contains only intentional files.
-  - **Evidence:** Browser success evidence is in
-    `docs/evidence/task-006-handoff.md`; README and narrow/keyboard browser cases
-    remain open.
+  - **Evidence:** Browser, container, and local-cluster evidence is in
+    `docs/evidence/task-006-handoff.md` and the linked task reports. The repository
+    owner confirmed that TASK-006 validation has no known issues.
 
 - [ ] **TASK-007 — Expose the Pareto frontier visualization**
   - **Outcome:** A completed run shows its verified run-scoped Pareto artifact with

@@ -28,3 +28,11 @@ A real `Qwen/Qwen3-32B-FP8`, 8 × `h200_sxm` request completed with five ranked
 results from `aiconfigurator-0.11.0`; its artifact endpoint returned a 97,617-byte
 ZIP. Exact deployment commands and observations are recorded in
 `docs/evidence/task-005-operations.md`.
+
+## Owner confirmation
+
+The repository owner subsequently confirmed that TASK-006 validation has no known
+issues. This closes TASK-006 and Stage 5 for planning purposes. The granular
+checkboxes in `docs/verification-checklist.md` remain the detailed evidence index;
+any item that needs a separately recorded command, viewport, or observation should
+be filled in when that evidence is available.

@@ -2,10 +2,11 @@
 
 ## Plan Status
 
-**ADR-001 and ADR-002 Accepted; Stages 1–4 are complete.** Planning, implementation,
-and operations evidence are recorded. TASK-006 is the current active task. The
-optional extension in Stages 6–10 is planned but blocked on the Stage 5 delivery
-gate. Each optional stage requires acceptance of its corresponding ADR.
+**ADR-001 through ADR-007 Accepted; Stages 1–5 are complete.** Planning,
+implementation, operations, and handoff evidence are recorded. The repository owner
+confirmed TASK-006 validation has no known issues. The optional extension in Stages
+6–10 is now available, with each stage still independently gated by its corresponding
+accepted ADR.
 
 ## Observable Outcome
 
@@ -247,8 +248,9 @@ successful Minikube rollout with a real run/download are recorded in
 
 **Tests / Evidence:** See `docs/verification-checklist.md`.
 
-**Status:** In Progress. Automated checks, container smoke, and manifest validation
-are recorded; browser MCP and live-cluster validation remain open.
+**Status:** Complete. Automated checks, container smoke, Playwright MCP browser flow,
+and live-cluster validation are recorded; the repository owner confirmed the handoff
+has no known issues.
 
 ## Test Matrix
 
