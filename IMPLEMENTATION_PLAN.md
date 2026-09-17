@@ -504,7 +504,8 @@ not required.
 - Probe/capacity latency observation during a real sweep.
 - Applicable configured checks, `make check`, and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** In Progress. API/UI implementation and automated checks are complete;
+browser validation is blocked by an unavailable Playwright MCP browser connection.
 
 ### Extension Risks, Assumptions, and Rollback
 

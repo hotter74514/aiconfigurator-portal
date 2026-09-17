@@ -42,6 +42,11 @@
         <p id="status">Ready.</p>
         <p id="error" role="alert"></p>
       </section>
+      <section aria-labelledby="capacity-heading">
+        <h2 id="capacity-heading">Shared capacity</h2>
+        <p id="capacity" role="status" aria-live="polite">Shared capacity: checking…</p>
+        <p id="capacity-note">This portal has no accounts, ownership, or reservation; capacity is shared and provides no fairness or quota.</p>
+      </section>
 
       <section id="results" hidden>
         <h2>Ranked configurations</h2>
@@ -83,6 +88,7 @@
       const results = document.getElementById('results');
       const rows = document.getElementById('result-rows');
       const download = document.getElementById('download');
+      const capacity = document.getElementById('capacity');
       const comparison = document.getElementById('comparison');
       const comparisonStatus = document.getElementById('comparison-status');
       const comparisonDefinition = document.getElementById('comparison-definition');
@@ -92,6 +98,8 @@
       const visualizationScope = document.getElementById('visualization-scope');
       const visualizationAxis = document.getElementById('visualization-axis');
       const visualizationImage = document.getElementById('visualization-image');
+      let capacityTimer = null;
+      let capacityRequestPending = false;
       visualizationImage.addEventListener('error', () => {
         visualizationImage.hidden = true;
       });
@@ -110,6 +118,54 @@
         error.textContent = message;
         status.textContent = 'Unable to complete the request.';
         submit.disabled = false;
+      };
+      const clearCapacityTimer = () => {
+        if (capacityTimer !== null) {
+          window.clearTimeout(capacityTimer);
+          capacityTimer = null;
+        }
+      };
+      const renderCapacity = (payload) => {
+        const active = Number(payload.active);
+        const queued = Number(payload.queued);
+        const activeCapacity = Number(payload.active_capacity);
+        const queueCapacity = Number(payload.queue_capacity);
+        if (![active, queued, activeCapacity, queueCapacity].every(Number.isInteger)) {
+          capacity.textContent = 'Shared capacity is temporarily unavailable.';
+          return;
+        }
+        if (!payload.admission_open && active + queued < activeCapacity + queueCapacity) {
+          capacity.textContent = 'Shared capacity is currently closed; retry later.';
+          return;
+        }
+        if (!payload.admission_open) {
+          capacity.textContent = `Shared capacity is full: ${active} run${active === 1 ? '' : 's'} active; ${queued} waiting. New submissions may be rejected; retry later.`;
+          return;
+        }
+        capacity.textContent = `Shared capacity: ${active} run${active === 1 ? '' : 's'} active; ${queued} waiting.`;
+      };
+      const scheduleCapacityPoll = () => {
+        clearCapacityTimer();
+        if (document.visibilityState !== 'visible') return;
+        capacityTimer = window.setTimeout(() => {
+          capacityTimer = null;
+          refreshCapacity();
+        }, 2000);
+      };
+      const refreshCapacity = async () => {
+        if (document.visibilityState !== 'visible' || capacityRequestPending) return;
+        capacityRequestPending = true;
+        try {
+          const response = await fetch('/api/capacity');
+          const payload = await response.json();
+          if (!response.ok) throw new Error('capacity request failed');
+          renderCapacity(payload);
+        } catch (_) {
+          capacity.textContent = 'Shared capacity is temporarily unavailable.';
+        } finally {
+          capacityRequestPending = false;
+          scheduleCapacityPoll();
+        }
       };
       const displayValue = (number, suffix = '') => number === null || number === undefined ? 'Unavailable' : `${number}${suffix}`;
       const renderComparison = (payload) => {
@@ -203,6 +259,14 @@
           showError(e.message);
         }
       });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          refreshCapacity();
+        } else {
+          clearCapacityTimer();
+        }
+      });
+      refreshCapacity();
     </script>
   </body>
 </html>

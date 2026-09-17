@@ -181,6 +181,21 @@ class RunManager:
                 },
             }
 
+    def capacity(self) -> dict[str, int | bool]:
+        """Return anonymous aggregate admission pressure without run details."""
+
+        with self._lock:
+            active = self._active
+            queued = len(self._queue)
+            return {
+                "active": active,
+                "queued": queued,
+                "active_capacity": self._max_active,
+                "queue_capacity": self._max_queued,
+                "admission_open": not self._closing
+                and active + queued < self._max_active + self._max_queued,
+            }
+
     def close(self) -> None:
         """Stop admission and cancel queued work during application shutdown."""
 

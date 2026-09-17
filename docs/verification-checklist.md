@@ -73,6 +73,9 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   shutdown, and does not flap merely because the queue is busy.
 - [x] `/metrics` exposes low-cardinality submitted/completed/failed/rejected totals,
   active work, queue depth, and duration without run/model/user labels.
+- [x] `/api/capacity` exposes only active/queued counts, configured active/queue
+  capacities, and aggregate admission state for idle, active, saturated, and
+  shutdown service states.
 - [x] JSON logs include timestamp, level, event, run ID, terminal status, duration,
   and safe error category; stack traces stay server-side and artifact bodies are not
   logged.
@@ -107,6 +110,9 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   submissions on repeated clicks.
 - [ ] If Playwright MCP is unavailable, record the blocker and leave these unchecked;
   do not substitute another browser automation tool.
+
+TASK-011-specific browser validation remains unchecked because the configured
+Playwright MCP browser profile was locked by another MCP process during this run.
 
 ## Trust and Product Safety
 

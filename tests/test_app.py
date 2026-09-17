@@ -67,6 +67,9 @@ def test_app_factory_exposes_liveness_and_metadata() -> None:
         assert "Serving Configuration Portal" in page.text
         assert "Aggregated vs disaggregated" in page.text
         assert "No universal winner is declared" in page.text
+        assert "Shared capacity" in page.text
+        assert "no accounts, ownership, or reservation" in page.text
+        assert "visibilitychange" in page.text
 
 
 def test_fake_adapter_returns_stable_rows_and_artifact(tmp_path: Path) -> None:
@@ -415,6 +418,88 @@ def test_health_readiness_and_metrics_are_exposed(tmp_path: Path) -> None:
             assert "portal_runs_queued 0.0" in metrics.text
             manager.close()
             assert client.get("/health/ready").status_code == 503
+    finally:
+        manager.close()
+
+
+def test_capacity_endpoint_exposes_allowlisted_aggregate_states(tmp_path: Path) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(
+        tmp_path,
+        worker=_slow_fake_worker,
+        executor=executor,
+        max_active=1,
+        max_queued=1,
+    )
+    request = {
+        "model": "capacity-model",
+        "system": "h200_sxm",
+        "total_gpus": 1,
+        "ttft": 1,
+        "tpot": 1,
+    }
+    expected_fields = {"active", "queued", "active_capacity", "queue_capacity", "admission_open"}
+    try:
+        with TestClient(create_app(manager)) as client:
+            idle = client.get("/api/capacity")
+            assert idle.status_code == 200
+            assert set(idle.json()) == expected_fields
+            assert idle.json() == {
+                "active": 0,
+                "queued": 0,
+                "active_capacity": 1,
+                "queue_capacity": 1,
+                "admission_open": True,
+            }
+
+            first = client.post("/api/runs", json=request)
+            assert first.status_code == 202
+            assert client.get("/api/capacity").json() == {
+                "active": 1,
+                "queued": 0,
+                "active_capacity": 1,
+                "queue_capacity": 1,
+                "admission_open": True,
+            }
+
+            second = client.post("/api/runs", json=request)
+            assert second.status_code == 202
+            assert client.get("/api/capacity").json() == {
+                "active": 1,
+                "queued": 1,
+                "active_capacity": 1,
+                "queue_capacity": 1,
+                "admission_open": False,
+            }
+
+            first_state = _wait_for_completion(client, first.json()["run_id"])
+            assert first_state["status"] == "completed"
+            assert client.get("/api/capacity").json() == {
+                "active": 1,
+                "queued": 0,
+                "active_capacity": 1,
+                "queue_capacity": 1,
+                "admission_open": True,
+            }
+
+            second_state = _wait_for_completion(client, second.json()["run_id"])
+            assert second_state["status"] == "completed"
+            assert client.get("/api/capacity").json() == {
+                "active": 0,
+                "queued": 0,
+                "active_capacity": 1,
+                "queue_capacity": 1,
+                "admission_open": True,
+            }
+
+            manager.close()
+            assert client.get("/api/capacity").json() == {
+                "active": 0,
+                "queued": 0,
+                "active_capacity": 1,
+                "queue_capacity": 1,
+                "admission_open": False,
+            }
     finally:
         manager.close()
 

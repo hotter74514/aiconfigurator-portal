@@ -96,6 +96,12 @@ def create_app(run_manager: RunManager | None = None) -> FastAPI:
 
         return Response(content=metrics.render(manager.stats()), media_type=CONTENT_TYPE_LATEST)
 
+    @app.get("/api/capacity", tags=["runs"])
+    def capacity() -> dict[str, int | bool]:
+        """Expose anonymous aggregate capacity without run or user details."""
+
+        return manager.capacity()
+
     @app.get("/", response_class=HTMLResponse, tags=["meta"])
     def index(request: Request) -> HTMLResponse:
         """Render the self-service request form."""

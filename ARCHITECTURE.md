@@ -21,7 +21,7 @@ deployment manifest. The checked-in deployment has been exercised on Minikube.
 | Component | Responsibility | Interfaces | Owner |
 |---|---|---|---|
 | Engineering harness | Planning, decision, verification, and handoff workflow | Markdown and Make targets | Repository owner |
-| Application | FastAPI app factory, liveness, and metadata boundary | `portal.app:create_app`; `/health/live`; `/` | Repository owner |
+| Application | FastAPI app factory, liveness, anonymous capacity awareness, and metadata boundary | `portal.app:create_app`; `/health/live`; `/api/capacity`; `/` | Repository owner |
 | Adapter boundary | Typed request/result protocol, visualization metadata, and deterministic fake | `portal.adapters.AiconfiguratorAdapter` | Repository owner |
 | Completed-result cache | Bounded process-local cache for successful normalized bundles, fresh run IDs, and artifact materialization | `portal.cache.BoundedResultCache`; run-manager internal | Repository owner |
 | Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts/verified Pareto output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |
@@ -54,6 +54,10 @@ run metadata would be local and ephemeral for the assignment scope.
   portal-normalization namespace; cache state is lost on restart.
 - Browser validation is required to use the Playwright MCP configured in
   `.codex/config.toml`.
+- Anonymous capacity awareness is a read-only aggregate view of this process's
+  active and queued runs. It exposes no run IDs, request data, timestamps, IPs,
+  cookies, or user labels; `admission_open` is informational and does not reserve
+  a slot.
 
 ## Quality Attributes
 

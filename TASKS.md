@@ -153,7 +153,7 @@ must contain exact commands and observations, not only a checked box.
     behavior; configured checks pass.
   - **Evidence:** Not started.
 
-- [ ] **TASK-011 — Show anonymous shared capacity**
+- [~] **TASK-011 — Show anonymous shared capacity**
   - **Outcome:** Browsers can see aggregate active/queued pressure without seeing run
     or user details.
   - **Scope:** Allowlisted aggregate capacity endpoint, visibility-aware polling,
@@ -163,7 +163,10 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** API tests cover all capacity states and fields; Playwright MCP covers
     two contexts, page visibility, narrow, and keyboard behavior; latency remains
     acceptable during a real sweep; configured checks pass.
-  - **Evidence:** Not started.
+  - **Evidence:** Implementation and API evidence are in
+    `docs/evidence/task-011-anonymous-capacity.md`; Playwright MCP validation is
+    pending because the configured browser profile is currently locked by another
+    MCP process.
 
 - [ ] **TASK-012 — Reconcile optional-feature handoff evidence**
   - **Outcome:** Every optional task represented as shipped has complete automated,

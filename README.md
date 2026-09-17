@@ -32,3 +32,16 @@ Start with docs/project-brief.md, then read AGENTS.md, ARCHITECTURE.md, ROADMAP.
     make check
 
 See DEVELOPMENT.md for setup and customization guidance.
+
+## Anonymous shared capacity
+
+The portal exposes `GET /api/capacity` for a small, anonymous view of shared
+admission pressure. The response contains only `active`, `queued`,
+`active_capacity`, `queue_capacity`, and `admission_open`. It does not expose run
+IDs, model inputs, timestamps, IP addresses, cookies, or user labels.
+
+The page refreshes this banner every two seconds while visible and pauses the
+capacity requests when the page is hidden. The counts are informational and do not
+reserve a slot. This portal has no accounts, ownership, reservation, fairness, or
+quota enforcement; a submission can still race with another caller and receive the
+documented retryable `429` response.
