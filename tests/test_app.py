@@ -200,6 +200,33 @@ def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
         manager.close()
 
 
+def test_run_api_reports_bounded_cache_metrics_for_hit_and_miss(tmp_path: Path) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(tmp_path, worker=_fake_worker, executor=executor)
+    payload = {
+        "model": "cache-model",
+        "system": "h200_sxm",
+        "total_gpus": 1,
+        "ttft": 1,
+        "tpot": 1,
+    }
+    try:
+        with TestClient(create_app(manager)) as client:
+            first = client.post("/api/runs", json=payload)
+            first_id = first.json()["run_id"]
+            assert _wait_for_completion(client, first_id)["status"] == "completed"
+
+            second = client.post("/api/runs", json=payload)
+            assert second.status_code == 202
+            assert second.json()["status"] == "completed"
+            metrics = client.get("/metrics").text
+            assert "portal_cache_misses_total 1.0" in metrics
+            assert "portal_cache_hits_total 1.0" in metrics
+            assert "portal_cache_evictions_total 0.0" in metrics
+    finally:
+        manager.close()
+
+
 def test_run_api_downloads_only_completed_run_artifacts(tmp_path: Path) -> None:
     executor = ThreadPoolExecutor(max_workers=1)
     manager = RunManager(tmp_path, worker=_fake_worker, executor=executor)

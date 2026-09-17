@@ -1,21 +1,30 @@
 """Bounded asynchronous run lifecycle with an isolated production worker."""
 
 import shutil
+import time
 from collections import deque
 from collections.abc import Callable
 from concurrent.futures import Executor, Future, ProcessPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from threading import Lock, Timer
+from threading import RLock, Timer
 from typing import Literal
 from uuid import uuid4
 
 from portal.adapters import AiconfiguratorAdapter, RunRequest, RunResult
 from portal.aiconfigurator import run_ai_configurator
+from portal.artifacts import zip_directory
+from portal.cache import (
+    DEFAULT_CACHE_NAMESPACE,
+    BoundedResultCache,
+    CacheNamespace,
+    result_from_cached_bundle,
+)
 
 RunStatus = Literal["queued", "running", "completed", "failed"]
 Worker = Callable[[RunRequest, str], RunResult]
+CacheEvent = Literal["hit", "miss"]
 
 
 class QueueFullError(Exception):
@@ -32,6 +41,7 @@ class _RunRecord:
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     result: RunResult | None = None
     error: str | None = None
+    cache_event: CacheEvent | None = None
     future: Future[RunResult] | None = field(default=None, repr=False)
     timer: Timer | None = field(default=None, repr=False)
 
@@ -46,6 +56,7 @@ class RunSnapshot:
     updated_at: datetime
     result: RunResult | None
     error: str | None
+    cache_event: CacheEvent | None = None
 
 
 class RunManager:
@@ -62,6 +73,11 @@ class RunManager:
         max_queued: int = 4,
         timeout_seconds: float = 900.0,
         retention_seconds: float = 3600.0,
+        cache_namespace: CacheNamespace | None = DEFAULT_CACHE_NAMESPACE,
+        cache_ttl_seconds: float = 3600.0,
+        cache_max_entries: int = 32,
+        cache_max_bytes: int = 64 * 1024 * 1024,
+        cache_clock: Callable[[], float] = time.monotonic,
     ) -> None:
         if max_active < 1 or max_queued < 0 or timeout_seconds <= 0 or retention_seconds <= 0:
             raise ValueError("run capacity, timeout, and retention must be positive")
@@ -77,13 +93,20 @@ class RunManager:
         self._max_queued = max_queued
         self._timeout_seconds = timeout_seconds
         self._retention_seconds = retention_seconds
+        self._cache = BoundedResultCache(
+            cache_namespace,
+            ttl_seconds=cache_ttl_seconds,
+            max_entries=cache_max_entries,
+            max_bytes=cache_max_bytes,
+            clock=cache_clock,
+        )
         self._active = 0
         self._completed_total = 0
         self._failed_total = 0
         self._last_duration_seconds = 0.0
         self._queue: deque[str] = deque()
         self._records: dict[str, _RunRecord] = {}
-        self._lock = Lock()
+        self._lock = RLock()
         self._closing = False
         self._remove_orphaned_run_directories()
 
@@ -94,10 +117,39 @@ class RunManager:
             self._cleanup_expired_locked()
             if self._closing:
                 raise RuntimeError("run service is shutting down")
+            cache_key = self._cache.key(request)
+            cache_event: CacheEvent | None = None
+            if cache_key is not None:
+                cached = self._cache.get(cache_key)
+                if cached is not None:
+                    run_id = uuid4().hex
+                    output_dir = self.root_dir / run_id
+                    try:
+                        result = result_from_cached_bundle(cached, output_dir)
+                    except (OSError, ValueError):
+                        self._cache.discard(cache_key)
+                    else:
+                        record = _RunRecord(
+                            run_id=run_id,
+                            request=request,
+                            output_dir=output_dir,
+                            status="completed",
+                            result=result,
+                            cache_event="hit",
+                        )
+                        self._records[run_id] = record
+                        self._completed_total += 1
+                        return self._snapshot_locked(record)
+                cache_event = "miss"
             if self._active + len(self._queue) >= self._max_active + self._max_queued:
                 raise QueueFullError
             run_id = uuid4().hex
-            record = _RunRecord(run_id=run_id, request=request, output_dir=self.root_dir / run_id)
+            record = _RunRecord(
+                run_id=run_id,
+                request=request,
+                output_dir=self.root_dir / run_id,
+                cache_event=cache_event,
+            )
             self._records[run_id] = record
             self._queue.append(run_id)
             self._start_next_locked()
@@ -122,6 +174,11 @@ class RunManager:
                 "failed": self._failed_total,
                 "last_duration_seconds": self._last_duration_seconds,
                 "ready": not self._closing,
+                **{
+                    f"cache_{key}": value
+                    for key, value in self._cache.stats().items()
+                    if key in {"hits", "misses", "evictions"}
+                },
             }
 
     def close(self) -> None:
@@ -182,6 +239,7 @@ class RunManager:
 
     def _complete(self, run_id: str, future: Future[RunResult]) -> None:
         error: str | None
+        artifact_zip: bytes | None = None
         try:
             result = future.result()
         except Exception as exc:  # noqa: BLE001 - normalize dependency failures at the boundary
@@ -191,6 +249,11 @@ class RunManager:
         else:
             status = "completed"
             error = None
+            assert result is not None
+            try:
+                artifact_zip = zip_directory(result.artifact_dir)
+            except (FileNotFoundError, OSError, ValueError):
+                artifact_zip = None
         with self._lock:
             record = self._records[run_id]
             if record.status != "running" or record.future is not future:
@@ -205,6 +268,10 @@ class RunManager:
             self._active -= 1
             if status == "completed":
                 self._completed_total += 1
+                if result is not None and artifact_zip is not None:
+                    cache_key = self._cache.key(record.request)
+                    if cache_key is not None:
+                        self._cache.put(cache_key, result, artifact_zip)
             else:
                 self._failed_total += 1
             self._start_next_locked()
@@ -234,6 +301,7 @@ class RunManager:
             updated_at=record.updated_at,
             result=record.result,
             error=record.error,
+            cache_event=record.cache_event,
         )
 
 

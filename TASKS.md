@@ -126,7 +126,7 @@ must contain exact commands and observations, not only a checked box.
     handling, automated checks, and Playwright MCP desktop/narrow/keyboard flows
     pass.
 
-- [ ] **TASK-009 — Reuse identical completed results**
+- [x] **TASK-009 — Reuse identical completed results**
   - **Outcome:** A recent identical request avoids another sweep while receiving a
     fresh run ID and equivalent implemented result fields and artifact ZIP.
   - **Scope:** Canonical versioned cache key; successful completed bundles only;
@@ -136,7 +136,10 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** Tests cover invalidation, hit/miss, distinct IDs, artifact equivalence,
     failure exclusion, eviction, expiry, metrics, and restart loss; configured checks
     pass.
-  - **Evidence:** Not started.
+  - **Evidence:** See `docs/evidence/task-009-bounded-result-cache.md`. The
+    canonical versioned cache, fresh run IDs, artifact equivalence, failure and
+    in-flight exclusion, TTL/LRU bounds, metrics, restart loss, and container
+    smoke are recorded.
 
 - [ ] **TASK-010 — Restore browser-known runs**
   - **Outcome:** The same browser can reopen up to 20 still-valid runs without a

@@ -23,6 +23,7 @@ deployment manifest. The checked-in deployment has been exercised on Minikube.
 | Engineering harness | Planning, decision, verification, and handoff workflow | Markdown and Make targets | Repository owner |
 | Application | FastAPI app factory, liveness, and metadata boundary | `portal.app:create_app`; `/health/live`; `/` | Repository owner |
 | Adapter boundary | Typed request/result protocol, visualization metadata, and deterministic fake | `portal.adapters.AiconfiguratorAdapter` | Repository owner |
+| Completed-result cache | Bounded process-local cache for successful normalized bundles, fresh run IDs, and artifact materialization | `portal.cache.BoundedResultCache`; run-manager internal | Repository owner |
 | Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts/verified Pareto output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |
 | Deployment | Non-root single-replica container on Kubernetes with probes and bounded ephemeral storage | `Dockerfile`; `deploy/portal.yaml`; ClusterIP HTTP service | Repository owner |
 
@@ -48,6 +49,9 @@ run metadata would be local and ephemeral for the assignment scope.
   structured logging, metrics, ranked results, and downloadable artifacts.
 - The assignment identifies the AIConfigurator workload as CPU-bound and the
   published wheels as Linux x86-64 only.
+- Successful completed bundles may be reused in-process only when the canonical
+  request key includes the pinned AIConfigurator, profile, generator-mapping, and
+  portal-normalization namespace; cache state is lost on restart.
 - Browser validation is required to use the Playwright MCP configured in
   `.codex/config.toml`.
 

@@ -430,7 +430,9 @@ optional; the cached bundle includes only result fields that are implemented.
 - Container check showing a hit in one process and a miss after restart.
 - Narrow checks, then `make check`, `make integration`, and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete. Canonicalization, namespace invalidation, bounded eviction,
+TTL, failure/in-flight exclusion, metrics, artifact equivalence, and restart-loss
+evidence are recorded in `docs/evidence/task-009-bounded-result-cache.md`.
 
 ### Stage 9: Add Browser-Local Run History
 

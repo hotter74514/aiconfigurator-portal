@@ -31,6 +31,18 @@ class PortalMetrics:
             "Duration of the most recently terminal run",
             registry=self.registry,
         )
+        self.cache_hits = Counter(
+            "portal_cache_hits_total", "Completed-result cache hits", registry=self.registry
+        )
+        self.cache_misses = Counter(
+            "portal_cache_misses_total", "Completed-result cache misses", registry=self.registry
+        )
+        self.cache_evictions = Counter(
+            "portal_cache_evictions_total",
+            "Completed-result cache evictions",
+            registry=self.registry,
+        )
+        self._cache_observed = {"hits": 0, "misses": 0, "evictions": 0}
 
     def render(self, stats: Mapping[str, int | float | bool]) -> bytes:
         """Update gauges from manager state and render Prometheus text."""
@@ -40,6 +52,16 @@ class PortalMetrics:
         self.completed.set(int(stats["completed"]))
         self.failed.set(int(stats["failed"]))
         self.last_duration.set(float(stats["last_duration_seconds"]))
+        for key, counter in (
+            ("hits", self.cache_hits),
+            ("misses", self.cache_misses),
+            ("evictions", self.cache_evictions),
+        ):
+            current = int(stats[f"cache_{key}"])
+            delta = current - self._cache_observed[key]
+            if delta > 0:
+                counter.inc(delta)
+            self._cache_observed[key] = current
         return generate_latest(self.registry)
 
 

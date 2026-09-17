@@ -58,7 +58,7 @@ ADR to be Accepted and may be approved, implemented, or deferred independently.
 
 - [x] ADR-003: verify and show the same run's Pareto artifact.
 - [x] ADR-004: add an accessible agg/disagg comparison summary.
-- [ ] ADR-005: add a TTL/count/byte-bounded process-local result cache.
+- [x] ADR-005: add a TTL/count/byte-bounded process-local result cache.
 - [ ] ADR-006: add capped browser-local recent-run history.
 - [ ] ADR-007: add anonymous aggregate capacity awareness.
 
