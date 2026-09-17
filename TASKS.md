@@ -96,6 +96,76 @@ must contain exact commands and observations, not only a checked box.
     `docs/evidence/task-006-handoff.md`; README and narrow/keyboard browser cases
     remain open.
 
+- [ ] **TASK-007 — Expose the Pareto frontier visualization**
+  - **Outcome:** A completed run shows its verified run-scoped Pareto artifact with
+    accessible context and the ranked-table fallback.
+  - **Scope:** Verify generated artifact semantics; add contained visualization
+    metadata/endpoint; render captions and warnings. No recomputation from top-N rows
+    or chart dependency.
+  - **Dependencies:** TASK-006; Accepted ADR-003; pinned-container evidence.
+  - **Verify:** Adapter/API tests cover lifecycle, media, missing, and unsafe paths;
+    Playwright MCP covers desktop, narrow, keyboard, and fallback behavior; configured
+    checks pass.
+  - **Evidence:** Not started.
+
+- [ ] **TASK-008 — Compare aggregated and disaggregated results**
+  - **Outcome:** A completed two-mode run shows absolute metrics and correctly signed
+    deltas without declaring a universal winner.
+  - **Scope:** Verify rank semantics; add a server-owned optional comparison block;
+    render mode values, deltas, and unavailable states. Pareto visualization is not
+    required.
+  - **Dependencies:** TASK-006; Accepted ADR-004.
+  - **Verify:** Tests cover both/missing modes, missing values, zero baseline, row
+    selection, signs, units, and rounding; Playwright MCP covers responsive and
+    keyboard behavior; configured checks pass.
+  - **Evidence:** Not started.
+
+- [ ] **TASK-009 — Reuse identical completed results**
+  - **Outcome:** A recent identical request avoids another sweep while receiving a
+    fresh run ID and equivalent implemented result fields and artifact ZIP.
+  - **Scope:** Canonical versioned cache key; successful completed bundles only;
+    process-local TTL/count/byte bounds; LRU eviction; cache metrics. No durability or
+    in-flight coalescing.
+  - **Dependencies:** TASK-006; Accepted ADR-005.
+  - **Verify:** Tests cover invalidation, hit/miss, distinct IDs, artifact equivalence,
+    failure exclusion, eviction, expiry, metrics, and restart loss; configured checks
+    pass.
+  - **Evidence:** Not started.
+
+- [ ] **TASK-010 — Restore browser-known runs**
+  - **Outcome:** The same browser can reopen up to 20 still-valid runs without a
+    server-wide run enumeration endpoint.
+  - **Scope:** Capped browser `localStorage`, status revalidation/pruning, clear action,
+    safe rendering, and honest loss/privacy wording. No cookie, account, ownership,
+    authorization, or durable history.
+  - **Dependencies:** TASK-006; Accepted ADR-006.
+  - **Verify:** Client tests cover cap/prune/order/malformed storage; Playwright MCP
+    covers refresh, expiry, clear, two-context separation, narrow, and keyboard
+    behavior; configured checks pass.
+  - **Evidence:** Not started.
+
+- [ ] **TASK-011 — Show anonymous shared capacity**
+  - **Outcome:** Browsers can see aggregate active/queued pressure without seeing run
+    or user details.
+  - **Scope:** Allowlisted aggregate capacity endpoint, visibility-aware polling,
+    neutral banner, and explicit no-account/no-reservation wording. No session,
+    ownership, fairness, quota, or authentication.
+  - **Dependencies:** TASK-006; Accepted ADR-007.
+  - **Verify:** API tests cover all capacity states and fields; Playwright MCP covers
+    two contexts, page visibility, narrow, and keyboard behavior; latency remains
+    acceptable during a real sweep; configured checks pass.
+  - **Evidence:** Not started.
+
+- [ ] **TASK-012 — Reconcile optional-feature handoff evidence**
+  - **Outcome:** Every optional task represented as shipped has complete automated,
+    browser, container, and applicable restart-loss evidence.
+  - **Scope:** Checklist/evidence, clean flow, documentation reconciliation, diff and
+    secret/generated-file review. Unstarted optional tasks remain deferred.
+  - **Dependencies:** Every optional task selected for release.
+  - **Verify:** All applicable formatter, linter, type, test, integration, build,
+    browser, `make check`, and `git diff --check` gates pass.
+  - **Evidence:** Not started.
+
 ## Status Rules
 
 - `[ ]` Not started or blocked; add a blocker note when applicable.

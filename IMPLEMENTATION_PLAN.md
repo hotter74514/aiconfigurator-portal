@@ -3,7 +3,9 @@
 ## Plan Status
 
 **ADR-001 and ADR-002 Accepted; Stages 1–4 are complete.** Planning, implementation,
-and operations evidence are recorded. TASK-006 is the current active task.
+and operations evidence are recorded. TASK-006 is the current active task. The
+optional extension in Stages 6–10 is planned but blocked on the Stage 5 delivery
+gate. Each optional stage requires acceptance of its corresponding ADR.
 
 ## Observable Outcome
 
@@ -14,9 +16,12 @@ deployment artifacts produced by that run. The same image exposes distinct live 
 ready probes, Prometheus metrics, and structured logs and can be deployed with the
 checked-in Kubernetes manifests.
 
-The acceptance criteria in `docs/project-brief.md` are authoritative. The plan does
-not include authentication, durable history, caching, Pareto charts, automatic
-deployment, or real-GPU benchmarking.
+The acceptance criteria in `docs/project-brief.md` are authoritative for the
+baseline. The baseline does not include authentication, durable history, caching,
+Pareto charts, automatic deployment, or real-GPU benchmarking. The proposed
+optional extension below adds deliberately ephemeral versions of visualization,
+comparison, caching, history, and multi-user awareness without claiming durable
+storage, identity, authorization, or isolation.
 
 ## Proposed Technical Shape
 
@@ -31,7 +36,7 @@ deployment, or real-GPU benchmarking.
 - In-memory run metadata and a size-limited `emptyDir` retain results for one hour.
 - Raw Kubernetes YAML keeps local-cluster deployment inspectable in an interview.
 
-See the Proposed ADRs for rejected alternatives, failure modes, and decision-change
+See the accepted ADRs for rejected alternatives, failure modes, and decision-change
 conditions.
 
 ## Time Budget and Cut Line
@@ -280,13 +285,236 @@ are recorded; browser MCP and live-cluster validation remain open.
   delayed, first reduce worker thread parallelism or reserve more CPU; do not make
   probe thresholds mask starvation.
 
-## Optional Work After All Gates Pass
+## Optional Extension: Results Insight and Ephemeral Convenience
 
-1. Pareto frontier chart using already-returned normalized rows.
-2. Clear aggregated-versus-disaggregated comparison summary.
-3. Deterministic cache keyed by canonical request, AIConfigurator version, profile
-   data/version, backend/generator version, and portal normalization schema.
-4. Durable history and user ownership only after replacing local state/storage.
+### Extension Outcome and Cut Line
+
+After the baseline delivery gate passes, a user can understand the trade-off between
+aggregated and disaggregated serving, inspect the full Pareto visualization produced
+by the same AIConfigurator run, avoid recomputation for an identical recent request,
+return to recent runs from the same browser, and see anonymous service pressure from
+other users.
+
+This extension intentionally does **not** add authentication, authorization,
+cross-device history, durable cache entries, or restart survival. Those capabilities
+require a different storage and identity boundary. ADR-003 through ADR-007 separate
+the five feature decisions so the owner can accept or reject each independently.
+
+The cut line is strict:
+
+1. Finish TASK-006 and the unchecked baseline verification items that are applicable.
+2. Review each ADR separately; acceptance of one does not imply acceptance
+   of any other optional feature.
+3. Implement visualization and comparison first because they add the most direct
+   user value without changing execution or storage ownership.
+4. Implement cache, history, and awareness only if time remains; each is independently
+   removable. Do not replace the local process/storage model for a nice-to-have.
+
+| Extension stage | Expected effort | Deliverable | Required decision |
+|---|---:|---|---|
+| 6. Expose the Pareto frontier | 1.5–2.5 h | Verified run-scoped Pareto asset | Accepted ADR-003 |
+| 7. Compare agg and disagg | 1–2 h | Server-owned comparison summary and UI | Accepted ADR-004 |
+| 8. Reuse identical completed results | 2–3 h | Bounded deterministic in-process cache | Accepted ADR-005 |
+| 9. Restore recent browser runs | 1.5–2 h | Browser-local history | Accepted ADR-006 |
+| 10. Show shared service pressure | 1–1.5 h | Anonymous aggregate capacity awareness | Accepted ADR-007 |
+
+The full extension is approximately 7–11 hours. With only 2–4 hours available,
+ship Stages 6 and/or 7 with their verification; do not start persistence or identity
+work. Each stage includes its own documentation and completion-gate checks.
+
+### Stage 6: Expose the Pareto Frontier
+
+**Goal:** Show the complete frontier produced by the same run without reconstructing
+it from incomplete top-N rows.
+
+**Prerequisites:** TASK-006 complete and ADR-003 Accepted.
+
+**Work:**
+
+1. In the pinned Linux image, inventory every `pareto_frontier.png`: count, relative
+   path, parent mode, dimensions, and whether it reflects the full sweep or `top_n`.
+2. Extend the result contract with whitelisted visualization metadata discovered
+   beneath the server-generated run root.
+3. Add a completed-run visualization endpoint keyed by a server-issued ID. Enforce
+   status, path containment, allowlisted PNG media type, and expiry semantics.
+4. Render captions, alternative text, scope/axis notes, the benchmark warning, and
+   the existing table as the exact-value fallback.
+
+**Success Criteria:**
+
+- The displayed image is verified dependency output from that same run.
+- Unsafe, missing, ambiguous, or non-PNG assets are never served or mislabeled.
+- No frontend chart dependency or top-N frontier recomputation is introduced.
+
+**Tests / Evidence:** Adapter discovery; successful image response; queued `409`;
+unknown/expired `404`; missing file; unsupported media; symlink/path escape; and
+Playwright MCP desktop, narrow, keyboard, caption, fallback, and warning scenarios.
+Then run `make check` and `git diff --check`.
+
+**Status:** Not Started.
+
+### Stage 7: Compare Aggregated and Disaggregated Results
+
+**Goal:** Explain cross-mode trade-offs with one stable, testable comparison contract.
+
+**Prerequisites:** TASK-006 complete and ADR-004 Accepted. Stage 6 is optional.
+
+**Work:**
+
+1. Verify that rank 1 is the best row independently within both `agg` and `disagg`.
+2. Add a portal-owned optional comparison block derived from those two rows.
+3. Return absolute throughput, TTFT, TPOT, GPU count, signed percentage deltas,
+   documented rounding, and explicit unavailable reasons.
+4. Render side-by-side values without declaring a universal winner; preserve the raw
+   ranked table and benchmark warning.
+
+**Success Criteria:**
+
+- Two-mode results show correct values and signed deltas.
+- Missing modes, missing values, and zero baselines remain explicit and usable.
+- Comparison domain logic is owned and tested by the server rather than duplicated
+  in browser code.
+
+**Tests / Evidence:** Fixtures for both modes and missing cases; tests for row
+selection, units, signs, zero division, rounding, and unavailable reasons; Playwright
+MCP desktop, narrow, and keyboard flows; `make check` and `git diff --check`.
+
+**Status:** Not Started.
+
+### Stage 8: Add a Bounded Deterministic Result Cache
+
+**Goal:** An identical recent request can complete without another CPU-heavy sweep,
+while preserving a fresh run ID and the existing API lifecycle contract.
+
+**Prerequisites:** TASK-006 complete and ADR-005 Accepted. Stages 6 and 7 are
+optional; the cached bundle includes only result fields that are implemented.
+
+**Work:**
+
+1. Write cache behavior tests before implementation. Define one canonical JSON
+   serialization for every `RunRequest` field and hash it with an explicit dependency
+   and normalization version namespace.
+2. Cache only successful completed bundles: normalized rows, visualization bytes,
+   source/version metadata, and the generated artifact ZIP. Never cache failures,
+   queued/running work, or an entry with unknown version inputs.
+3. On a hit, create a new opaque run ID and a completed record; do not reveal or reuse
+   another caller's run ID. Keep `POST /api/runs` at `202` so clients retain one
+   contract, even when the first poll observes `completed`.
+4. Bound the process-local cache by TTL, entry count, and total bytes with predictable
+   least-recently-used eviction. Clear it on restart. Avoid duplicate in-flight
+   coalescing in this increment.
+5. Add low-cardinality hit, miss, and eviction metrics. Never log raw cache keys,
+   model names, request payloads, or user-derived labels.
+
+**Success Criteria:**
+
+- Two identical completed requests execute the worker once and return distinct run
+  IDs with equivalent results, visualizations, and downloadable ZIP content.
+- Any request-field or namespace-version change is a miss.
+- Failed and in-flight requests never produce hits.
+- TTL, LRU count, and byte limits keep memory bounded, and restart loss is explicit.
+
+**Tests / Evidence:**
+
+- Unit tests for canonicalization, version invalidation, TTL, byte/count eviction,
+  misses, and no failure caching.
+- Run-manager/API concurrency tests for distinct IDs, one worker execution after a
+  completed hit, artifact equivalence, and cache isolation from run expiry.
+- Metrics assertions with no high-cardinality labels.
+- Container check showing a hit in one process and a miss after restart.
+- Narrow checks, then `make check`, `make integration`, and `git diff --check`.
+
+**Status:** Not Started.
+
+### Stage 9: Add Browser-Local Run History
+
+**Goal:** A user can revisit recent submissions known to the same browser without a
+server-wide enumeration endpoint.
+
+**Prerequisites:** TASK-006 complete and ADR-006 Accepted. Other optional stages are
+not required.
+
+**Work:**
+
+1. Store a capped recent-run index in browser `localStorage`: run ID, submitted-at
+   time, and a concise request summary. Treat it as untrusted display data and render
+   only through DOM text properties.
+2. On page load, re-fetch each stored opaque run ID from the existing status API,
+   update its state, and prune malformed, unknown, or expired entries. Selecting an
+   available entry restores its status/results without resubmission.
+3. Cap history at 20 entries and provide a browser-only clear action. Do not add a
+   server-side list-runs endpoint, session cookie, or claim of durable history.
+
+**Success Criteria:**
+
+- Refreshing the same browser restores up to 20 known runs while valid; clearing site
+  data, server restart, or one-hour expiry has the documented loss behavior.
+- History cannot enumerate other users' runs and uses no unsafe HTML insertion.
+- UI and README state plainly that this is convenience history, not authentication,
+  authorization, privacy isolation, or auditing.
+
+**Tests / Evidence:**
+
+- UI logic tests where practical for cap/prune/order and malformed local storage.
+- Playwright MCP scenarios for refresh restore, expired pruning, clear history,
+  two browser contexts with separate local history, narrow viewport, and keyboard
+  access.
+- Narrow checks, then `make check` and `git diff --check`.
+
+**Status:** Not Started.
+
+### Stage 10: Add Anonymous Multi-User Capacity Awareness
+
+**Goal:** Show shared queue pressure without introducing identity-like semantics or
+exposing another caller's run details.
+
+**Prerequisites:** TASK-006 complete and ADR-007 Accepted. Other optional stages are
+not required.
+
+**Work:**
+
+1. Add a read-only endpoint returning only active count, queued count, configured
+   capacities, and whether admission is open.
+2. Render a neutral shared-pressure banner and explain that it is informational and
+   the portal has no accounts, ownership, reservation, fairness, or quotas.
+3. Poll at no more than the existing status interval and only while the page is
+   visible. Expose no run IDs, model inputs, timestamps, IPs, cookies, or user labels.
+4. Record endpoint latency during a real sweep and update the applicable verification
+   checklist, evidence, architecture, README, roadmap, and task status.
+
+**Success Criteria:**
+
+- Idle, active, queued, saturated, and shutdown states have bounded payloads.
+- Two browser contexts see the same aggregate pressure without sharing run details.
+- Capacity checks remain responsive during CPU work and do not reserve a slot.
+- Documentation never represents awareness as authentication or isolation.
+
+**Tests / Evidence:**
+
+- API tests for every capacity state and exact allowlisted response fields.
+- Playwright MCP two-context, page-visibility, narrow, and keyboard scenarios.
+- Probe/capacity latency observation during a real sweep.
+- Applicable configured checks, `make check`, and `git diff --check`.
+
+**Status:** Not Started.
+
+### Extension Risks, Assumptions, and Rollback
+
+- The plan assumes AIConfigurator's generated PNG is a trustworthy full-frontier
+  artifact. If evidence disproves that assumption, ADR-003 requires omission until a
+  complete structured frontier contract exists.
+- Rank 1 is assumed to be meaningful independently per mode; it must not be used for
+  comparison until verified.
+- Cached artifacts are safe to reuse only for an exact canonical request and version
+  namespace. Any ambiguity is a cache miss.
+- Browser-local history can expose request summaries to anyone using the same browser
+  profile. Keep summaries minimal, document the behavior, and provide clear-history.
+- Anonymous capacity is intentionally not identity. Real ownership, private history,
+  per-user quotas, audit, cross-device access, or multi-replica operation triggers a
+  new Accepted ADR and durable storage design.
+- Each optional stage owns its tests, documentation, and focused commit and can be
+  accepted, implemented, or reverted independently. An incomplete stage remains
+  unshipped rather than weakening its gate.
 
 ## References
 

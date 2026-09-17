@@ -51,13 +51,23 @@ The roadmap prioritizes a working, defensible must-have path within the assignme
 - [ ] Reconcile all planning/architecture documents, inspect commit history, and
   confirm the working tree contains only intentional files.
 
+## P5 — Optional Results Insight and Ephemeral Convenience
+
+This phase begins only after P4 passes. Each increment requires its corresponding
+ADR to be Accepted and may be approved, implemented, or deferred independently.
+
+- [ ] ADR-003: verify and show the same run's Pareto artifact.
+- [ ] ADR-004: add an accessible agg/disagg comparison summary.
+- [ ] ADR-005: add a TTL/count/byte-bounded process-local result cache.
+- [ ] ADR-006: add capped browser-local recent-run history.
+- [ ] ADR-007: add anonymous aggregate capacity awareness.
+
 ## Deferred
 
-- **Pareto chart and richer agg/disagg comparison:** promote only after every
-  must-have gate passes with remaining time.
-- **Deterministic result cache:** promote when repeat traffic justifies explicit
-  invalidation across inputs, AIConfigurator/profile/backend versions, and portal
-  schema.
+- **Portal-owned Pareto recomputation:** use only if the generated artifact is
+  unsuitable and the SDK exposes the complete frontier data required for correctness.
+- **In-flight request coalescing:** defer until duplicate concurrent traffic justifies
+  the added cancellation, failure, and ownership semantics.
 - **Durable run history:** requires durable metadata and object/PVC storage first.
 - **Multi-user authorization and quota:** requires an identity boundary, ownership
   model, and durable admission control.
