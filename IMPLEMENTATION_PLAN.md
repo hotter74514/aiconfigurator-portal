@@ -2,11 +2,12 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-007 Accepted; Stages 1–6 are complete.** Planning,
+**ADR-001 through ADR-007 Accepted; Stages 1–10 and TASK-012 are complete.** Planning,
 implementation, operations, and handoff evidence are recorded. The repository owner
 confirmed TASK-006 validation has no known issues. The optional extension in Stages
-6–10 is now available, with each stage still independently gated by its corresponding
-accepted ADR.
+6–10 passed its final automated, container, cluster, and browser gates; the project
+scoped Playwright MCP server uses an isolated profile to avoid the observed Chrome
+download crash.
 
 ## Observable Outcome
 

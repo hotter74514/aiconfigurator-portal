@@ -63,7 +63,7 @@ deployment artifacts without installing AIConfigurator locally.
   case, and the application container is reproducibly buildable.
 - [x] Raw Kubernetes manifests deploy the service with probes, resource requests and
   limits, temporary artifact storage, and a non-root security context.
-- [ ] Unit/integration checks and the browser scenarios in
+- [x] Unit/integration checks and the browser scenarios in
   `docs/verification-checklist.md` pass, followed by `make check` and
   `git diff --check`.
 

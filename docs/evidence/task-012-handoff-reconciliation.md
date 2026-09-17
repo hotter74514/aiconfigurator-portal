@@ -2,13 +2,11 @@
 
 ## Status
 
-**Blocked on 2026-09-18.** Automated, clean-checkout, container, offline dependency,
+**Complete on 2026-09-18.** Automated, clean-checkout, container, offline dependency,
 shutdown, storage-failure, documentation, history, source/image hygiene, terminal
-polling, all local-cluster gates, and the dependency-failure/retry browser scenario
-are complete. Keyboard activation of the artifact link still closes the Playwright
-MCP target/context before a downloadable file can be inspected, reaching the
-repository's three-attempt stop condition for that blocker. Full keyboard download
-completion remains unchecked; no other browser automation was substituted.
+polling, all local-cluster gates, and the browser scenarios are complete. The
+configured Playwright MCP server now uses an isolated profile, which avoids the
+Chrome native download crash that previously surfaced as a closed target/context.
 
 ## Automated and Clean-Checkout Gates
 
@@ -140,19 +138,33 @@ fake-adapter server at `http://127.0.0.1:18767/` and freshly proved:
 - From Submit, keyboard focus continued through the saved-run button and clear
   button to the run-scoped artifact link.
 
-Pressing Enter on the focused artifact link returned:
+Before the MCP configuration fix, pressing Enter on the focused artifact link returned:
 
 ```text
 Transport closed
 ```
 
-Tab listing and a fresh navigation then returned the same error. A later standalone
-session using the exact configured `npx @playwright/mcp@latest` command reached
-`download.saveAs` before the target/context closed, and an event-only retry also
-closed the target immediately after keyboard activation. The generated ZIP itself is
-verified by the desktop/API and cluster evidence above, but this MCP transport cannot
-confirm keyboard download completion. Earlier TASK-007 through TASK-011 evidence
-remains valid.
+Tab listing and a fresh navigation then returned the same error. The crash report
+for that run identifies native Google Chrome `152.0.7977.83` on macOS 26.6.2 / ARM64
+terminating with `EXC_BAD_ACCESS (SIGSEGV)` in `CrBrowserMain`; a foreground worker
+was inside `__rename` while DevTools pipe threads were active. This is browser-process
+failure, not an application exception; the MCP transport closure was a consequence.
+
+The project-scoped MCP configuration was changed to pass `--isolated`, preventing
+reuse of the persistent browser profile. With the exact configured command
+`npx @playwright/mcp@latest --isolated`, keyboard focus reached the run-scoped link
+and Enter completed the download:
+
+```text
+focused.id=download
+suggestedFilename=run-1560cefbc74045ab85af5b25db37a980-artifacts.zip
+failure=null
+savedPath=/tmp/task012-isolated-artifacts.zip
+unzip -t: no errors detected in compressed data
+entries: fake-k8s-deploy.yaml, pareto_frontier.png
+```
+
+Earlier TASK-007 through TASK-011 evidence remains valid.
 
 The dependency-failure/retry scenario was then run with a fresh deterministic server
 at `http://127.0.0.1:18768/`: the first keyboard submission returned the sanitized
@@ -230,16 +242,13 @@ Deployment is currently healthy on `serving-configuration-portal:local-arm64`.
   points, and known limitations.
 - `ARCHITECTURE.md` now describes the implemented optional extension rather than a
   proposed target.
-- Project-brief acceptance items with direct evidence are checked; the final browser
-  completion item remains open only for keyboard download completion.
+- Project-brief acceptance items with direct evidence are checked, including the
+  final browser completion item after the isolated-profile MCP fix.
 - Commit review from the serving-portal plan through the current branch found focused
   Conventional Commit subjects and descriptive bodies. Current TASK-012 changes are
   split into test, image-hardening, and evidence/documentation milestones.
 
-## Remaining Work to Close TASK-012
+## Closure
 
-1. Obtain a healthy configured Playwright MCP transport that stays open through
-   keyboard download activation, then inspect the resulting ZIP.
-2. Rerun the final repository gates and confirm intentional git status. The
-   dependency-failure/retry gate is complete; TASK-012 remains blocked only on the
-   keyboard download gate.
+TASK-012 is complete. The final repository gates were rerun after the configuration
+change and the working tree contains only the intentional fix and its evidence.

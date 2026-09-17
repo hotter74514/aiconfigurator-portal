@@ -168,7 +168,7 @@ must contain exact commands and observations, not only a checked box.
   - **Evidence:** See `docs/evidence/task-011-anonymous-capacity.md` for API,
     Playwright MCP, and pinned-container real-sweep evidence.
 
-- [ ] **TASK-012 — Reconcile optional-feature handoff evidence**
+- [x] **TASK-012 — Reconcile optional-feature handoff evidence**
   - **Outcome:** Every optional task represented as shipped has complete automated,
     browser, container, and applicable restart-loss evidence.
   - **Scope:** Checklist/evidence, clean flow, documentation reconciliation, diff and
@@ -178,12 +178,11 @@ must contain exact commands and observations, not only a checked box.
     browser, `make check`, and `git diff --check` gates pass.
   - **Evidence:** Partial evidence is in
     `docs/evidence/task-012-handoff-reconciliation.md`.
-  - **Blocker:** The Kubernetes architecture mismatch and all cluster gates are
-    resolved with an architecture-matched local image. Playwright MCP now also
-    passes dependency failure/retry: the first keyboard submission shows a sanitized
-    recoverable error and a second Enter completes. The remaining blocker is keyboard
-    activation of the ZIP link, which closes the MCP target/context before completion
-    can be inspected; no substitute evidence is claimed.
+  - **Resolution:** The Kubernetes architecture mismatch and all cluster gates are
+    resolved with an architecture-matched local image. The Playwright MCP profile
+    was changed to isolated mode after the Chrome native download crash; keyboard
+    download now saves and validates the run-scoped ZIP. Dependency failure/retry,
+    all configured checks, and the final browser path are complete.
 
 - [ ] **TASK-013 — Refresh the portal UI as a precision planning workspace**
   - **Outcome:** The existing end-to-end workflow is visually polished, responsive,

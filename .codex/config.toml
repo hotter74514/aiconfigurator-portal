@@ -9,4 +9,6 @@ network_access = true
 
 [mcp_servers.playwright]
 command = "npx"
-args = ["@playwright/mcp@latest"]
+# Avoid reusing a persistent Chrome profile: Chrome 152 has a native download
+# crash path on macOS/Apple Silicon that surfaces as a closed MCP transport.
+args = ["@playwright/mcp@latest", "--isolated"]

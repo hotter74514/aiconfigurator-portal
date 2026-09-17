@@ -110,12 +110,12 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 - [x] TASK-011 Playwright MCP coverage: two isolated contexts observe the same
   aggregate pressure, the capacity banner shows saturation, visibility-aware polling
   pauses and resumes, and keyboard focus reaches and activates submission.
-- [ ] Keyboard-only: labels, focus order, submission, status announcement, result
+- [x] Keyboard-only: labels, focus order, submission, status announcement, result
   navigation, retry, and download are usable. TASK-012 verified the labeled
   input-to-submit focus order, Enter submission, completed result, history controls,
-  retry navigation, and focus reaching the run-scoped download link. Activating that
-  link with Enter still closes the MCP target/context before ZIP completion can be
-  inspected; the desktop/API and cluster paths verify the same artifact endpoint.
+  retry navigation, and focus reaching the run-scoped download link. The configured
+  MCP server now uses `--isolated`; Enter saved and inspected the ZIP successfully
+  with no download failure.
 - [x] Client and server validation: invalid field and dependency failure each show a
   recoverable message without a browser console error. Native invalid-GPU validation
   produced no POST; the fresh dependency-failure run showed the sanitized
@@ -125,9 +125,9 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   submissions on repeated clicks. Two Enter presses produced one POST and one terminal
   GET; the request list stayed unchanged during a further three-second interval.
 - [x] If Playwright MCP is unavailable, record the blocker and leave these unchecked;
-  do not substitute another browser automation tool. The configured MCP package was
-  restarted for the dependency-failure/retry scenario; only keyboard download
-  completion remains blocked by target/context closure.
+  do not substitute another browser automation tool. Playwright MCP remained the
+  only browser automation; the project-scoped isolated-profile configuration kept
+  the transport alive through keyboard download completion.
 
 ## Trust and Product Safety
 
