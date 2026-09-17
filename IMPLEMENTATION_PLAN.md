@@ -2,7 +2,7 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-007 Accepted; Stages 1–5 are complete.** Planning,
+**ADR-001 through ADR-007 Accepted; Stages 1–6 are complete.** Planning,
 implementation, operations, and handoff evidence are recorded. The repository owner
 confirmed TASK-006 validation has no known issues. The optional extension in Stages
 6–10 is now available, with each stage still independently gated by its corresponding
@@ -353,7 +353,9 @@ unknown/expired `404`; missing file; unsupported media; symlink/path escape; and
 Playwright MCP desktop, narrow, keyboard, caption, fallback, and warning scenarios.
 Then run `make check` and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete. The pinned SDK artifact semantics, contained visualization
+endpoint, accessible metadata/fallback, API security tests, and Playwright MCP
+browser evidence are recorded in `docs/evidence/task-007-pareto-frontier.md`.
 
 ### Stage 7: Compare Aggregated and Disaggregated Results
 

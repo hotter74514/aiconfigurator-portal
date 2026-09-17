@@ -96,7 +96,7 @@ must contain exact commands and observations, not only a checked box.
     `docs/evidence/task-006-handoff.md` and the linked task reports. The repository
     owner confirmed that TASK-006 validation has no known issues.
 
-- [ ] **TASK-007 — Expose the Pareto frontier visualization**
+- [x] **TASK-007 — Expose the Pareto frontier visualization**
   - **Outcome:** A completed run shows its verified run-scoped Pareto artifact with
     accessible context and the ranked-table fallback.
   - **Scope:** Verify generated artifact semantics; add contained visualization
@@ -106,7 +106,10 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** Adapter/API tests cover lifecycle, media, missing, and unsafe paths;
     Playwright MCP covers desktop, narrow, keyboard, and fallback behavior; configured
     checks pass.
-  - **Evidence:** Not started.
+  - **Evidence:** See `docs/evidence/task-007-pareto-frontier.md`. The pinned SDK
+    produced one verified 800×500 root-level PNG distinct from the mode top-N CSVs;
+    the completed-run API serves it through a contained asset endpoint, and the
+    Playwright MCP desktop/narrow/keyboard checks passed with the ranked table fallback.
 
 - [ ] **TASK-008 — Compare aggregated and disaggregated results**
   - **Outcome:** A completed two-mode run shows absolute metrics and correctly signed

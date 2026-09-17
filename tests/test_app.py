@@ -2,6 +2,7 @@
 
 import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
@@ -10,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from portal.adapters import FakeAiconfiguratorAdapter, RunRequest, RunResult
+from portal.aiconfigurator import _discover_pareto_frontier
 from portal.app import create_app
 from portal.runs import QueueFullError, RunManager
 
@@ -21,6 +23,39 @@ def _fake_worker(request: RunRequest, output_dir: str) -> RunResult:
 def _slow_fake_worker(request: RunRequest, output_dir: str) -> RunResult:
     time.sleep(0.1)
     return _fake_worker(request, output_dir)
+
+
+def _unsafe_visualization_worker(request: RunRequest, output_dir: str) -> RunResult:
+    result = _fake_worker(request, output_dir)
+    asset = result.visualizations[0]
+    if request.model == "escape":
+        outside = Path(output_dir).parent / "outside.png"
+        outside.write_bytes((Path(output_dir) / asset.relative_path).read_bytes())
+        asset = replace(asset, relative_path="../outside.png")
+    elif request.model == "symlink":
+        image = Path(output_dir) / asset.relative_path
+        image.unlink()
+        image.symlink_to(Path(output_dir).parent / "outside.png")
+    elif request.model == "internal-symlink":
+        image = Path(output_dir) / asset.relative_path
+        target = Path(output_dir) / "target.png"
+        target.write_bytes(image.read_bytes())
+        image.unlink()
+        image.symlink_to(target)
+    else:
+        asset = replace(asset, media_type="text/plain")
+    return replace(result, visualizations=(asset,))
+
+
+def _wait_for_completion(client: TestClient, run_id: str) -> dict[str, object]:
+    deadline = time.monotonic() + 2
+    state: dict[str, object] = {}
+    while time.monotonic() < deadline:
+        state = client.get(f"/api/runs/{run_id}").json()
+        if state["status"] in {"completed", "failed"}:
+            return state
+        time.sleep(0.01)
+    return state
 
 
 @pytest.mark.integration
@@ -46,6 +81,9 @@ def test_fake_adapter_returns_stable_rows_and_artifact(tmp_path: Path) -> None:
     assert result.source_version == "fake"
     assert result.rows[0].metrics["tokens/s"] == 1.0
     assert (tmp_path / "run" / "fake-k8s-deploy.yaml").is_file()
+    assert len(result.visualizations) == 1
+    assert result.visualizations[0].relative_path == "pareto_frontier.png"
+    assert result.visualizations[0].media_type == "image/png"
 
 
 def test_run_manager_limits_active_and_queued_work(tmp_path: Path) -> None:
@@ -178,9 +216,154 @@ def test_run_api_downloads_only_completed_run_artifacts(tmp_path: Path) -> None:
             assert download.status_code == 200
             assert download.headers["content-type"].startswith("application/zip")
             with ZipFile(BytesIO(download.content)) as archive:
-                assert archive.namelist() == ["fake-k8s-deploy.yaml"]
+                assert archive.namelist() == ["fake-k8s-deploy.yaml", "pareto_frontier.png"]
     finally:
         manager.close()
+
+
+def test_run_api_exposes_and_serves_run_scoped_pareto_visualization(tmp_path: Path) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(tmp_path, worker=_fake_worker, executor=executor)
+    try:
+        with TestClient(create_app(manager)) as client:
+            response = client.post(
+                "/api/runs",
+                json={
+                    "model": "model",
+                    "system": "h200_sxm",
+                    "total_gpus": 1,
+                    "ttft": 1,
+                    "tpot": 1,
+                },
+            )
+            run_id = response.json()["run_id"]
+            state = _wait_for_completion(client, run_id)
+            assert state["status"] == "completed"
+            visualizations = state["visualizations"]
+            assert isinstance(visualizations, list)
+            asset = visualizations[0]
+            assert asset["media_type"] == "image/png"
+            assert asset["width"] == 1
+            assert asset["height"] == 1
+            assert asset["alt_text"]
+            assert asset["caption"]
+            assert asset["scope_note"]
+            assert asset["axis_note"]
+
+            image = client.get(asset["url"])
+            assert image.status_code == 200
+            assert image.headers["content-type"].startswith("image/png")
+            assert image.content.startswith(b"\x89PNG\r\n\x1a\n")
+            assert client.get(f"/api/runs/{run_id}/visualizations/{'a' * 32}").status_code == 404
+            assert (
+                client.get(f"/api/runs/{'b' * 32}/visualizations/{asset['id']}").status_code == 404
+            )
+    finally:
+        manager.close()
+
+
+def test_visualization_endpoint_rejects_incomplete_missing_and_unsafe_assets(
+    tmp_path: Path,
+) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(tmp_path, worker=_slow_fake_worker, executor=executor)
+    try:
+        with TestClient(create_app(manager)) as client:
+            response = client.post(
+                "/api/runs",
+                json={
+                    "model": "model",
+                    "system": "h200_sxm",
+                    "total_gpus": 1,
+                    "ttft": 1,
+                    "tpot": 1,
+                },
+            )
+            run_id = response.json()["run_id"]
+            assert client.get(f"/api/runs/{run_id}/visualizations/{'a' * 32}").status_code == 409
+            state = _wait_for_completion(client, run_id)
+            asset_id = state["visualizations"][0]["id"]
+            (tmp_path / run_id / "pareto_frontier.png").unlink()
+            assert client.get(f"/api/runs/{run_id}/visualizations/{asset_id}").status_code == 404
+    finally:
+        manager.close()
+
+    for model, expected_status in (
+        ("escape", 404),
+        ("symlink", 404),
+        ("internal-symlink", 404),
+        ("unsupported", 415),
+    ):
+        executor = ThreadPoolExecutor(max_workers=1)
+        manager = RunManager(
+            tmp_path / model, worker=_unsafe_visualization_worker, executor=executor
+        )
+        try:
+            with TestClient(create_app(manager)) as client:
+                response = client.post(
+                    "/api/runs",
+                    json={
+                        "model": model,
+                        "system": "h200_sxm",
+                        "total_gpus": 1,
+                        "ttft": 1,
+                        "tpot": 1,
+                    },
+                )
+                run_id = response.json()["run_id"]
+                state = _wait_for_completion(client, run_id)
+                asset_id = state["visualizations"][0]["id"]
+                assert (
+                    client.get(f"/api/runs/{run_id}/visualizations/{asset_id}").status_code
+                    == expected_status
+                )
+        finally:
+            manager.close()
+
+
+def test_visualization_endpoint_honors_run_expiry(tmp_path: Path) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(
+        tmp_path,
+        worker=_fake_worker,
+        executor=executor,
+        retention_seconds=0.1,
+    )
+    try:
+        with TestClient(create_app(manager)) as client:
+            response = client.post(
+                "/api/runs",
+                json={
+                    "model": "model",
+                    "system": "h200_sxm",
+                    "total_gpus": 1,
+                    "ttft": 1,
+                    "tpot": 1,
+                },
+            )
+            run_id = response.json()["run_id"]
+            state = _wait_for_completion(client, run_id)
+            asset_id = state["visualizations"][0]["id"]
+            time.sleep(0.15)
+            assert client.get(f"/api/runs/{run_id}/visualizations/{asset_id}").status_code == 404
+    finally:
+        manager.close()
+
+
+def test_pareto_discovery_requires_one_contained_png(tmp_path: Path) -> None:
+    png = bytes.fromhex(
+        "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
+        "0000000d49444154789c6360f8cfc000000301010018dd8db40000000049454e44ae426082"
+    )
+    (tmp_path / "pareto_frontier.png").write_bytes(png)
+    discovered = _discover_pareto_frontier(tmp_path)
+    assert len(discovered) == 1
+    assert discovered[0].width == 1
+    assert discovered[0].height == 1
+
+    (tmp_path / "nested").mkdir()
+    (tmp_path / "nested" / "pareto_frontier.png").write_bytes(png)
+    assert _discover_pareto_frontier(tmp_path) == ()
 
 
 def test_health_readiness_and_metrics_are_exposed(tmp_path: Path) -> None:

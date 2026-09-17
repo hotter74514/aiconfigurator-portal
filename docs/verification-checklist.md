@@ -57,6 +57,9 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   completed returns a run-scoped ZIP with safe headers and expected generated files.
 - [x] Attempts to influence a run path or include sibling-run files fail; only files
   under the server-generated run root are archived.
+- [x] A completed run exposes one verified same-run Pareto PNG with caption,
+  alternative text, scope/axis notes, and the ranked-table exact-value fallback;
+  ambiguous, missing, non-PNG, symlink, and path-escape assets are not served.
 - [x] One-hour TTL cleanup removes terminal metadata/files; active work is retained;
   startup removes or reconciles documented orphan state.
 - [ ] Full/unwritable temporary storage fails the run clearly while live/ready remain

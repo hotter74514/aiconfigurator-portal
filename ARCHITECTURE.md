@@ -22,8 +22,8 @@ deployment manifest. The checked-in deployment has been exercised on Minikube.
 |---|---|---|---|
 | Engineering harness | Planning, decision, verification, and handoff workflow | Markdown and Make targets | Repository owner |
 | Application | FastAPI app factory, liveness, and metadata boundary | `portal.app:create_app`; `/health/live`; `/` | Repository owner |
-| Adapter boundary | Typed request/result protocol and deterministic fake | `portal.adapters.AiconfiguratorAdapter` | Repository owner |
-| Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts | `portal.aiconfigurator:AiconfiguratorSdkAdapter` | Repository owner |
+| Adapter boundary | Typed request/result protocol, visualization metadata, and deterministic fake | `portal.adapters.AiconfiguratorAdapter` | Repository owner |
+| Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts/verified Pareto output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |
 | Deployment | Non-root single-replica container on Kubernetes with probes and bounded ephemeral storage | `Dockerfile`; `deploy/portal.yaml`; ClusterIP HTTP service | Repository owner |
 
 ## Proposed Data and Control Flow
@@ -63,6 +63,8 @@ run metadata would be local and ephemeral for the assignment scope.
 - **Safety:** Never shell-interpolate user input or auto-apply generated manifests.
 - **Honest output:** Every result/download view says estimates require real benchmark
   validation.
+- **Traceable visualization:** The portal serves only the pinned SDK's contained
+  `pareto_frontier.png`; exact values remain available in the ranked table.
 
 ## Decision Links
 

@@ -46,10 +46,20 @@
       <section id="results" hidden>
         <h2>Ranked configurations</h2>
         <p>These are model estimates, not benchmark results.</p>
-        <table>
-          <thead><tr><th>Rank</th><th>Mode</th><th>Throughput (tokens/s)</th><th>TTFT (ms)</th><th>TPOT (ms)</th><th>GPUs</th></tr></thead>
-          <tbody id="result-rows"></tbody>
-        </table>
+        <section id="visualization" hidden aria-labelledby="visualization-heading">
+          <h3 id="visualization-heading">Pareto frontier</h3>
+          <p id="visualization-caption"></p>
+          <p id="visualization-scope"></p>
+          <p id="visualization-axis"></p>
+          <img id="visualization-image" alt="" hidden style="max-width: 100%; height: auto;">
+          <p id="visualization-fallback">The exact-value ranked table below is the fallback when the generated visualization is unavailable.</p>
+        </section>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead><tr><th>Rank</th><th>Mode</th><th>Throughput (tokens/s)</th><th>TTFT (ms)</th><th>TPOT (ms)</th><th>GPUs</th></tr></thead>
+            <tbody id="result-rows"></tbody>
+          </table>
+        </div>
         <p><a id="download" hidden>Download generated artifacts</a></p>
       </section>
     </main>
@@ -61,11 +71,22 @@
       const results = document.getElementById('results');
       const rows = document.getElementById('result-rows');
       const download = document.getElementById('download');
+      const visualization = document.getElementById('visualization');
+      const visualizationCaption = document.getElementById('visualization-caption');
+      const visualizationScope = document.getElementById('visualization-scope');
+      const visualizationAxis = document.getElementById('visualization-axis');
+      const visualizationImage = document.getElementById('visualization-image');
+      visualizationImage.addEventListener('error', () => {
+        visualizationImage.hidden = true;
+      });
 
       const value = (id) => document.getElementById(id).value;
       const clearResults = () => {
         results.hidden = true;
         download.hidden = true;
+        visualization.hidden = true;
+        visualizationImage.hidden = true;
+        visualizationImage.removeAttribute('src');
         rows.replaceChildren();
       };
       const showError = (message) => {
@@ -85,6 +106,18 @@
             row.appendChild(cell);
           }
           rows.appendChild(row);
+        }
+        const asset = (payload.visualizations || [])[0];
+        if (asset) {
+          visualizationCaption.textContent = asset.caption;
+          visualizationScope.textContent = asset.scope_note;
+          visualizationAxis.textContent = asset.axis_note;
+          visualizationImage.alt = asset.alt_text;
+          visualizationImage.src = asset.url;
+          visualizationImage.width = asset.width;
+          visualizationImage.height = asset.height;
+          visualizationImage.hidden = false;
+          visualization.hidden = false;
         }
         download.href = `/api/runs/${payload.run_id}/artifacts`;
         download.hidden = false;
