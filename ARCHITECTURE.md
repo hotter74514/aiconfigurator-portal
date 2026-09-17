@@ -24,6 +24,7 @@ deployment manifest. The checked-in deployment has been exercised on Minikube.
 | Application | FastAPI app factory, liveness, anonymous capacity awareness, and metadata boundary | `portal.app:create_app`; `/health/live`; `/api/capacity`; `/` | Repository owner |
 | Adapter boundary | Typed request/result protocol, visualization metadata, and deterministic fake | `portal.adapters.AiconfiguratorAdapter` | Repository owner |
 | Completed-result cache | Bounded process-local cache for successful normalized bundles, fresh run IDs, and artifact materialization | `portal.cache.BoundedResultCache`; run-manager internal | Repository owner |
+| Browser-local run history | Capped, status-revalidated convenience index for one browser profile | `localStorage`; `/api/runs/{id}` status endpoint | Repository owner |
 | Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts/verified Pareto output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |
 | Deployment | Non-root single-replica container on Kubernetes with probes and bounded ephemeral storage | `Dockerfile`; `deploy/portal.yaml`; ClusterIP HTTP service | Repository owner |
 
@@ -54,6 +55,8 @@ run metadata would be local and ephemeral for the assignment scope.
   portal-normalization namespace; cache state is lost on restart.
 - Browser validation is required to use the Playwright MCP configured in
   `.codex/config.toml`.
+- Browser-local history is capped at 20 entries and stores no server-wide index;
+  malformed, expired, and unknown IDs are pruned through the existing status API.
 - Anonymous capacity awareness is a read-only aggregate view of this process's
   active and queued runs. It exposes no run IDs, request data, timestamps, IPs,
   cookies, or user labels; `admission_open` is informational and does not reserve

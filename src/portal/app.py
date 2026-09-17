@@ -9,6 +9,7 @@ from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from prometheus_client import CONTENT_TYPE_LATEST
 
@@ -75,6 +76,7 @@ def create_app(run_manager: RunManager | None = None) -> FastAPI:
         manager.close()
 
     app = FastAPI(title="Serving Configuration Portal", version=__version__, lifespan=lifespan)
+    app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
     @app.get("/health/live", tags=["health"])
     def live() -> dict[str, str]:

@@ -469,7 +469,9 @@ not required.
   access.
 - Narrow checks, then `make check` and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete. Client contract tests and Playwright MCP browser evidence cover
+the cap, ordering, malformed/expired/unknown pruning, refresh restore, clear action,
+browser isolation, narrow layout, and keyboard access.
 
 ### Stage 10: Add Anonymous Multi-User Capacity Awareness
 

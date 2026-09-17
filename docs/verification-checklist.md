@@ -100,13 +100,17 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 
 - [x] Desktop viewport: submit the documented default, observe queued/running,
   inspect ordered results and estimate warning, and download/inspect the ZIP.
-- [ ] Narrow viewport: all form controls, status, result fields, warning, and download
-  remain usable; record viewport and screenshot only if useful for evidence.
+- [x] Narrow viewport: all form controls, status, result fields, warning, and download
+  remain usable; record viewport and screenshot only if useful for evidence. TASK-010
+  exercised the history controls, completed result path, and ZIP download at `390x844`
+  (see `docs/evidence/task-010-browser-local-run-history.md`).
 - [x] TASK-011 Playwright MCP coverage: two isolated contexts observe the same
   aggregate pressure, the capacity banner shows saturation, visibility-aware polling
   pauses and resumes, and keyboard focus reaches and activates submission.
 - [ ] Keyboard-only: labels, focus order, submission, status announcement, result
-  navigation, retry, and download are usable.
+  navigation, retry, and download are usable. TASK-010 recorded the labeled input-to-
+  submit focus order and keyboard-accessible history/clear controls; full retry/download
+  keyboard coverage remains unverified.
 - [ ] Client and server validation: invalid field and dependency failure each show a
   recoverable message without a browser console error.
 - [ ] Polling stops after completed/failed state and does not issue duplicate

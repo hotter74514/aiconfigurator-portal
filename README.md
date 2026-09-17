@@ -45,3 +45,16 @@ capacity requests when the page is hidden. The counts are informational and do n
 reserve a slot. This portal has no accounts, ownership, reservation, fairness, or
 quota enforcement; a submission can still race with another caller and receive the
 documented retryable `429` response.
+
+## Browser-local recent runs
+
+The page keeps up to 20 recent run summaries in browser `localStorage`. Each entry
+contains only the opaque run ID, client submission time, and the request values needed
+to restore the form. On page load the browser revalidates each ID through the existing
+status endpoint and removes malformed, expired, or unknown entries. The clear action
+deletes this browser-only index; it does not delete server-side run data.
+
+This is convenience history, not an account, ownership, authorization, privacy
+boundary, audit log, or durable/cross-device history. It can disappear when site data
+is cleared, after a portal restart, or when the server's one-hour run retention
+expires. Anyone sharing the same browser profile may see its summaries.

@@ -69,7 +69,9 @@ def test_app_factory_exposes_liveness_and_metadata() -> None:
         assert "No universal winner is declared" in page.text
         assert "Shared capacity" in page.text
         assert "no accounts, ownership, or reservation" in page.text
-        assert "visibilitychange" in page.text
+        assert "Recent runs in this browser" in page.text
+        assert "/static/portal.mjs" in page.text
+        assert client.get("/api/runs").status_code == 405
 
 
 def test_fake_adapter_returns_stable_rows_and_artifact(tmp_path: Path) -> None:

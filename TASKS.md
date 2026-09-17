@@ -141,7 +141,7 @@ must contain exact commands and observations, not only a checked box.
     in-flight exclusion, TTL/LRU bounds, metrics, restart loss, and container
     smoke are recorded.
 
-- [ ] **TASK-010 — Restore browser-known runs**
+- [x] **TASK-010 — Restore browser-known runs**
   - **Outcome:** The same browser can reopen up to 20 still-valid runs without a
     server-wide run enumeration endpoint.
   - **Scope:** Capped browser `localStorage`, status revalidation/pruning, clear action,
@@ -151,7 +151,9 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** Client tests cover cap/prune/order/malformed storage; Playwright MCP
     covers refresh, expiry, clear, two-context separation, narrow, and keyboard
     behavior; configured checks pass.
-  - **Evidence:** Not started.
+  - **Evidence:** See `docs/evidence/task-010-browser-local-run-history.md`. The
+    capped client history, status revalidation/pruning, clear action, refresh restore,
+    isolated browser storage, narrow layout, and keyboard behavior are recorded.
 
 - [x] **TASK-011 — Show anonymous shared capacity**
   - **Outcome:** Browsers can see aggregate active/queued pressure without seeing run
