@@ -25,6 +25,11 @@ def _slow_fake_worker(request: RunRequest, output_dir: str) -> RunResult:
     return _fake_worker(request, output_dir)
 
 
+def _storage_failure_worker(request: RunRequest, output_dir: str) -> RunResult:
+    del request, output_dir
+    raise OSError("No space left on device")
+
+
 def _unsafe_visualization_worker(request: RunRequest, output_dir: str) -> RunResult:
     result = _fake_worker(request, output_dir)
     asset = result.visualizations[0]
@@ -146,6 +151,68 @@ def test_run_manager_marks_overdue_work_failed(tmp_path: Path) -> None:
         assert state is not None
         assert state.status == "failed"
         assert state.error == "run exceeded 0.01s timeout"
+    finally:
+        manager.close()
+
+
+def test_shutdown_stops_admission_fails_queue_and_allows_active_work_to_finish(
+    tmp_path: Path,
+) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(
+        tmp_path,
+        worker=_slow_fake_worker,
+        executor=executor,
+        max_active=1,
+        max_queued=1,
+    )
+    request = RunRequest("model", "h200_sxm", 1, 1000, 10)
+    active = manager.submit(request)
+    queued = manager.submit(request)
+
+    manager.close()
+
+    assert manager.stats()["ready"] is False
+    assert manager.capacity()["admission_open"] is False
+    assert manager.snapshot(queued.run_id).status == "failed"  # type: ignore[union-attr]
+    assert manager.snapshot(queued.run_id).error == "service shutting down"  # type: ignore[union-attr]
+    with pytest.raises(RuntimeError, match="run service is shutting down"):
+        manager.submit(request)
+
+    deadline = time.monotonic() + 2
+    active_state = manager.snapshot(active.run_id)
+    while (
+        active_state is not None
+        and active_state.status == "running"
+        and time.monotonic() < deadline
+    ):
+        time.sleep(0.01)
+        active_state = manager.snapshot(active.run_id)
+    assert active_state is not None
+    assert active_state.status == "completed"
+
+
+def test_storage_failure_is_actionable_without_breaking_probes(tmp_path: Path) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(tmp_path, worker=_storage_failure_worker, executor=executor)
+    try:
+        with TestClient(create_app(manager)) as client:
+            response = client.post(
+                "/api/runs",
+                json={
+                    "model": "model",
+                    "system": "h200_sxm",
+                    "total_gpus": 1,
+                    "ttft": 1,
+                    "tpot": 1,
+                },
+            )
+            state = _wait_for_completion(client, response.json()["run_id"])
+
+            assert state["status"] == "failed"
+            assert state["error"] == "OSError: No space left on device"
+            assert client.get("/health/live").json() == {"status": "ok"}
+            assert client.get("/health/ready").json() == {"status": "ok"}
     finally:
         manager.close()
 
