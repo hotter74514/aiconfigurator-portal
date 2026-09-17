@@ -178,6 +178,22 @@ must contain exact commands and observations, not only a checked box.
     browser, `make check`, and `git diff --check` gates pass.
   - **Evidence:** Not started.
 
+- [ ] **TASK-013 — Refresh the portal UI as a precision planning workspace**
+  - **Outcome:** The existing end-to-end workflow is visually polished, responsive,
+    accessible, and easier to scan without changing application semantics.
+  - **Scope:** Apply a pinned framework-agnostic frontend-design skill to the Jinja2
+    template, a dedicated CSS token/style layer, and minimal presentation-state
+    changes in native JavaScript. Audit the result with current web interface
+    guidelines. No frontend framework, runtime CDN, external font dependency, API
+    change, storage change, or new identity/security claim.
+  - **Dependencies:** TASK-012; the Stage 11 design brief and baseline state matrix.
+  - **Verify:** Tests cover static delivery and any extracted client view logic;
+    Playwright MCP covers desktop, 390 px, 320 px, zoom, keyboard, reduced motion,
+    complete/failed/saturated/fallback/history states, and the full submit-to-download
+    flow; all configured completion gates pass.
+  - **Evidence:** Not started; planned location is
+    `docs/evidence/task-013-ui-refresh.md`.
+
 ## Status Rules
 
 - `[ ]` Not started or blocked; add a blocker note when applicable.

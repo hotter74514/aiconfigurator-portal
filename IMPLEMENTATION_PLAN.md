@@ -527,8 +527,175 @@ validation, and pinned-container real-sweep latency evidence are recorded.
   accepted, implemented, or reverted independently. An incomplete stage remains
   unshipped rather than weakening its gate.
 
+## UI Refresh Extension: Precision Planning Workspace
+
+### Direction and Boundaries
+
+Refresh the portal as a calm, high-density engineering workspace rather than a
+generic marketing dashboard. The page should make the primary sequence immediately
+clear: define a workload, observe the run, compare trade-offs, then download the
+generated artifacts. Visual polish must improve comprehension without changing the
+run API, storage, worker, cache, or security boundaries.
+
+Use the framework-agnostic `frontend-design` skill as the art-direction and
+implementation guide. Use `web-design-guidelines` as a separate post-implementation
+audit for interaction, accessibility, responsive behavior, and copy. Record the
+exact upstream source and commit used before implementation; do not silently update
+a skill midway through the work. The internal marketplace candidates are not the
+default: `fedex-dev` assumes React/Tonic migration concerns that this portal does not
+have, while a full `ux-atelier` adoption would add a prototype/handoff workflow that
+is larger than this single-page refresh needs.
+
+Keep FastAPI, Jinja2, and native JavaScript. Add no frontend framework, component
+library, package manager, build pipeline, analytics, external font CDN, or runtime
+network dependency. A proposal that needs any of those changes crosses the current
+architecture boundary and must stop for owner review and, if material, a Proposed
+ADR. Preserve every API contract, DOM hook used by `portal.mjs`, estimate warning,
+history limitation, and anonymous-capacity limitation.
+
+The implementation begins only after TASK-012 reconciles the existing optional
+feature evidence. Estimated effort is 4–6 hours plus review time.
+
+### Stage 11: Baseline the Existing Experience and Lock the Design Brief
+
+**Goal:** Establish an evidence-backed visual direction and regression baseline
+before changing markup or styles.
+
+**Work:**
+
+1. Install or load the selected `frontend-design` skill in personal Codex scope,
+   pin its upstream revision in task evidence, and confirm that it requires no
+   shipped runtime dependency.
+2. Use Playwright MCP to capture the current page at 1440×900 and 390×844 for ready,
+   running, completed, failed, saturated, empty-history, and populated-history
+   states. Record keyboard order and obvious overflow or hierarchy problems.
+3. Produce a one-page design brief for a “precision planning workspace”: restrained
+   neutral surfaces, one clear action color, tabular/monospace treatment for metrics,
+   strong status semantics, and motion limited to state feedback.
+4. Map the existing DOM IDs and JavaScript behaviors that must remain stable. Define
+   a CSS token set for color, type, spacing, radius, shadow, focus, and state colors.
+
+**Success Criteria:** The before-state evidence is reproducible; the brief identifies
+the primary task, information hierarchy, responsive strategy, and complete UI-state
+matrix; no product or architecture requirement is inferred from the design skill.
+
+**Tests / Evidence:** Playwright MCP screenshots and keyboard notes, existing narrow
+tests, `make check`, and `git diff --check`.
+
+**Status:** Not Started.
+
+### Stage 12: Build the Visual Foundation and Responsive Shell
+
+**Goal:** Give the page an intentional, accessible visual system without changing
+application behavior.
+
+**Work:**
+
+1. Add a dedicated static stylesheet and link it from the Jinja template. Define
+   semantic CSS custom properties rather than scattering literal colors and sizes.
+2. Restructure presentation markup into a responsive workspace: concise product
+   header, prominent estimate warning, clear configuration panel, compact run-status
+   and shared-capacity region, and a results workspace that receives the most space.
+3. Style native inputs, select, buttons, links, focus rings, disabled states, tables,
+   and cards consistently. Keep native semantics and visible labels; use decoration
+   only when it does not become the sole carrier of meaning.
+4. Use one-column flow on narrow viewports and a measured desktop grid. Avoid
+   horizontal page overflow; contain wide comparison and results tables locally.
+5. Respect `prefers-reduced-motion`, browser zoom, forced colors where practical,
+   and mobile target/input sizing. Do not hide content solely to simplify layout.
+
+**Success Criteria:** The ready state has a clear first action and readable hierarchy
+at 320 px through desktop widths; all controls have visible hover/focus/disabled
+states; the page loads with no new runtime network request or frontend dependency.
+
+**Tests / Evidence:** Template/static-asset tests first; Playwright MCP desktop,
+390 px, 320 px, 200% zoom, keyboard, reduced-motion, and no-horizontal-page-overflow
+checks; then `make check` and `git diff --check`.
+
+**Status:** Not Started.
+
+### Stage 13: Polish Run, Result, Comparison, and History States
+
+**Goal:** Make every asynchronous state and decision surface easy to scan without
+changing lifecycle semantics.
+
+**Work:**
+
+1. Add presentation-only status classes or `data-*` state attributes in
+   `portal.mjs`; keep polling intervals, error handling, history behavior, and API
+   payloads unchanged.
+2. Render queued/running/completed/failed and capacity states with consistent text,
+   iconography, color, and live-region behavior. Preserve actionable sanitized
+   errors and do not rely on color alone.
+3. Improve comparison and ranked-result hierarchy with metric cards or grouped
+   headings, aligned numerals, table captions/header scopes, explicit units, and a
+   prominent artifact-download action. Preserve exact values and the no-universal-
+   winner and benchmark warnings.
+4. Make recent runs compact and scannable while retaining all browser-only,
+   expiry, shared-profile, and no-ownership caveats.
+5. Cover visualization available, loading, and image-error fallback states without
+   replacing the exact-value table.
+
+**Success Criteria:** Every state in the Stage 11 matrix is visually distinct,
+keyboard reachable, understandable without color, and consistent on narrow and
+desktop layouts; no API, caching, history, or security behavior changes.
+
+**Tests / Evidence:** Add deterministic client tests for any extracted state-to-view
+logic and update server template assertions where wording changes. Use Playwright MCP
+for the full submit → progress → result → download path plus failure, saturation,
+history restore/clear, visualization fallback, comparison unavailable, and two-
+context capacity scenarios. Run narrow checks, then `make check` and
+`git diff --check`.
+
+**Status:** Not Started.
+
+### Stage 14: Audit, Regress, and Hand Off the Refresh
+
+**Goal:** Prove that visual polish did not weaken function, accessibility,
+operability, or documentation.
+
+**Work:**
+
+1. Run the `web-design-guidelines` skill against the changed template, stylesheet,
+   and client script. Resolve applicable findings or record a concrete rationale.
+2. Compare before/after Playwright MCP captures at identical viewports and states.
+   Review hierarchy, density, contrast, focus visibility, overflow, motion, loading,
+   empty, and error behavior.
+3. Execute the complete repository completion gate and the behavior-level path in
+   `docs/verification-checklist.md`, including the real container flow where the UI
+   consumes real normalized results.
+4. Record changed files, exact commands/results, skill source revisions, known
+   limitations, and rollback notes in `docs/evidence/task-013-ui-refresh.md`. Update
+   README screenshots or UI descriptions only from observed final behavior.
+
+**Success Criteria:** Applicable formatter, lint, type, unit, client, integration,
+build, Playwright MCP, `make check`, and `git diff --check` gates pass; functional
+behavior and warnings remain intact; git status contains only intentional changes.
+
+**Tests / Evidence:** The complete configured gate, browser state matrix, container
+smoke, before/after evidence, source-revision record, and final self-review.
+
+**Status:** Not Started.
+
+### UI Refresh Risks and Rollback
+
+- A visually ambitious skill can overproduce motion, decoration, or marketing-style
+  layouts. The engineering-workspace brief, reduced-motion gate, and state matrix
+  constrain that tendency.
+- Copy simplification can accidentally weaken required estimate, privacy, capacity,
+  or retention disclosures. Treat those messages as acceptance criteria, not visual
+  clutter.
+- Template restructuring can break JavaScript ID hooks or live regions. Inventory
+  those hooks first and keep behavior changes in separately tested client helpers.
+- Wide metric tables remain legitimate dense data. Preserve exact-value tables and
+  use contained scrolling instead of collapsing or hiding decision data.
+- Each stage is a focused, reversible commit. Revert the stage if its visual gains
+  cannot pass the same functional and accessibility checks as the baseline.
+
 ## References
 
 - [AIConfigurator README](https://github.com/ai-dynamo/aiconfigurator/blob/main/README.md)
 - [AIConfigurator CLI User Guide](https://github.com/ai-dynamo/aiconfigurator/blob/main/docs/cli_user_guide.md)
 - [AIConfigurator Support Matrix](https://ai-dynamo.github.io/aiconfigurator/support-matrix/)
+- [Anthropic Frontend Design plugin](https://github.com/anthropics/claude-code/tree/main/plugins/frontend-design)
+- [Vercel Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines)
