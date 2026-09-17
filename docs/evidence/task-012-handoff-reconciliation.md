@@ -3,18 +3,13 @@
 ## Status
 
 **Blocked on 2026-09-18.** Automated, clean-checkout, container, offline dependency,
-shutdown, storage-failure, documentation, history, and source/image hygiene evidence
-is complete. Two required final gates could not be completed:
-
-1. Playwright MCP could not acquire its configured Chrome profile after three
-   attempts, so the remaining full keyboard, validation/failure, and terminal
-   polling browser scenarios were not rerun.
-2. The rebuilt Linux/amd64 OCI index could not be selected by the existing arm64
-   Minikube node, so the final rollout and pod-deletion restart-loss scenario were
-   not rerun against the current image.
-
-No alternate browser automation was substituted and neither blocker is represented
-as a passing result.
+shutdown, storage-failure, documentation, history, source/image hygiene, terminal
+polling, and all local-cluster gates are complete. The owner released the original
+Playwright profile lock, but keyboard activation of the artifact link closed the MCP
+transport. Tab listing and fresh navigation returned the same `Transport closed`
+error, reaching the repository's three-attempt stop condition. Full keyboard
+download and dependency-failure/retry browser scenarios remain unchecked. No other
+browser automation was substituted.
 
 ## Automated and Clean-Checkout Gates
 
@@ -128,28 +123,36 @@ Its live and ready endpoints returned `200`, and a real API run with ID
 `aiconfigurator-0.11.0` with six rows and one visualization. Its artifact endpoint
 returned `200` with the same 122,825-byte, 72-entry ZIP.
 
-## Playwright MCP Blocker
+## Playwright MCP Revalidation and Remaining Blocker
 
-The repository's configured Playwright MCP was the only browser mechanism attempted.
-The following calls were made against a local deterministic fake-adapter server:
+The repository's configured Playwright MCP was the only browser automation used.
+After the owner released the old profile lock, it loaded the deterministic
+fake-adapter server at `http://127.0.0.1:18767/` and freshly proved:
 
-1. navigate to `http://127.0.0.1:18767/`;
-2. list browser tabs;
-3. close the current browser session.
+- Tab order was `model → system → total_gpus → ttft → tpot → isl → osl → submit`,
+  with every input exposed by its visible label.
+- A GPU count of zero was natively invalid with `Value must be greater than or equal
+  to 1.`; status remained `Ready.`, submission stayed enabled, and no POST occurred.
+- Keyboard focus reached Submit and Enter completed a two-row fake run. A second
+  immediate Enter did not duplicate the submission.
+- The network trace contained exactly one `POST /api/runs` and one terminal
+  `GET /api/runs/{id}`. After three more seconds it was unchanged, proving terminal
+  polling stopped.
+- From Submit, keyboard focus continued through the saved-run button and clear
+  button to the run-scoped artifact link.
 
-All returned the same error:
+Pressing Enter on the focused artifact link returned:
 
 ```text
-Browser is already in use for
-/Users/sean_yang/Library/Caches/ms-playwright-mcp/mcp-chrome-e7abbf9
+Transport closed
 ```
 
-The local server was then stopped. Earlier TASK-007 through TASK-011 Playwright MCP
-evidence remains valid for the feature commits, but TASK-012 does not claim a fresh
-pass for the remaining keyboard-only, invalid/dependency-failure, or polling-stop
-scenarios.
+Tab listing and a fresh navigation then returned the same error. Work stopped after
+those three occurrences. The MCP transport cannot confirm the download event and
+could not proceed to the dependency-failure/retry scenario, so those checks remain
+open. Earlier TASK-007 through TASK-011 evidence remains valid.
 
-## Minikube Blocker
+## Minikube Architecture Resolution and Cluster Evidence
 
 The active context was the local `aiconfigurator` profile: Minikube 1.39.0,
 Kubernetes 1.37.0, arm64 node. The current manifest dry-run passed. Three materially
@@ -169,9 +172,34 @@ failed to create containerd container: error unpacking image:
 no match for platform in manifest: not found
 ```
 
-The error occurs before the node can invoke its qemu/binfmt handler. Earlier
-TASK-005/TASK-006 cluster evidence proved the prior image and real flow on this
-profile, but the current-image rollout and pod-deletion/`404` check remain unverified.
+The error occurred before the node could invoke its qemu/binfmt handler. The portable
+resolution was to leave the verified amd64 release image and checked-in manifest
+unchanged, then build a local-only image matching the node:
+
+```text
+docker buildx build --platform linux/arm64 --load \
+  -t serving-configuration-portal:local-arm64 .
+minikube image load serving-configuration-portal:local-arm64 \
+  --profile aiconfigurator
+kubectl set image deployment/serving-configuration-portal \
+  portal=serving-configuration-portal:local-arm64
+```
+
+The image identified itself as `linux/arm64`; Minikube loaded it successfully, the
+new ReplicaSet reached one ready replica, and pod events recorded image pull,
+container creation, and start without the platform error.
+
+Through a Service port-forward, `/health/live` and `/health/ready` returned `200`.
+A real Qwen/H200 run `2b7e848bd0b24cdda30eb872affaf1fc` moved from running to
+completed with `aiconfigurator-0.11.0`, six rows, and one visualization. Its artifact
+download was 122,825 bytes with 72 ZIP entries. Metrics reported one submitted and
+one completed run with zero active, queued, or failed runs; pod logs contained the
+real SDK experiment and request lifecycle.
+
+For restart loss, run `0a0713af68bb4a8b935926b58e7f3d23` was confirmed running
+before deleting its pod. The replacement reached `1/1 Running`; a fresh
+port-forward returned `404 {"error":"run not found"}` for the old ID. The local
+Deployment is currently healthy on `serving-configuration-portal:local-arm64`.
 
 ## Documentation and History Reconciliation
 
@@ -189,10 +217,7 @@ profile, but the current-image rollout and pod-deletion/`404` check remain unver
 
 ## Remaining Work to Close TASK-012
 
-1. Release or isolate the configured Playwright MCP Chrome profile, then execute and
-   record the three unchecked browser scenarios without another browser tool.
-2. Use an x86-64 Kubernetes node, or a verified containerd single-manifest import
-   procedure on the arm64 profile, then rerun rollout/service/real-run/ZIP checks and
-   delete the pod during an active run to prove the documented `404` loss behavior.
-3. Rerun the final repository gates, confirm intentional git status, update this
+1. Restart or reconnect the configured Playwright MCP transport, then finish keyboard
+   download confirmation and dependency-failure/retry without another browser tool.
+2. Rerun the final repository gates, confirm intentional git status, update this
    report and checklist, and only then mark TASK-012 complete.

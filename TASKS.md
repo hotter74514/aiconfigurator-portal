@@ -178,10 +178,13 @@ must contain exact commands and observations, not only a checked box.
     browser, `make check`, and `git diff --check` gates pass.
   - **Evidence:** Partial evidence is in
     `docs/evidence/task-012-handoff-reconciliation.md`.
-  - **Blockers:** The configured Playwright MCP Chrome profile remained locked after
-    three attempts, and the local arm64 Minikube node rejected the rebuilt amd64-only
-    OCI index before qemu execution. Browser-only and pod-deletion gates remain
-    unchecked; no substitute evidence is claimed.
+  - **Blocker:** The Kubernetes architecture mismatch and all cluster gates are now
+    resolved with an architecture-matched local image. Playwright MCP connected and
+    passed client validation, keyboard submit/result navigation, single submission,
+    and terminal polling, but its transport closed when keyboard-activating the ZIP
+    download and remained closed for two reconnect attempts. Full keyboard download
+    and dependency-failure/retry gates remain unchecked; no substitute evidence is
+    claimed.
 
 - [ ] **TASK-013 — Refresh the portal UI as a precision planning workspace**
   - **Outcome:** The existing end-to-end workflow is visually polished, responsive,

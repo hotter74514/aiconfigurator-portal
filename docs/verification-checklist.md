@@ -91,13 +91,13 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 - [x] Deployment has one replica, `Recreate`, startup/live/ready probes, explicit
   requests/limits, termination grace, bounded `emptyDir`, and restrictive security
   context compatible with the application.
-- [ ] Service routing, rollout, logs, metrics, real run, result polling, and ZIP
-  download succeed on an available local cluster. Earlier evidence passed, but the
-  TASK-012 rebuild could not be re-imported into the arm64 Minikube node because
-  containerd rejected the amd64-only OCI index before qemu execution.
-- [ ] Pod deletion during a run demonstrates the documented loss/`404` behavior
-  after restart; no durability claim is made. Container SIGTERM/restart loss passed,
-  but the final pod-deletion rerun is blocked by the cross-architecture image import.
+- [x] Service routing, rollout, logs, metrics, real run, result polling, and ZIP
+  download succeed on an available local cluster. TASK-012 used an arm64 local-only
+  image matching the arm64 Minikube node while retaining the amd64 release image.
+- [x] Pod deletion during a run demonstrates the documented loss/`404` behavior
+  after restart; no durability claim is made. Run
+  `0a0713af68bb4a8b935926b58e7f3d23` was running before deletion and returned `404`
+  from the replacement pod.
 
 ## Browser Validation — Playwright MCP Only
 
@@ -111,16 +111,20 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   aggregate pressure, the capacity banner shows saturation, visibility-aware polling
   pauses and resumes, and keyboard focus reaches and activates submission.
 - [ ] Keyboard-only: labels, focus order, submission, status announcement, result
-  navigation, retry, and download are usable. TASK-010 recorded the labeled input-to-
-  submit focus order and keyboard-accessible history/clear controls; full retry/download
-  keyboard coverage remains unverified.
+  navigation, retry, and download are usable. TASK-012 freshly verified the labeled
+  input-to-submit focus order, Enter submission, completed result, history controls,
+  and focus reaching the run-scoped download link. Activating that link with Enter
+  closed the MCP transport, so download completion and failure/retry remain unverified.
 - [ ] Client and server validation: invalid field and dependency failure each show a
-  recoverable message without a browser console error.
-- [ ] Polling stops after completed/failed state and does not issue duplicate
-  submissions on repeated clicks.
+  recoverable message without a browser console error. TASK-012 verified native
+  invalid-GPU validation without a POST; the dependency-failure rerun remains blocked.
+- [x] Polling stops after completed/failed state and does not issue duplicate
+  submissions on repeated clicks. Two Enter presses produced one POST and one terminal
+  GET; the request list stayed unchanged during a further three-second interval.
 - [x] If Playwright MCP is unavailable, record the blocker and leave these unchecked;
-  do not substitute another browser automation tool. On 2026-09-18, navigate, tab
-  listing, and close all failed on the same `mcp-chrome-e7abbf9` profile lock.
+  do not substitute another browser automation tool. On retry, the old profile lock
+  was gone and fresh validation ran until keyboard download closed the transport;
+  tab listing and navigation then returned the same `Transport closed` error.
 
 ## Trust and Product Safety
 

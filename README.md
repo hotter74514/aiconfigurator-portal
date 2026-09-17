@@ -38,10 +38,10 @@ wheel is not available natively on Apple Silicon macOS.
 | kubectl | 1.37.0 client | Manifest validation/deployment |
 | Minikube | 1.39.0 | Optional local-cluster verification |
 
-Docker needs enough capacity for the declared two CPUs and 4 GiB memory. An x86-64
-Kubernetes node is the supported deployment path. Running the amd64 image through an
-arm64 Minikube node requires a working binfmt/qemu and containerd import setup and is
-not a portable guarantee.
+Docker needs enough capacity for the declared two CPUs and 4 GiB memory. The release
+image and checked-in manifest target x86-64. For local validation on an arm64
+Minikube node, build and load an architecture-matched image as shown below rather
+than relying on binfmt/qemu to select an amd64 OCI index.
 
 ## Quick Start
 
@@ -178,6 +178,19 @@ Deploy to an x86-64 cluster where `serving-configuration-portal:local` is availa
 kubectl apply -f deploy/portal.yaml
 kubectl rollout status deployment/serving-configuration-portal --timeout=180s
 kubectl port-forward service/serving-configuration-portal 8080:80
+```
+
+For local-only validation on an arm64 Minikube profile, keep the amd64 release image
+and manifest unchanged and override only the live Deployment:
+
+```sh
+docker buildx build --platform linux/arm64 --load \
+  -t serving-configuration-portal:local-arm64 .
+minikube image load serving-configuration-portal:local-arm64 \
+  --profile aiconfigurator
+kubectl set image deployment/serving-configuration-portal \
+  portal=serving-configuration-portal:local-arm64
+kubectl rollout status deployment/serving-configuration-portal --timeout=180s
 ```
 
 The manifest uses one `Recreate` replica, non-root UID/GID 10001, a read-only root
