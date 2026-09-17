@@ -46,6 +46,18 @@
       <section id="results" hidden>
         <h2>Ranked configurations</h2>
         <p>These are model estimates, not benchmark results.</p>
+        <section id="comparison" hidden aria-labelledby="comparison-heading">
+          <h3 id="comparison-heading">Aggregated vs disaggregated</h3>
+          <p id="comparison-status"></p>
+          <p id="comparison-definition"></p>
+          <p id="comparison-warning">No universal winner is declared. Compare each metric and validate the estimate with a real benchmark.</p>
+          <div style="overflow-x: auto;">
+            <table>
+              <thead><tr><th>Metric</th><th>agg (rank 1)</th><th>disagg (rank 1)</th><th>Absolute delta</th><th>Signed percentage delta</th><th>Availability</th></tr></thead>
+              <tbody id="comparison-rows"></tbody>
+            </table>
+          </div>
+        </section>
         <section id="visualization" hidden aria-labelledby="visualization-heading">
           <h3 id="visualization-heading">Pareto frontier</h3>
           <p id="visualization-caption"></p>
@@ -71,6 +83,10 @@
       const results = document.getElementById('results');
       const rows = document.getElementById('result-rows');
       const download = document.getElementById('download');
+      const comparison = document.getElementById('comparison');
+      const comparisonStatus = document.getElementById('comparison-status');
+      const comparisonDefinition = document.getElementById('comparison-definition');
+      const comparisonRows = document.getElementById('comparison-rows');
       const visualization = document.getElementById('visualization');
       const visualizationCaption = document.getElementById('visualization-caption');
       const visualizationScope = document.getElementById('visualization-scope');
@@ -84,6 +100,7 @@
       const clearResults = () => {
         results.hidden = true;
         download.hidden = true;
+        comparison.hidden = true;
         visualization.hidden = true;
         visualizationImage.hidden = true;
         visualizationImage.removeAttribute('src');
@@ -93,6 +110,35 @@
         error.textContent = message;
         status.textContent = 'Unable to complete the request.';
         submit.disabled = false;
+      };
+      const displayValue = (number, suffix = '') => number === null || number === undefined ? 'Unavailable' : `${number}${suffix}`;
+      const renderComparison = (payload) => {
+        const modes = payload.modes || {};
+        comparisonStatus.textContent = payload.available
+          ? 'Both serving modes have a comparable rank-one configuration.'
+          : `Comparison partially unavailable: ${payload.unavailable_reason || 'required values are missing.'}`;
+        comparisonDefinition.textContent = payload.delta_definition;
+        comparisonRows.replaceChildren();
+        for (const metric of payload.metrics || []) {
+          const row = document.createElement('tr');
+          const aggValue = modes.agg && modes.agg.metrics ? modes.agg.metrics[metric.name] : null;
+          const disaggValue = modes.disagg && modes.disagg.metrics ? modes.disagg.metrics[metric.name] : null;
+          const cells = [
+            `${metric.name} (${metric.unit})`,
+            displayValue(aggValue),
+            displayValue(disaggValue),
+            displayValue(metric.absolute_delta),
+            displayValue(metric.percentage_delta, metric.percentage_delta === null || metric.percentage_delta === undefined ? '' : '%'),
+            metric.unavailable_reason || 'Available',
+          ];
+          for (const text of cells) {
+            const cell = document.createElement('td');
+            cell.textContent = String(text);
+            row.appendChild(cell);
+          }
+          comparisonRows.appendChild(row);
+        }
+        comparison.hidden = false;
       };
       const render = (payload) => {
         status.textContent = `Completed with ${payload.results.length} configurations.`;
@@ -107,6 +153,13 @@
           }
           rows.appendChild(row);
         }
+        renderComparison(payload.comparison || {
+          available: false,
+          unavailable_reason: 'comparison data is unavailable.',
+          delta_definition: 'No comparison definition was provided.',
+          modes: {},
+          metrics: [],
+        });
         const asset = (payload.visualizations || [])[0];
         if (asset) {
           visualizationCaption.textContent = asset.caption;

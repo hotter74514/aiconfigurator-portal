@@ -79,21 +79,34 @@ class FakeAiconfiguratorAdapter:
                 "0000000d49444154789c6360f8cfc000000301010018dd8db40000000049454e44ae426082"
             )
         )
-        row = ConfigurationRow(
+        common_metrics: dict[str, float | int | str] = {
+            "model": request.model,
+            "system": request.system,
+            "tokens/s/gpu": 1.0 / request.total_gpus,
+            "num_total_gpus": request.total_gpus,
+        }
+        agg_row = ConfigurationRow(
             rank=1,
             serving_mode="agg",
             metrics={
-                "model": request.model,
-                "system": request.system,
+                **common_metrics,
                 "tokens/s": 1.0,
-                "tokens/s/gpu": 1.0 / request.total_gpus,
                 "ttft": request.ttft_ms,
                 "tpot": request.tpot_ms,
-                "num_total_gpus": request.total_gpus,
+            },
+        )
+        disagg_row = ConfigurationRow(
+            rank=1,
+            serving_mode="disagg",
+            metrics={
+                **common_metrics,
+                "tokens/s": 2.0,
+                "ttft": request.ttft_ms + 1.0,
+                "tpot": max(request.tpot_ms - 1.0, 0.001),
             },
         )
         return RunResult(
-            rows=(row,),
+            rows=(agg_row, disagg_row),
             artifact_dir=output_dir,
             source_version=self.source_version,
             visualizations=(

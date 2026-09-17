@@ -65,6 +65,8 @@ def test_app_factory_exposes_liveness_and_metadata() -> None:
         page = client.get("/")
         assert page.headers["content-type"].startswith("text/html")
         assert "Serving Configuration Portal" in page.text
+        assert "Aggregated vs disaggregated" in page.text
+        assert "No universal winner is declared" in page.text
 
 
 def test_fake_adapter_returns_stable_rows_and_artifact(tmp_path: Path) -> None:
@@ -176,6 +178,13 @@ def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
             metrics = results[0]["metrics"]
             assert isinstance(metrics, dict)
             assert metrics["tokens/s"] == 1.0
+            comparison = state["comparison"]
+            assert isinstance(comparison, dict)
+            assert comparison["available"] is True
+            assert comparison["modes"]["agg"]["rank"] == 1
+            assert comparison["modes"]["disagg"]["rank"] == 1
+            comparison_metrics = {metric["name"]: metric for metric in comparison["metrics"]}
+            assert comparison_metrics["tokens/s"]["percentage_delta"] == 100.0
             rendered_metrics = client.get("/metrics").text
             assert "portal_runs_submitted_total 1.0" in rendered_metrics
             assert "portal_runs_completed_total 1.0" in rendered_metrics

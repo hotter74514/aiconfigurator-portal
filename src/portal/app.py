@@ -14,6 +14,7 @@ from prometheus_client import CONTENT_TYPE_LATEST
 
 from portal import __version__
 from portal.artifacts import zip_directory
+from portal.comparison import build_comparison
 from portal.observability import PortalMetrics, configure_logging
 from portal.runs import QueueFullError, RunManager, RunSnapshot
 from portal.schemas import RunSubmission
@@ -39,6 +40,7 @@ def _snapshot_payload(snapshot: RunSnapshot) -> dict[str, Any]:
             }
             for row in snapshot.result.rows
         ]
+        payload["comparison"] = build_comparison(snapshot.result.rows).to_payload()
         payload["visualizations"] = [
             {
                 "id": asset.asset_id,
