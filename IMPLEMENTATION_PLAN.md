@@ -383,9 +383,9 @@ browser evidence are recorded in `docs/evidence/task-007-pareto-frontier.md`.
 selection, units, signs, zero division, rounding, and unavailable reasons; Playwright
 MCP desktop, narrow, and keyboard flows; `make check` and `git diff --check`.
 
-**Status:** Implementation and automated checks complete; Playwright MCP browser
-validation is blocked by an existing browser-session lock. Domain tests define
-rank-1 selection, signed deltas, rounding, and unavailable states.
+**Status:** Complete. Domain tests define rank-1 selection, signed deltas,
+rounding, and unavailable states; automated checks and Playwright MCP desktop,
+narrow, and keyboard validation are recorded in the task evidence.
 
 ### Stage 8: Add a Bounded Deterministic Result Cache
 

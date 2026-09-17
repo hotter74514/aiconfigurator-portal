@@ -57,18 +57,23 @@ percentage delta. The deterministic fake adapter supplies one rank-one row for
 each mode so the completed-run API and page contract are exercised without the
 Linux-only SDK.
 
-## Browser validation blocker
+## Playwright MCP browser checks
 
-The required Playwright MCP browser pass could not be executed in this session.
-The configured browser process was already owned by another session:
+On 2026-09-17, the local fake-adapter app was exercised through the configured
+Playwright MCP at `http://127.0.0.1:18084/`.
 
-```text
-browser_tabs(new/list): Browser is already in use for
-/Users/sean_yang/Library/Caches/ms-playwright-mcp/mcp-chrome-e7abbf9,
-use --isolated to run multiple instances of the same browser
-browser_navigate: same in-use error
-```
+- Desktop: submitted the default form and observed `Completed with 2
+  configurations.` The completed view showed the **Aggregated vs disaggregated**
+  heading, both rank-one mode values, absolute deltas, signed percentage deltas,
+  the delta definition, the no-universal-winner warning, and the raw ranked table.
+- Narrow viewport: resized to `390x844`. The form, comparison heading/status,
+  warning, and values remained visible. The comparison table measured 424.54 CSS
+  pixels inside a 374 pixel overflow container; `document.documentElement.scrollWidth`
+  remained 390, so the page itself did not horizontally overflow.
+- Keyboard: navigated to a fresh page, pressed `Tab` eight times, and confirmed
+  the **Estimate configurations** button was focused. Pressing `Enter` submitted
+  the form and the completed comparison appeared.
+- Browser console: zero errors and zero warnings. Network inspection showed one
+  `POST /api/runs` followed by status polling; no duplicate submission occurred.
 
-No alternate browser driver was used, and no browser completion is claimed.
-Desktop, narrow viewport, and keyboard checks remain to be run after the
-Playwright MCP session lock is released.
+No alternate browser driver was used.

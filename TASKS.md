@@ -111,7 +111,7 @@ must contain exact commands and observations, not only a checked box.
     the completed-run API serves it through a contained asset endpoint, and the
     Playwright MCP desktop/narrow/keyboard checks passed with the ranked table fallback.
 
-- [~] **TASK-008 — Compare aggregated and disaggregated results**
+- [x] **TASK-008 — Compare aggregated and disaggregated results**
   - **Outcome:** A completed two-mode run shows absolute metrics and correctly signed
     deltas without declaring a universal winner.
   - **Scope:** Verify rank semantics; add a server-owned optional comparison block;
@@ -123,8 +123,8 @@ must contain exact commands and observations, not only a checked box.
     keyboard behavior; configured checks pass.
   - **Evidence:** See `docs/evidence/task-008-aggregated-disaggregated.md`. The
     server-owned rank-one comparison, signed deltas, rounding, missing-value
-    handling, and deterministic API/UI coverage pass; Playwright MCP remains
-    blocked by an existing browser-session lock.
+    handling, automated checks, and Playwright MCP desktop/narrow/keyboard flows
+    pass.
 
 - [ ] **TASK-009 — Reuse identical completed results**
   - **Outcome:** A recent identical request avoids another sweep while receiving a
