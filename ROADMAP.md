@@ -44,8 +44,9 @@ The roadmap prioritizes a working, defensible must-have path within the assignme
 ## P4 — Verify and Hand Off
 
 - [ ] Execute automated, container, browser, overload, restart, and artifact checks
-  in `docs/verification-checklist.md`. TASK-012 revalidation reopened the final
-  browser and pod-restart gates; see the blocker note under P5.
+  in `docs/verification-checklist.md`. TASK-012 now has dependency-failure/retry
+  evidence; only keyboard download completion remains blocked by the Playwright MCP
+  target/context closure.
 - [x] Verify clean-checkout setup and the 15-minute demo path.
 - [x] Complete README architecture, design decisions, operations, and known
   limitations from observed evidence.
@@ -63,10 +64,10 @@ ADR to be Accepted and may be approved, implemented, or deferred independently.
 - [x] ADR-006: add capped browser-local recent-run history.
 - [x] ADR-007: add anonymous aggregate capacity awareness.
 
-Final optional-feature handoff reconciliation is blocked on a Playwright MCP profile
-lock and a cross-architecture Minikube image-import failure. See TASK-012 and
-`docs/evidence/task-012-handoff-reconciliation.md`; prior feature evidence remains
-recorded, but the final browser and pod-restart gates are not represented as passed.
+Final optional-feature handoff reconciliation is blocked only on Playwright MCP
+keyboard-download target/context closure. See TASK-012 and
+`docs/evidence/task-012-handoff-reconciliation.md`; prior feature and cluster
+evidence remains recorded.
 
 ## P6 — Optional UI Refresh
 

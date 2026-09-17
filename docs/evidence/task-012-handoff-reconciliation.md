@@ -4,12 +4,11 @@
 
 **Blocked on 2026-09-18.** Automated, clean-checkout, container, offline dependency,
 shutdown, storage-failure, documentation, history, source/image hygiene, terminal
-polling, and all local-cluster gates are complete. The owner released the original
-Playwright profile lock, but keyboard activation of the artifact link closed the MCP
-transport. Tab listing and fresh navigation returned the same `Transport closed`
-error, reaching the repository's three-attempt stop condition. Full keyboard
-download and dependency-failure/retry browser scenarios remain unchecked. No other
-browser automation was substituted.
+polling, all local-cluster gates, and the dependency-failure/retry browser scenario
+are complete. Keyboard activation of the artifact link still closes the Playwright
+MCP target/context before a downloadable file can be inspected, reaching the
+repository's three-attempt stop condition for that blocker. Full keyboard download
+completion remains unchecked; no other browser automation was substituted.
 
 ## Automated and Clean-Checkout Gates
 
@@ -147,10 +146,32 @@ Pressing Enter on the focused artifact link returned:
 Transport closed
 ```
 
-Tab listing and a fresh navigation then returned the same error. Work stopped after
-those three occurrences. The MCP transport cannot confirm the download event and
-could not proceed to the dependency-failure/retry scenario, so those checks remain
-open. Earlier TASK-007 through TASK-011 evidence remains valid.
+Tab listing and a fresh navigation then returned the same error. A later standalone
+session using the exact configured `npx @playwright/mcp@latest` command reached
+`download.saveAs` before the target/context closed, and an event-only retry also
+closed the target immediately after keyboard activation. The generated ZIP itself is
+verified by the desktop/API and cluster evidence above, but this MCP transport cannot
+confirm keyboard download completion. Earlier TASK-007 through TASK-011 evidence
+remains valid.
+
+The dependency-failure/retry scenario was then run with a fresh deterministic server
+at `http://127.0.0.1:18768/`: the first keyboard submission returned the sanitized
+`RuntimeError: AIConfigurator dependency unavailable` message with the submit button
+enabled, and Tab navigation from the error state reached Submit before a second Enter
+completed the two-row fake run. Playwright recorded two POSTs, terminal GETs for both
+runs, a visible artifact link after recovery, and zero console errors. The exact
+returned observation was:
+
+```text
+failure.status=Unable to complete the request.
+failure.error=RuntimeError: AIConfigurator dependency unavailable
+failure.submitEnabled=true
+retry.status=Completed with 2 configurations.
+retry.downloadVisible=true
+requests=POST /api/runs; GET /api/runs/a57f999c85aa46a58aecf05b7e20822b;
+         POST /api/runs; GET /api/runs/0a2f86e45542419db2567b2e00dcc7f2
+consoleErrors=[]
+```
 
 ## Minikube Architecture Resolution and Cluster Evidence
 
@@ -210,14 +231,15 @@ Deployment is currently healthy on `serving-configuration-portal:local-arm64`.
 - `ARCHITECTURE.md` now describes the implemented optional extension rather than a
   proposed target.
 - Project-brief acceptance items with direct evidence are checked; the final browser
-  completion item remains open.
+  completion item remains open only for keyboard download completion.
 - Commit review from the serving-portal plan through the current branch found focused
   Conventional Commit subjects and descriptive bodies. Current TASK-012 changes are
   split into test, image-hardening, and evidence/documentation milestones.
 
 ## Remaining Work to Close TASK-012
 
-1. Restart or reconnect the configured Playwright MCP transport, then finish keyboard
-   download confirmation and dependency-failure/retry without another browser tool.
-2. Rerun the final repository gates, confirm intentional git status, update this
-   report and checklist, and only then mark TASK-012 complete.
+1. Obtain a healthy configured Playwright MCP transport that stays open through
+   keyboard download activation, then inspect the resulting ZIP.
+2. Rerun the final repository gates and confirm intentional git status. The
+   dependency-failure/retry gate is complete; TASK-012 remains blocked only on the
+   keyboard download gate.

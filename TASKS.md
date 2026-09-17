@@ -178,13 +178,12 @@ must contain exact commands and observations, not only a checked box.
     browser, `make check`, and `git diff --check` gates pass.
   - **Evidence:** Partial evidence is in
     `docs/evidence/task-012-handoff-reconciliation.md`.
-  - **Blocker:** The Kubernetes architecture mismatch and all cluster gates are now
-    resolved with an architecture-matched local image. Playwright MCP connected and
-    passed client validation, keyboard submit/result navigation, single submission,
-    and terminal polling, but its transport closed when keyboard-activating the ZIP
-    download and remained closed for two reconnect attempts. Full keyboard download
-    and dependency-failure/retry gates remain unchecked; no substitute evidence is
-    claimed.
+  - **Blocker:** The Kubernetes architecture mismatch and all cluster gates are
+    resolved with an architecture-matched local image. Playwright MCP now also
+    passes dependency failure/retry: the first keyboard submission shows a sanitized
+    recoverable error and a second Enter completes. The remaining blocker is keyboard
+    activation of the ZIP link, which closes the MCP target/context before completion
+    can be inspected; no substitute evidence is claimed.
 
 - [ ] **TASK-013 — Refresh the portal UI as a precision planning workspace**
   - **Outcome:** The existing end-to-end workflow is visually polished, responsive,

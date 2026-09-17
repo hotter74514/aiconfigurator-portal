@@ -111,20 +111,23 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   aggregate pressure, the capacity banner shows saturation, visibility-aware polling
   pauses and resumes, and keyboard focus reaches and activates submission.
 - [ ] Keyboard-only: labels, focus order, submission, status announcement, result
-  navigation, retry, and download are usable. TASK-012 freshly verified the labeled
+  navigation, retry, and download are usable. TASK-012 verified the labeled
   input-to-submit focus order, Enter submission, completed result, history controls,
-  and focus reaching the run-scoped download link. Activating that link with Enter
-  closed the MCP transport, so download completion and failure/retry remain unverified.
-- [ ] Client and server validation: invalid field and dependency failure each show a
-  recoverable message without a browser console error. TASK-012 verified native
-  invalid-GPU validation without a POST; the dependency-failure rerun remains blocked.
+  retry navigation, and focus reaching the run-scoped download link. Activating that
+  link with Enter still closes the MCP target/context before ZIP completion can be
+  inspected; the desktop/API and cluster paths verify the same artifact endpoint.
+- [x] Client and server validation: invalid field and dependency failure each show a
+  recoverable message without a browser console error. Native invalid-GPU validation
+  produced no POST; the fresh dependency-failure run showed the sanitized
+  `RuntimeError: AIConfigurator dependency unavailable` message, kept Submit enabled,
+  and recovered to a completed result after keyboard retry with zero console errors.
 - [x] Polling stops after completed/failed state and does not issue duplicate
   submissions on repeated clicks. Two Enter presses produced one POST and one terminal
   GET; the request list stayed unchanged during a further three-second interval.
 - [x] If Playwright MCP is unavailable, record the blocker and leave these unchecked;
-  do not substitute another browser automation tool. On retry, the old profile lock
-  was gone and fresh validation ran until keyboard download closed the transport;
-  tab listing and navigation then returned the same `Transport closed` error.
+  do not substitute another browser automation tool. The configured MCP package was
+  restarted for the dependency-failure/retry scenario; only keyboard download
+  completion remains blocked by target/context closure.
 
 ## Trust and Product Safety
 
