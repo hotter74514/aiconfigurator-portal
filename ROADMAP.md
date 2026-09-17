@@ -38,8 +38,8 @@ The roadmap prioritizes a working, defensible must-have path within the assignme
   work.
 - [x] Build a pinned non-root container and deploy one replica with sound probes,
   resource controls, graceful shutdown, and bounded `emptyDir` storage.
-- [~] Validate manifests and execute the flow on an available local cluster (no
-  usable local cluster; kubeconfig requires unavailable AWS credentials).
+- [x] Validate manifests and execute the service, metrics, real run, result polling,
+  and artifact download flow on the local Minikube cluster.
 
 ## P4 — Verify and Hand Off
 

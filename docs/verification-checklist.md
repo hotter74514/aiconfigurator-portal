@@ -85,7 +85,7 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 - [x] Deployment has one replica, `Recreate`, startup/live/ready probes, explicit
   requests/limits, termination grace, bounded `emptyDir`, and restrictive security
   context compatible with the application.
-- [~] Service routing, rollout, logs, metrics, real run, result polling, and ZIP
+- [x] Service routing, rollout, logs, metrics, real run, result polling, and ZIP
   download succeed on an available local cluster.
 - [ ] Pod deletion during a run demonstrates the documented loss/`404` behavior
   after restart; no durability claim is made.

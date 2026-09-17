@@ -79,8 +79,8 @@ must contain exact commands and observations, not only a checked box.
     manifest validation; probe latency during real CPU work; local-cluster flow when
     a cluster is available.
   - **Evidence:** See `docs/evidence/task-005-operations.md`. Observability,
-    non-root image, real container run/download, and manifest shape are recorded;
-    cluster rollout remains environment-blocked by unavailable AWS credentials.
+    non-root image, real container run/download, manifest shape, and a live
+    Minikube rollout are recorded.
 
 - [~] **TASK-006 — Verify and document the handoff**
   - **Outcome:** A reviewer can reproduce and understand the solution and run a
@@ -93,8 +93,8 @@ must contain exact commands and observations, not only a checked box.
     evidence; all configured checks, build, integration, and `git diff --check`
     pass; git status contains only intentional files.
   - **Evidence:** Browser success evidence is in
-    `docs/evidence/task-006-handoff.md`; README, narrow/keyboard cases, and
-    live-cluster behavior remain open.
+    `docs/evidence/task-006-handoff.md`; README and narrow/keyboard browser cases
+    remain open.
 
 ## Status Rules
 

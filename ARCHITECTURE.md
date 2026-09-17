@@ -2,15 +2,14 @@
 
 ## Status
 
-**Baseline recorded; ADR-001 and ADR-002 are Accepted.** The repository currently
-contains documentation and workflow scaffolding but no application code, package
-manifest, container image, or deployment manifest. Implementation now proceeds
-against the accepted target.
+**Implemented baseline; ADR-001 and ADR-002 are Accepted.** The repository contains
+the application, pinned dependency lock, container image definition, and Kubernetes
+deployment manifest. The checked-in deployment has been exercised on Minikube.
 
 ## Current System Context
 
-- **Users or callers:** No implemented callers. The assignment targets ML engineers
-  using a browser and platform operators using Kubernetes/HTTP observability.
+- **Users or callers:** ML engineers use the browser/API; platform operators use
+  Kubernetes and the HTTP observability endpoints.
 - **Primary outcome:** See `docs/project-brief.md`.
 - **External systems:** AIConfigurator and its packaged/profile data; a Kubernetes
   API is only a deployment target for the portal and for downloaded artifacts.
@@ -24,8 +23,8 @@ against the accepted target.
 | Engineering harness | Planning, decision, verification, and handoff workflow | Markdown and Make targets | Repository owner |
 | Application | FastAPI app factory, liveness, and metadata boundary | `portal.app:create_app`; `/health/live`; `/` | Repository owner |
 | Adapter boundary | Typed request/result protocol and deterministic fake | `portal.adapters.AiconfiguratorAdapter` | Repository owner |
-| Real AIConfigurator adapter | Not implemented; contract verified by TASK-001 smoke | Must use pinned Linux x86-64 package | Repository owner |
-| Deployment | Not implemented | Kubernetes shape proposed in ADR-001/002 | Repository owner |
+| Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts | `portal.aiconfigurator:AiconfiguratorSdkAdapter` | Repository owner |
+| Deployment | Non-root single-replica container on Kubernetes with probes and bounded ephemeral storage | `Dockerfile`; `deploy/portal.yaml`; ClusterIP HTTP service | Repository owner |
 
 ## Proposed Data and Control Flow
 

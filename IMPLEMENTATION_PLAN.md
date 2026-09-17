@@ -205,9 +205,9 @@ visible and bounded.
   available.
 - `make check`, configured build/integration targets, and `git diff --check`.
 
-**Status:** Complete. Container, probes, metrics, logs, and manifest evidence are
-recorded in `docs/evidence/task-005-operations.md`; local-cluster rollout is
-explicitly environment-blocked.
+**Status:** Complete. Container, probes, metrics, logs, manifest evidence, and a
+successful Minikube rollout with a real run/download are recorded in
+`docs/evidence/task-005-operations.md`.
 
 ## Stage 5: Verify and Prepare Handoff
 
@@ -268,7 +268,9 @@ are recorded; browser MCP and live-cluster validation remain open.
   resource limits are deliberately not frozen until measured.
 - The macOS host currently has `uv 0.11.21`, Python 3.14.5, Docker CLI 29.4.0,
   kubectl 1.37.0, Node 26.8.1, and npx 11.19.0. The OrbStack daemon is available
-  for image builds; `kind` is absent and live-cluster execution is not verified.
+  for image builds. Minikube v1.39.0 runs an arm64 Kubernetes v1.37.0 node with
+  x86_64 emulation; the Linux amd64 image must be imported into containerd because
+  `minikube image load` rejects the cross-architecture image.
 - Each stage is a focused commit with real newlines and a descriptive body. If a
   stage fails, revert that stage's commit; do not weaken tests or probes.
 - If the SDK is unusable after three materially different attempts, stop and report

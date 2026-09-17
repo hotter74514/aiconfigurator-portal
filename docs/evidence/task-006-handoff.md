@@ -18,3 +18,13 @@ an inline empty favicon declaration.
 
 The browser run used the required Playwright MCP tools. No alternate browser driver
 or external system was used.
+
+## Live Minikube deployment
+
+On 2026-09-17, the checked-in image and manifest were deployed to Minikube v1.39.0
+with Kubernetes v1.37.0. `kubectl rollout status` completed with one ready pod and
+zero restarts. Service-routed live/readiness probes and metrics returned HTTP 200.
+A real `Qwen/Qwen3-32B-FP8`, 8 × `h200_sxm` request completed with five ranked
+results from `aiconfigurator-0.11.0`; its artifact endpoint returned a 97,617-byte
+ZIP. Exact deployment commands and observations are recorded in
+`docs/evidence/task-005-operations.md`.
