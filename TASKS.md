@@ -176,7 +176,12 @@ must contain exact commands and observations, not only a checked box.
   - **Dependencies:** Every optional task selected for release.
   - **Verify:** All applicable formatter, linter, type, test, integration, build,
     browser, `make check`, and `git diff --check` gates pass.
-  - **Evidence:** Not started.
+  - **Evidence:** Partial evidence is in
+    `docs/evidence/task-012-handoff-reconciliation.md`.
+  - **Blockers:** The configured Playwright MCP Chrome profile remained locked after
+    three attempts, and the local arm64 Minikube node rejected the rebuilt amd64-only
+    OCI index before qemu execution. Browser-only and pod-deletion gates remain
+    unchecked; no substitute evidence is claimed.
 
 - [ ] **TASK-013 — Refresh the portal UI as a precision planning workspace**
   - **Outcome:** The existing end-to-end workflow is visually polished, responsive,

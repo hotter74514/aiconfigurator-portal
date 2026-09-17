@@ -6,16 +6,16 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 
 ## Reproducibility and Dependency Proof
 
-- [ ] A clean checkout installs only from the committed lockfile and documented
+- [x] A clean checkout installs only from the committed lockfile and documented
   Linux x86-64 container build.
-- [ ] README lists required Docker/kubectl/cluster tools, tested versions, startup
+- [x] README lists required Docker/kubectl/cluster tools, tested versions, startup
   commands, safe example values, and first-run network/cache behavior.
 - [x] The pinned AIConfigurator version completes the documented
   `Qwen/Qwen3-32B-FP8`, 32 × `h200_sxm` SDK smoke run with explicit TTFT/TPOT,
   `top_n`, and `save_dir`.
 - [x] Evidence records the SDK result keys/columns, generated artifact tree, runtime,
   peak memory when practical, and SLA-filter behavior.
-- [ ] The image and manifest contain no credentials, private data, local paths,
+- [x] The image and manifest contain no credentials, private data, local paths,
   generated run output, writable source tree, or floating application dependencies.
 
 ## Automated Checks
@@ -42,7 +42,7 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   retry hint while queue memory remains bounded.
 - [x] SDK exception, no-feasible-config result, unexpected process exit, and timeout
   produce sanitized, actionable terminal failures without killing the API.
-- [ ] SIGTERM stops admission/readiness, gives active work the documented grace
+- [x] SIGTERM stops admission/readiness, gives active work the documented grace
   period, and does not claim recovery if the job is killed.
 
 ## Results, Artifacts, and Cleanup
@@ -62,7 +62,7 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   ambiguous, missing, non-PNG, symlink, and path-escape assets are not served.
 - [x] One-hour TTL cleanup removes terminal metadata/files; active work is retained;
   startup removes or reconciles documented orphan state.
-- [ ] Full/unwritable temporary storage fails the run clearly while live/ready remain
+- [x] Full/unwritable temporary storage fails the run clearly while live/ready remain
   semantically correct.
 
 ## Observability and Resource Behavior
@@ -91,10 +91,13 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 - [x] Deployment has one replica, `Recreate`, startup/live/ready probes, explicit
   requests/limits, termination grace, bounded `emptyDir`, and restrictive security
   context compatible with the application.
-- [x] Service routing, rollout, logs, metrics, real run, result polling, and ZIP
-  download succeed on an available local cluster.
+- [ ] Service routing, rollout, logs, metrics, real run, result polling, and ZIP
+  download succeed on an available local cluster. Earlier evidence passed, but the
+  TASK-012 rebuild could not be re-imported into the arm64 Minikube node because
+  containerd rejected the amd64-only OCI index before qemu execution.
 - [ ] Pod deletion during a run demonstrates the documented loss/`404` behavior
-  after restart; no durability claim is made.
+  after restart; no durability claim is made. Container SIGTERM/restart loss passed,
+  but the final pod-deletion rerun is blocked by the cross-architecture image import.
 
 ## Browser Validation — Playwright MCP Only
 
@@ -115,27 +118,29 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   recoverable message without a browser console error.
 - [ ] Polling stops after completed/failed state and does not issue duplicate
   submissions on repeated clicks.
-- [ ] If Playwright MCP is unavailable, record the blocker and leave these unchecked;
-  do not substitute another browser automation tool.
+- [x] If Playwright MCP is unavailable, record the blocker and leave these unchecked;
+  do not substitute another browser automation tool. On 2026-09-18, navigate, tab
+  listing, and close all failed on the same `mcp-chrome-e7abbf9` profile lock.
 
 ## Trust and Product Safety
 
-- [ ] User input is mapped to typed SDK arguments and never interpolated into a shell
+- [x] User input is mapped to typed SDK arguments and never interpolated into a shell
   command, log format string, artifact path, or rendered unsafe HTML.
-- [ ] Generated manifests are never automatically applied and every result/download
+- [x] Generated manifests are never automatically applied and every result/download
   experience says predictions require real benchmark validation.
-- [ ] No authentication is represented as present; README explains where identity,
+- [x] No authentication is represented as present; README explains where identity,
   ownership, authorization, per-team quota, and audit would enter the architecture.
 
 ## Handoff Evidence
 
-- [ ] README documents build/run from clean checkout, architecture/data flow, all ten
+- [x] README documents build/run from clean checkout, architecture/data flow, all ten
   assignment discussion areas, debugging signals, and known limitations.
-- [ ] `ARCHITECTURE.md`, `ROADMAP.md`, `TASKS.md`, Make targets, and ADR statuses match
+- [x] `ARCHITECTURE.md`, `ROADMAP.md`, `TASKS.md`, Make targets, and ADR statuses match
   the implemented system rather than the original plan.
-- [ ] A 15-minute demo script covers submit, status, ranked results, download,
+- [x] A 15-minute demo script covers submit, status, ranked results, download,
   metrics/logs, Kubernetes shape, and one deliberate failure.
-- [ ] Commit history is incremental; each commit is focused, passes its applicable
-  checks, and has a Conventional Commit subject plus descriptive bullet body.
-- [ ] Final `git status` contains only intentional changes, and the handoff reports
+- [x] Commit history is incremental; each portal commit is focused, passes its
+  applicable checks, and has a Conventional Commit subject plus descriptive bullet
+  body.
+- [x] Final `git status` contains only intentional changes, and the handoff reports
   exact commands/results, assumptions, limitations, and unverified areas.

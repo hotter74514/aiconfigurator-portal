@@ -2,9 +2,10 @@
 
 ## Status
 
-**Implemented baseline; ADR-001 and ADR-002 are Accepted.** The repository contains
-the application, pinned dependency lock, container image definition, and Kubernetes
-deployment manifest. The checked-in deployment has been exercised on Minikube.
+**Implemented baseline and optional extension; ADR-001 through ADR-007 are
+Accepted.** The repository contains the application, pinned dependency lock,
+container image definition, Kubernetes deployment manifest, result insight features,
+bounded cache, browser-local history, and anonymous capacity awareness.
 
 ## Current System Context
 
@@ -28,10 +29,7 @@ deployment manifest. The checked-in deployment has been exercised on Minikube.
 | Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts/verified Pareto output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |
 | Deployment | Non-root single-replica container on Kubernetes with probes and bounded ephemeral storage | `Dockerfile`; `deploy/portal.yaml`; ClusterIP HTTP service | Repository owner |
 
-## Proposed Data and Control Flow
-
-This is the accepted target; implementation and verification evidence will fill in
-the concrete component names and measured limits:
+## Implemented Data and Control Flow
 
     browser -> web/API -> bounded in-memory queue -> isolated worker process
                 |                                      |
@@ -39,8 +37,10 @@ the concrete component names and measured limits:
                                                          |
                                                          +-> AIConfigurator SDK
 
-The portal would expose polling rather than hold an HTTP request open. Artifacts and
-run metadata would be local and ephemeral for the assignment scope.
+The portal returns an opaque run ID immediately and the browser polls the status
+endpoint. Completed immutable bundles may be reused from the bounded in-process
+cache under a versioned canonical request key, but every cache hit receives a fresh
+run ID. Artifacts and run metadata remain local and ephemeral.
 
 ## Verified Constraints
 
@@ -76,6 +76,9 @@ run metadata would be local and ephemeral for the assignment scope.
   validation.
 - **Traceable visualization:** The portal serves only the pinned SDK's contained
   `pareto_frontier.png`; exact values remain available in the ranked table.
+- **Honest multi-user boundary:** Browser-local history and anonymous capacity
+  counts add convenience without claiming identity, ownership, privacy, fairness,
+  or durable state.
 
 ## Decision Links
 

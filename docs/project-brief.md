@@ -39,29 +39,29 @@ deployment artifacts without installing AIConfigurator locally.
 
 ## Acceptance Criteria
 
-- [ ] The page accepts model, GPU system, total GPU count, TTFT, and TPOT, with
+- [x] The page accepts model, GPU system, total GPU count, TTFT, and TPOT, with
   documented defaults; input/output token lengths may be exposed with defaults.
-- [ ] Valid submission returns an opaque run ID and status URL without holding the
+- [x] Valid submission returns an opaque run ID and status URL without holding the
   request open for the sweep.
-- [ ] The status endpoint reports `queued`, `running`, `completed`, or `failed`, and
+- [x] The status endpoint reports `queued`, `running`, `completed`, or `failed`, and
   terminal failure responses contain an actionable but sanitized reason.
-- [ ] A successful run displays at least the top five configurations, ranked
+- [x] A successful run displays at least the top five configurations, ranked
   consistently, including predicted throughput, TTFT, and TPOT.
-- [ ] Results that do not meet the requested SLA are either excluded or visibly
+- [x] Results that do not meet the requested SLA are either excluded or visibly
   identified; the exact AIConfigurator behavior is verified in the initial spike.
-- [ ] A completed run exposes a ZIP download containing the AIConfigurator-generated
+- [x] A completed run exposes a ZIP download containing the AIConfigurator-generated
   deployment artifacts; incomplete and unknown runs fail clearly.
-- [ ] Unsupported or invalid model/system requests do not start an unbounded job and
+- [x] Unsupported or invalid model/system requests do not start an unbounded job and
   return a useful error state.
-- [ ] Concurrent execution is bounded. Excess submissions receive an explicit
+- [x] Concurrent execution is bounded. Excess submissions receive an explicit
   retryable response rather than exhausting the pod.
-- [ ] `/health/live`, `/health/ready`, and `/metrics` remain responsive during a
+- [x] `/health/live`, `/health/ready`, and `/metrics` remain responsive during a
   sweep and have documented semantics.
-- [ ] Logs are structured and correlate lifecycle events by run ID without logging
+- [x] Logs are structured and correlate lifecycle events by run ID without logging
   artifact contents or secrets.
-- [ ] A Linux x86-64 container can execute one documented real AIConfigurator smoke
+- [x] A Linux x86-64 container can execute one documented real AIConfigurator smoke
   case, and the application container is reproducibly buildable.
-- [ ] Raw Kubernetes manifests deploy the service with probes, resource requests and
+- [x] Raw Kubernetes manifests deploy the service with probes, resource requests and
   limits, temporary artifact storage, and a non-root security context.
 - [ ] Unit/integration checks and the browser scenarios in
   `docs/verification-checklist.md` pass, followed by `make check` and
