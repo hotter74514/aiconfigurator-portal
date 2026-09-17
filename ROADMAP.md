@@ -73,12 +73,12 @@ Begin only after TASK-012 reconciles the existing release evidence. Keep the cur
 Jinja2/native-JavaScript architecture and use design skills as bounded guidance, not
 as authority to change product or system boundaries.
 
-- [ ] Capture a complete visual and interaction baseline with Playwright MCP.
-- [ ] Apply a pinned framework-agnostic frontend-design skill and semantic CSS token
+- [x] Capture a complete visual and interaction baseline with Playwright MCP.
+- [x] Apply a pinned framework-agnostic frontend-design skill and semantic CSS token
   system to create a responsive precision-planning workspace.
-- [ ] Polish every asynchronous, comparison, visualization, history, capacity, and
+- [x] Polish every asynchronous, comparison, visualization, history, capacity, and
   error state without changing its behavior or required disclosures.
-- [ ] Audit against current web interface guidelines and pass the full automated,
+- [x] Audit against current web interface guidelines and pass the full automated,
   browser, container, and documentation completion gates.
 
 ## Deferred

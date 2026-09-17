@@ -2,7 +2,7 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-007 Accepted; Stages 1–10 and TASK-012 are complete.** Planning,
+**ADR-001 through ADR-007 Accepted; Stages 1–14 and TASK-013 are complete.** Planning,
 implementation, operations, and handoff evidence are recorded. The repository owner
 confirmed TASK-006 validation has no known issues. The optional extension in Stages
 6–10 passed its final automated, container, cluster, and browser gates; the project
@@ -583,7 +583,8 @@ matrix; no product or architecture requirement is inferred from the design skill
 **Tests / Evidence:** Playwright MCP screenshots and keyboard notes, existing narrow
 tests, `make check`, and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete. Baseline screenshots, keyboard notes, stable DOM hook inventory,
+and the pinned design brief are recorded in `docs/evidence/task-013-design-brief.md`.
 
 ### Stage 12: Build the Visual Foundation and Responsive Shell
 
@@ -613,7 +614,8 @@ states; the page loads with no new runtime network request or frontend dependenc
 390 px, 320 px, 200% zoom, keyboard, reduced-motion, and no-horizontal-page-overflow
 checks; then `make check` and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete. The tokenized stylesheet, semantic responsive shell, reduced-motion
+handling, and static delivery checks are implemented and verified in TASK-013 evidence.
 
 ### Stage 13: Polish Run, Result, Comparison, and History States
 
@@ -648,7 +650,9 @@ history restore/clear, visualization fallback, comparison unavailable, and two-
 context capacity scenarios. Run narrow checks, then `make check` and
 `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete. Presentation-only state attributes and polished result, comparison,
+visualization, history, capacity, failure, and download states are verified with
+Playwright MCP fixtures and automated checks.
 
 ### Stage 14: Audit, Regress, and Hand Off the Refresh
 
@@ -676,7 +680,8 @@ behavior and warnings remain intact; git status contains only intentional change
 **Tests / Evidence:** The complete configured gate, browser state matrix, container
 smoke, before/after evidence, source-revision record, and final self-review.
 
-**Status:** Not Started.
+**Status:** Complete. The pinned guideline audit, browser matrix, repository checks,
+and handoff evidence are recorded in `docs/evidence/task-013-ui-refresh.md`.
 
 ### UI Refresh Risks and Rollback
 

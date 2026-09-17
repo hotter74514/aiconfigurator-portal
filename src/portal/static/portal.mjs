@@ -9,6 +9,7 @@ const results = document.getElementById("results");
 const rows = document.getElementById("result-rows");
 const download = document.getElementById("download");
 const capacity = document.getElementById("capacity");
+const capacityPanel = document.querySelector(".capacity-panel");
 const comparison = document.getElementById("comparison");
 const comparisonStatus = document.getElementById("comparison-status");
 const comparisonDefinition = document.getElementById("comparison-definition");
@@ -29,6 +30,11 @@ let pollTimer = null;
 let pollGeneration = 0;
 
 const value = (id) => document.getElementById(id).value;
+
+const setStatus = (message, state) => {
+  status.textContent = message;
+  status.dataset.state = state;
+};
 
 const readHistory = () => {
   try {
@@ -92,6 +98,7 @@ const clearResults = () => {
   download.hidden = true;
   comparison.hidden = true;
   visualization.hidden = true;
+  visualization.dataset.state = "idle";
   visualizationImage.hidden = true;
   visualizationImage.removeAttribute("src");
   rows.replaceChildren();
@@ -99,7 +106,7 @@ const clearResults = () => {
 
 const showError = (message) => {
   error.textContent = message;
-  status.textContent = "Unable to complete the request.";
+  setStatus("Unable to complete the request.", "failed");
   submit.disabled = false;
 };
 
@@ -116,17 +123,21 @@ const renderCapacity = (payload) => {
   const activeCapacity = Number(payload.active_capacity);
   const queueCapacity = Number(payload.queue_capacity);
   if (![active, queued, activeCapacity, queueCapacity].every(Number.isInteger)) {
+    capacityPanel.dataset.state = "unavailable";
     capacity.textContent = "Shared capacity is temporarily unavailable.";
     return;
   }
   if (!payload.admission_open && active + queued < activeCapacity + queueCapacity) {
+    capacityPanel.dataset.state = "full";
     capacity.textContent = "Shared capacity is currently closed; retry later.";
     return;
   }
   if (!payload.admission_open) {
+    capacityPanel.dataset.state = "full";
     capacity.textContent = `Shared capacity is full: ${active} run${active === 1 ? "" : "s"} active; ${queued} waiting. New submissions may be rejected; retry later.`;
     return;
   }
+  capacityPanel.dataset.state = "open";
   capacity.textContent = `Shared capacity: ${active} run${active === 1 ? "" : "s"} active; ${queued} waiting.`;
 };
 
@@ -148,6 +159,7 @@ const refreshCapacity = async () => {
     if (!response.ok) throw new Error("capacity request failed");
     renderCapacity(payload);
   } catch (_) {
+    capacityPanel.dataset.state = "unavailable";
     capacity.textContent = "Shared capacity is temporarily unavailable.";
   } finally {
     capacityRequestPending = false;
@@ -188,7 +200,7 @@ const renderComparison = (payload) => {
 const render = (payload) => {
   historyStatuses.set(payload.run_id, "completed");
   renderHistory();
-  status.textContent = `Completed with ${payload.results.length} configurations.`;
+  setStatus(`Completed with ${payload.results.length} configurations.`, "completed");
   rows.replaceChildren();
   for (const item of payload.results) {
     const row = document.createElement("tr");
@@ -209,6 +221,7 @@ const render = (payload) => {
   });
   const asset = (payload.visualizations || [])[0];
   if (asset) {
+    visualization.dataset.state = "available";
     visualizationCaption.textContent = asset.caption;
     visualizationScope.textContent = asset.scope_note;
     visualizationAxis.textContent = asset.axis_note;
@@ -235,7 +248,7 @@ const poll = async (url, runId, generation = pollGeneration) => {
   }
   historyStatuses.set(runId, payload.status);
   renderHistory();
-  status.textContent = `Run ${payload.status}…`;
+  setStatus(`Run ${payload.status}…`, payload.status);
   if (payload.status === "completed") return render(payload);
   if (payload.status === "failed") return showError(payload.error || "The estimator failed.");
   pollTimer = window.setTimeout(() => {
@@ -258,7 +271,7 @@ const restoreRun = (entry) => {
   clearResults();
   error.textContent = "";
   submit.disabled = true;
-  status.textContent = "Restoring saved run…";
+  setStatus("Restoring saved run…", "running");
   startPolling(`/api/runs/${entry.run_id}`, entry.run_id).catch((e) => showError(e.message));
 };
 
@@ -303,14 +316,14 @@ form.addEventListener("submit", async (event) => {
   clearResults();
   error.textContent = "";
   submit.disabled = true;
-  status.textContent = "Submitting…";
+  setStatus("Submitting…", "queued");
   const payload = {model: value("model"), system: value("system"), total_gpus: Number(value("total_gpus")), ttft: Number(value("ttft")), tpot: Number(value("tpot")), isl: Number(value("isl")), osl: Number(value("osl"))};
   try {
     const response = await fetch("/api/runs", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)});
     const created = await response.json();
     if (!response.ok) throw new Error(created.error || "Request was rejected.");
     rememberRun(created.run_id, payload);
-    status.textContent = `Run ${created.status}…`;
+    setStatus(`Run ${created.status}…`, created.status);
     await startPolling(created.status_url, created.run_id);
   } catch (e) {
     showError(e.message);
@@ -335,6 +348,7 @@ document.addEventListener("visibilitychange", () => {
 
 visualizationImage.addEventListener("error", () => {
   visualizationImage.hidden = true;
+  visualization.dataset.state = "fallback";
 });
 
 historyEntries = readHistory();

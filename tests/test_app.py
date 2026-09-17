@@ -75,6 +75,12 @@ def test_app_factory_exposes_liveness_and_metadata() -> None:
         assert "Shared capacity" in page.text
         assert "no accounts, ownership, or reservation" in page.text
         assert "Recent runs in this browser" in page.text
+        assert "/static/portal.css" in page.text
+        assert 'id="run-form"' in page.text
+        assert 'id="result-rows"' in page.text
+        stylesheet = client.get("/static/portal.css")
+        assert stylesheet.status_code == 200
+        assert "--accent" in stylesheet.text
         assert "/static/portal.mjs" in page.text
         assert client.get("/api/runs").status_code == 405
 

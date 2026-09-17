@@ -184,7 +184,7 @@ must contain exact commands and observations, not only a checked box.
     download now saves and validates the run-scoped ZIP. Dependency failure/retry,
     all configured checks, and the final browser path are complete.
 
-- [ ] **TASK-013 — Refresh the portal UI as a precision planning workspace**
+- [x] **TASK-013 — Refresh the portal UI as a precision planning workspace**
   - **Outcome:** The existing end-to-end workflow is visually polished, responsive,
     accessible, and easier to scan without changing application semantics.
   - **Scope:** Apply a pinned framework-agnostic frontend-design skill to the Jinja2
@@ -197,8 +197,8 @@ must contain exact commands and observations, not only a checked box.
     Playwright MCP covers desktop, 390 px, 320 px, zoom, keyboard, reduced motion,
     complete/failed/saturated/fallback/history states, and the full submit-to-download
     flow; all configured completion gates pass.
-  - **Evidence:** Not started; planned location is
-    `docs/evidence/task-013-ui-refresh.md`.
+  - **Evidence:** See `docs/evidence/task-013-ui-refresh.md` and the pinned design
+    brief in `docs/evidence/task-013-design-brief.md`.
 
 ## Status Rules
 
