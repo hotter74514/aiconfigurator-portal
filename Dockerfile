@@ -18,7 +18,7 @@ COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/src /app/src
 RUN useradd --create-home --uid 10001 portal \
     && mkdir -p /var/lib/portal/runs \
-    && chown -R portal:portal /app /var/lib/portal
+    && chown -R portal:portal /var/lib/portal
 USER 10001:10001
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
