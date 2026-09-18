@@ -848,9 +848,9 @@ navigation observations, outage results, real container flow, full `make check`,
 image build, integration tests, manifest validation, and `git diff --check` in
 `docs/evidence/task-014-opentelemetry-alloy.md`.
 
-**Status:** In Progress. Backend correlation and visible bidirectional Grafana
-navigation are verified with Playwright MCP; outage timing under the declared
-resource limits remains.
+**Status:** Complete. Backend correlation, visible bidirectional Grafana navigation,
+outage isolation, bounded resource behavior, graceful shutdown, recovery, and
+negative propagation cases are verified.
 
 ### OpenTelemetry Extension Risks and Rollback
 

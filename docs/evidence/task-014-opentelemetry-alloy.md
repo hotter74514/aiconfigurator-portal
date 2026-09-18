@@ -32,14 +32,12 @@ Date: 2026-09-18 (Asia/Taipei)
 | `make build` | Linux/amd64 image built successfully; locked runtime includes OpenTelemetry API/SDK, OTLP gRPC exporter, Prometheus exporter, FastAPI, and logging instrumentation. |
 | `docker run ... -e OTEL_SDK_DISABLED=true ...` plus `curl /health/live` and `/health/ready` | Both probes returned `{"status":"ok"}` while remote telemetry was disabled. |
 
-## Remaining verification
+## Verification scope
 
 The Minikube deployment below verifies a real spawned worker exporting to an OTLP
 receiver, pod stdout ingestion and structured metadata queries in Loki, Prometheus
-scraping, and Grafana datasource-proxy correlation. The following gate remains
-intentionally open:
-
-- Alloy/backend outage timing under the declared resource limits.
+scraping, Grafana datasource-proxy correlation, outage isolation, graceful
+shutdown, recovery, and negative propagation behavior.
 
 Backend URLs, tenant headers, TLS material, and credentials remain deployment inputs
 and are not committed.
@@ -89,4 +87,32 @@ The project-scoped Playwright MCP was used against the port-forwarded Grafana UI
    original trace ID.
 
 This proves both visible Grafana navigation directions for the same real run. The
-only remaining Stage 19 gate is outage timing under the declared resource limits.
+following outage and negative-propagation exercises close the remaining Stage 19
+gates.
+
+## Outage and negative-propagation evidence
+
+Each outage was applied to the existing Minikube stack, exercised with a fresh
+uncached AIConfigurator request, and restored before the next case. Portal pod
+memory stayed below the 4 GiB container limit; the application continued to serve
+probes and business traffic while telemetry destinations retried asynchronously.
+
+| Failure exercise | Observation while unavailable | Recovery |
+|---|---|---|
+| OTLP collector scaled to zero | Live/readiness returned 200; run `dda4423b268d4f1dbae5d56be59d49a5` completed. Submit returned in 15 ms, terminal state arrived after 12 s, memory was 551,669,760 bytes, and stdout retained the trace-correlated lifecycle records. OTLP exporter emitted bounded retry/error messages. | Collector restored to one Ready pod. |
+| Loki StatefulSet scaled to zero | Live/readiness returned 200; run `7959531b295245cdb9d6d7f90d18c9f1` completed after four polling seconds. Stdout retained 20 records for the trace and portal memory was 549,392,384 bytes; Alloy reported destination errors without affecting the request. | Loki restored to `2/2` containers Ready. |
+| Tempo StatefulSet scaled to zero | Live/readiness returned 200; run `712252da8f8040dbaace6b99257505b` completed after four polling seconds, memory 555,429,888 bytes. Collector retry logs showed connection-refused delivery failures only. | Tempo restored to one Ready pod. |
+| Prometheus deployment scaled to zero | Live/readiness and the portal `/metrics` endpoint remained available; run `075ca8db974e4375a7aab5550cf59b5e` completed after four polling seconds, memory 530,509,824 bytes. Alloy remote-write errors were asynchronous. | Prometheus restored to `2/2` containers Ready. |
+| Alloy DaemonSet made unschedulable | Live/readiness and `/metrics` remained available; run `b5f9c860004a4ec3a4612a9e69b8cb87` completed after four polling seconds, memory 533,782,528 bytes, and stdout retained 20 trace-correlated records. | Alloy node selector reverted; one Available pod returned. |
+| Grafana deployment scaled to zero | Live/readiness returned 200; run `f860d26d7983481c9ea911e0eae13b68` completed after eight polling seconds. | Grafana restored to one Available pod. |
+| Portal pod deletion / shutdown | Existing pod terminated in approximately 3 seconds, so telemetry shutdown/flush did not hold the 30-second grace period. Kubernetes emitted one transient `Insufficient memory` scheduling event while all observability pods were restored; the replacement then became Ready and probes returned 200. | Replacement pod `serving-configuration-portal-768c749689-cj4c2` running. |
+
+After all components were restored, recovery run `5c3869e9c35f46d2b2dfad50efcea349`
+with trace ID `deadbeefdeadbeefdeadbeefdeadbeef` completed. Tempo returned HTTP 200
+with four spans, Loki returned HTTP 200 with 20 matching entries, stdout retained
+20 matching records, and all observability pods were Ready.
+
+Propagation edge cases were also exercised: malformed, absent, and unsampled
+`traceparent` requests all returned 202 and completed. The malformed case created
+no Loki trace entry; the unsampled case retained 20 Loki records with its trace ID
+but Tempo correctly returned 404 because an unsampled trace is not stored.

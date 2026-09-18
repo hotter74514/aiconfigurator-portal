@@ -200,7 +200,7 @@ must contain exact commands and observations, not only a checked box.
   - **Evidence:** See `docs/evidence/task-013-ui-refresh.md` and the pinned design
     brief in `docs/evidence/task-013-design-brief.md`.
 
-- [~] **TASK-014 — Deliver correlated OpenTelemetry signals through Grafana Alloy**
+- [x] **TASK-014 — Deliver correlated OpenTelemetry signals through Grafana Alloy**
   - **Outcome:** Operators can follow one submitted run across the FastAPI request,
     queue, callback threads, and spawned AIConfigurator worker in Tempo; inspect
     trace-correlated JSON logs in Loki; query low-cardinality metrics in Prometheus;
@@ -229,7 +229,9 @@ must contain exact commands and observations, not only a checked box.
     Playwright MCP bidirectional Grafana navigation are recorded in
     `docs/evidence/task-014-opentelemetry-alloy.md`, including a real trace ID,
     Tempo/Loki/Prometheus queries, datasource-proxy checks, and the visible
-    **Logs for this span** / **View trace** flow. Only outage timing remains.
+    **Logs for this span** / **View trace** flow, outage isolation, graceful
+    shutdown, recovery, and negative propagation cases. All TASK-014 gates are
+    complete.
 
 ## Status Rules
 
