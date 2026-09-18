@@ -31,7 +31,7 @@ OpenTelemetry/Alloy/Grafana configuration extension.
 | Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts, complete Pareto frames, and verified PNG output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |
 | Deployment | Non-root single-replica container on Kubernetes with probes and bounded ephemeral storage | `Dockerfile`; `deploy/portal.yaml`; ClusterIP HTTP service | Repository owner |
 | Telemetry bootstrap | Owns OpenTelemetry providers, W3C carrier serialization, JSON log injection, and Prometheus-compatible metrics | `portal.observability`; `OTEL_*`; `/metrics` | Repository owner |
-| Alloy/Grafana delivery | Routes OTLP traces, selected pod logs, and scraped metrics; provisions stable data-source correlation | `deploy/observability/`; Tempo/Loki/Prometheus/Grafana endpoints | Platform operator |
+| Alloy/Grafana delivery | Routes OTLP traces, selected pod logs, and scraped metrics; provisions stable data-source correlation and the portal status dashboard | `deploy/observability/`; Tempo/Loki/Prometheus/Grafana endpoints | Platform operator |
 
 ## Implemented Data and Control Flow
 

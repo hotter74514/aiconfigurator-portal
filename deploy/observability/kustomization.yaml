@@ -15,3 +15,13 @@ configMapGenerator:
       - datasources.yaml=grafana/provisioning/datasources/datasources.yaml
     options:
       disableNameSuffixHash: true
+  - name: portal-grafana-dashboard-provider
+    files:
+      - dashboards.yaml=grafana/provisioning/dashboards/dashboards.yaml
+    options:
+      disableNameSuffixHash: true
+  - name: portal-grafana-dashboards
+    files:
+      - portal-status.json=grafana/dashboards/portal-status.json
+    options:
+      disableNameSuffixHash: true

@@ -189,6 +189,19 @@ derived field links back to the exact Tempo trace. A real Tempo/Loki/Prometheus/
 Grafana deployment is required to verify the clickable links; local repository
 checks validate the application path and configuration shape only.
 
+The same observability bundle provisions the `Serving Configuration Portal Status`
+dashboard (UID `serving-configuration-portal-status`) from
+`deploy/observability/grafana/dashboards/portal-status.json`. It uses only the
+existing `prometheus` datasource and an `instance` selector, so it works with
+both direct Kubernetes scraping and the Alloy remote-write path. The panels cover
+availability, active/queued saturation, completed/failed/rejected outcomes, run
+and HTTP latency, request/error rate, and cache activity/hit ratio. The dashboard
+provider and JSON are emitted as `portal-grafana-dashboard-provider` and
+`portal-grafana-dashboards` ConfigMaps by Kustomize. Mount those ConfigMaps in the
+Grafana namespace at `/etc/grafana/provisioning/dashboards/dashboards.yaml` and
+`/var/lib/grafana/dashboards/portal/` respectively (the repository intentionally
+does not own the separately deployed Grafana workload).
+
 ## Cache, History, and Retention
 
 Completed bundles are cached only in process memory for exact canonical request and

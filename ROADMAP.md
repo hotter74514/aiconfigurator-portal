@@ -110,6 +110,15 @@ telemetry boundaries.
 - [x] Verify deterministic fixtures, API/cache serialization, configured checks,
   and Playwright MCP desktop/narrow browser behavior.
 
+## P9 — Portal Status Dashboard
+
+- [x] Provision a version-controlled Grafana dashboard from the existing
+  low-cardinality Prometheus metrics.
+- [x] Cover availability, traffic, run outcomes, saturation, latency, and cache
+  behavior with explicit units and thresholds.
+- [x] Validate every PromQL expression and render the dashboard in the local
+  Grafana stack with Playwright MCP.
+
 ## Deferred
 
 - **Additional Pareto dimensions:** require a new accepted ADR if users need

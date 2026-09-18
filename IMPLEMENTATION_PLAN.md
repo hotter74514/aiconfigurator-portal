@@ -2,9 +2,8 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-008 Accepted; Stages 1–18 and TASK-013 are complete; Stage
-19 is in progress because visible Grafana UI
-clicks still need browser validation.** Planning, implementation,
+**ADR-001 through ADR-009 Accepted; Stages 1–23 and TASK-016 are complete.**
+Planning, implementation,
 operations, and handoff evidence are recorded for completed work. The repository
 owner confirmed TASK-006 validation has no known issues. The optional extension in
 Stages 6–10 passed its final automated, container, cluster, and browser gates; the
@@ -883,6 +882,51 @@ recorded in the task evidence.
 **Status:** Complete. The accepted contract, deterministic normalization, native
 SVG/browser rendering, fallback evidence, real SDK source check, and configured
 repository/browser gates are recorded in `docs/evidence/task-015-tradeoff-surface.md`.
+
+### Stage 21: Lock the Portal Status Dashboard Contract
+
+**Goal:** Define a testable operator view from the portal's existing low-cardinality
+Prometheus metrics without changing application instrumentation.
+
+**Success Criteria:** Tests require a stable dashboard UID, the provisioned
+`prometheus` datasource, an instance selector, and panels covering availability,
+active/queued work, run outcomes, rejection/failure, duration, HTTP traffic, and
+cache behavior.
+
+**Tests:** `uv run pytest tests/test_grafana_dashboard.py` starts red before the
+dashboard and provider exist, then passes against the checked-in JSON/YAML.
+
+**Status:** Complete. The dashboard contract tests pass against the checked-in
+JSON and all required existing metric families.
+
+### Stage 22: Provision and Document the Dashboard
+
+**Goal:** Add a Grafana file provider and version-controlled dashboard to the
+existing observability bundle.
+
+**Success Criteria:** Kustomize emits provider/dashboard ConfigMaps; Grafana can
+load the dashboard without manual query construction; README documents mounting
+the generated files and the meaning of each operational signal.
+
+**Tests:** Dashboard contract test, JSON parsing, `kubectl kustomize
+deploy/observability`, and `kubectl apply --dry-run=client -k deploy/observability`.
+
+**Status:** Complete. Kustomize emits the provider and dashboard ConfigMaps, and
+README documents the required Grafana mounts.
+
+### Stage 23: Verify Queries and the Rendered Grafana View
+
+**Goal:** Prove the dashboard against the running local Prometheus/Grafana stack.
+
+**Success Criteria:** Every PromQL expression parses successfully, the dashboard
+loads with the expected panels and live values in Grafana, browser console errors
+are absent, and the repository completion gates pass.
+
+**Tests:** Prometheus API query checks, Grafana API import/health checks, Playwright
+MCP desktop validation, `make check`, and `git diff --check`.
+
+**Status:** Complete. Prometheus expressions, Grafana schema/import, and the local
+Playwright MCP render are recorded in `docs/evidence/task-016-grafana-dashboard.md`.
 
 ### OpenTelemetry Extension Risks and Rollback
 

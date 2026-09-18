@@ -251,6 +251,22 @@ must contain exact commands and observations, not only a checked box.
     rendered browser observations, and limitations in
     `docs/evidence/task-015-tradeoff-surface.md`.
 
+- [x] **TASK-016 — Provision a Grafana portal status dashboard**
+  - **Outcome:** Operators can open one provisioned dashboard and quickly determine
+    whether the portal is observable, busy, saturated, slow, or failing.
+  - **Scope:** Reuse the existing Prometheus datasource UID and low-cardinality
+    portal/HTTP metrics. Add file provisioning, availability and workload summary
+    stats, outcome/rate trends, run and HTTP latency, and cache behavior. Do not add
+    application metrics, alert delivery, production credentials, or a new backend.
+  - **Dependencies:** TASK-014 and a Prometheus-compatible backend containing the
+    existing `/metrics` series.
+  - **Verify:** Contract tests parse the dashboard and lock key PromQL; Kustomize
+    and client-side Kubernetes validation pass; every expression succeeds against
+    local Prometheus; Playwright MCP verifies the rendered Grafana dashboard and
+    browser console; `make check` and `git diff --check` pass.
+  - **Evidence:** Record exact checks, visible panels, live values, and limitations
+    in `docs/evidence/task-016-grafana-dashboard.md`.
+
 ## Status Rules
 
 - `[ ]` Not started or blocked; add a blocker note when applicable.
