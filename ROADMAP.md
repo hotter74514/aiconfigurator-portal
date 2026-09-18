@@ -89,13 +89,13 @@ the existing `/metrics` contract.
 - [x] Accept the hybrid OpenTelemetry, Alloy, and Grafana correlation architecture.
 - [x] Instrument FastAPI, Python logs, and portal metrics with an explicit,
   lifecycle-owned OpenTelemetry bootstrap.
-- [~] Propagate W3C Trace Context through queued work, callback threads, and the
+- [x] Propagate W3C Trace Context through queued work, callback threads, and the
   explicitly spawned AIConfigurator worker process.
-- [~] Route traces to Tempo, JSON pod logs to Loki, and scraped metrics to
+- [x] Route traces to Tempo, JSON pod logs to Loki, and scraped metrics to
   Prometheus through bounded Alloy pipelines.
-- [ ] Provision stable Grafana data sources and prove Tempo-to-Loki and
+- [~] Provision stable Grafana data sources and prove Tempo-to-Loki and
   Loki-to-Tempo navigation with Playwright MCP.
-- [ ] Complete container, Kubernetes, outage, cardinality, and documentation gates
+- [~] Complete container, Kubernetes, outage, cardinality, and documentation gates
   for TASK-014.
 
 ## Deferred

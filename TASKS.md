@@ -225,10 +225,10 @@ must contain exact commands and observations, not only a checked box.
     trace's Loki logs and **View Trace** returns to the exact Tempo trace ID. Re-run
     the real container flow, configured repository checks, image build,
     `kubectl apply --dry-run=client`, and `git diff --check`.
-  - **Evidence:** Implementation and local validation are recorded in
-    `docs/evidence/task-014-opentelemetry-alloy.md`. Live backend queries, a real
-    trace ID, Grafana navigation, outage behavior, and resource-bound worker timing
-    remain environment-dependent gates.
+  - **Evidence:** Implementation and local plus Minikube backend validation are
+    recorded in `docs/evidence/task-014-opentelemetry-alloy.md`, including a real
+    trace ID, Tempo/Loki/Prometheus queries, and Grafana datasource proxy checks.
+    Visible Grafana navigation and outage exercises remain outstanding gates.
 
 ## Status Rules
 
