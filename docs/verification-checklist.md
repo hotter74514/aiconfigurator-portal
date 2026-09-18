@@ -60,6 +60,10 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 - [x] A completed run exposes one verified same-run Pareto PNG with caption,
   alternative text, scope/axis notes, and the ranked-table exact-value fallback;
   ambiguous, missing, non-PNG, symlink, and path-escape assets are not served.
+- [x] A completed run exposes a bounded `tradeoff_surface` from complete SDK
+  `pareto_fronts` frames with explicit lower-latency/higher-throughput directions,
+  cross-mode frontier classification, and safe fallback when the source contract
+  is malformed or empty.
 - [x] One-hour TTL cleanup removes terminal metadata/files; active work is retained;
   startup removes or reconciles documented orphan state.
 - [x] Full/unwritable temporary storage fails the run clearly while live/ready remain

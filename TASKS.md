@@ -233,6 +233,24 @@ must contain exact commands and observations, not only a checked box.
     shutdown, recovery, and negative propagation cases. All TASK-014 gates are
     complete.
 
+- [x] **TASK-015 — Render the portal-owned Pareto trade-off surface**
+  - **Outcome:** Completed estimates show a responsive, accessible trade-off
+    surface with blue frontier points, slate dominated candidates, explicit axis
+    directions, and a frontier summary sourced from the same full SDK sweep.
+  - **Scope:** Normalize bounded `CLIResult.pareto_fronts` frames, classify only
+    cross-mode dominance over those complete frames, render a native SVG and text
+    summary, and retain the SDK PNG plus ranked table as fallback evidence. No
+    browser recomputation from top-N rows and no chart runtime dependency.
+  - **Dependencies:** TASK-014; Accepted ADR-009; pinned AIConfigurator 0.11.0
+    `pareto_fronts` contract.
+  - **Verify:** Unit tests cover objective direction, cross-mode dominance,
+    malformed/missing columns, empty data, and bounded cardinality. API/cache tests,
+    `make check`, image build, and Playwright MCP desktop/narrow/keyboard checks
+    pass.
+  - **Evidence:** Record the deterministic fixture, real SDK column inventory,
+    rendered browser observations, and limitations in
+    `docs/evidence/task-015-tradeoff-surface.md`.
+
 ## Status Rules
 
 - `[ ]` Not started or blocked; add a blocker note when applicable.

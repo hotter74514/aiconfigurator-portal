@@ -128,6 +128,7 @@ def test_cache_hit_uses_one_worker_and_fresh_run_with_equivalent_artifacts(
         assert second_state.result is not None
         assert second.run_id != first.run_id
         assert second_state.result.rows == first_state.result.rows
+        assert second_state.result.tradeoff_surface == first_state.result.tradeoff_surface
         assert zip_directory(second_state.result.artifact_dir) == first_zip
         assert worker.calls == 1
     finally:

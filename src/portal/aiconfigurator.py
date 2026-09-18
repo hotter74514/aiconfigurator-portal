@@ -11,6 +11,7 @@ from typing import Any
 from uuid import uuid4
 
 from portal.adapters import ConfigurationRow, RunRequest, RunResult, VisualizationAsset
+from portal.tradeoff import normalize_tradeoff_surface
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
@@ -124,4 +125,5 @@ def run_ai_configurator(request: RunRequest, output_dir: str) -> RunResult:
         artifact_dir=destination,
         source_version=f"aiconfigurator-{package_version}",
         visualizations=_discover_pareto_frontier(destination),
+        tradeoff_surface=normalize_tradeoff_surface(result.pareto_fronts),
     )

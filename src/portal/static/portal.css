@@ -29,6 +29,10 @@
   --radius-sm: 0.35rem;
   --radius-md: 0.7rem;
   --shadow: 0 1px 2px rgb(23 37 43 / 8%), 0 12px 28px rgb(23 37 43 / 4%);
+  --tradeoff-frontier: #1769e0;
+  --tradeoff-dominated: #93a3a7;
+  --tradeoff-grid: #d7e0e0;
+  --tradeoff-axis: #506267;
 }
 
 * { box-sizing: border-box; }
@@ -134,6 +138,25 @@ th span { font-family: var(--sans); font-size: 0.9em; letter-spacing: 0; text-tr
 .visualization-frame { margin: var(--space-4) 0 0; border: 1px solid var(--rule); background: var(--panel-alt); padding: var(--space-3); }
 #visualization-image { display: block; max-width: 100%; height: auto; margin: 0 auto; }
 #visualization-fallback { margin: var(--space-3) 0 0; color: var(--ink-muted); font-size: 0.78rem; }
+.tradeoff-section { overflow: hidden; }
+.tradeoff-legend { display: flex; flex-wrap: wrap; gap: var(--space-4); margin: var(--space-4) 0 var(--space-3); color: var(--ink-muted); font-size: 0.82rem; }
+.tradeoff-legend span { display: inline-flex; gap: var(--space-2); align-items: center; }
+.legend-dot { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 50%; }
+.frontier-dot { background: var(--tradeoff-frontier); }
+.dominated-dot { background: var(--tradeoff-dominated); }
+.tradeoff-chart { border: 1px solid var(--rule); border-radius: var(--radius-md); background: #fff; padding: var(--space-3); }
+.tradeoff-chart svg { display: block; width: 100%; height: auto; }
+.tradeoff-grid { stroke: var(--tradeoff-grid); stroke-dasharray: 5 6; stroke-width: 1.2; }
+.tradeoff-axis { stroke: var(--tradeoff-axis); stroke-width: 1.7; }
+.tradeoff-tick, .tradeoff-axis-label { fill: var(--tradeoff-axis); font-family: var(--mono); font-size: 12px; }
+.tradeoff-axis-label { font-family: var(--sans); font-size: 13px; }
+.tradeoff-frontier-line { fill: none; stroke: var(--tradeoff-frontier); stroke-dasharray: 7 6; stroke-width: 2.5; }
+.tradeoff-point { stroke: #fff; stroke-width: 2.5; }
+.frontier-point { fill: var(--tradeoff-frontier); }
+.dominated-point { fill: var(--tradeoff-dominated); }
+.tradeoff-point:focus { outline: none; stroke: var(--focus); stroke-width: 4; }
+.tradeoff-summary { margin: var(--space-4) 0 var(--space-2); font-size: 1rem; }
+.tradeoff-frontier-list { display: grid; gap: var(--space-1); margin: 0; padding-left: 1.3rem; color: var(--ink-muted); font-size: 0.86rem; }
 .download-action { display: inline-flex; gap: var(--space-2); align-items: center; border-bottom: 2px solid var(--accent); color: var(--accent-dark); padding: 0.3rem 0; font-weight: 700; text-decoration: none; }
 .download-action:hover { border-color: var(--accent-dark); color: var(--ink); }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
@@ -162,6 +185,9 @@ th span { font-family: var(--sans); font-size: 0.9em; letter-spacing: 0; text-tr
   .result-badge { text-align: left; }
   .subsection-heading { align-items: flex-start; }
   .comparison-tag { font-size: 0.6rem; }
+  .tradeoff-chart { margin-inline: -0.35rem; padding: 0.35rem; }
+  .tradeoff-tick { font-size: 10px; }
+  .tradeoff-axis-label { font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

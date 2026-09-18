@@ -852,6 +852,38 @@ image build, integration tests, manifest validation, and `git diff --check` in
 outage isolation, bounded resource behavior, graceful shutdown, recovery, and
 negative propagation cases are verified.
 
+### Stage 20: Add Portal-Owned Trade-off Surface
+
+**Goal:** Render a responsive, accessible Pareto trade-off surface from the
+complete SDK-provided `pareto_fronts` frames while retaining the verified SDK PNG
+and exact ranked table as fallback evidence.
+
+**Work:**
+
+1. Normalize finite latency and cluster-throughput points from every complete
+   serving-mode frontier and classify cross-mode dominance without using top-N
+   rows; reject missing, malformed, or unbounded source frames.
+2. Add a versioned JSON payload and deterministic native SVG renderer with axis
+   direction labels, frontier connector, legend, point descriptions, and a
+   text summary of the frontier.
+3. Keep the dependency-generated PNG endpoint and ranked table available when
+   the portal-owned surface is absent or unavailable; preserve cache behavior.
+4. Verify deterministic fixtures, API serialization, desktop/narrow Playwright
+   rendering, keyboard focus, and configured repository checks.
+
+**Success Criteria:** Completed runs expose a bounded `tradeoff_surface` payload;
+the page renders blue frontier and slate dominated candidates from the same full
+SDK sweep; latency is explicitly minimized, throughput maximized, exact values
+remain available in the table, and malformed source data falls back safely.
+
+**Tests / Evidence:** Trade-off normalization unit tests, application payload and
+cache tests, `make check`, image build, and Playwright MCP desktop/narrow checks
+recorded in the task evidence.
+
+**Status:** Complete. The accepted contract, deterministic normalization, native
+SVG/browser rendering, fallback evidence, real SDK source check, and configured
+repository/browser gates are recorded in `docs/evidence/task-015-tradeoff-surface.md`.
+
 ### OpenTelemetry Extension Risks and Rollback
 
 - Explicit `spawn` can change AIConfigurator startup latency and memory behavior;

@@ -14,6 +14,11 @@ const comparison = document.getElementById("comparison");
 const comparisonStatus = document.getElementById("comparison-status");
 const comparisonDefinition = document.getElementById("comparison-definition");
 const comparisonRows = document.getElementById("comparison-rows");
+const tradeoffSurface = document.getElementById("tradeoff-surface");
+const tradeoffDescription = document.getElementById("tradeoff-description");
+const tradeoffChart = document.getElementById("tradeoff-chart");
+const tradeoffSummary = document.getElementById("tradeoff-summary");
+const tradeoffFrontierList = document.getElementById("tradeoff-frontier-list");
 const visualization = document.getElementById("visualization");
 const visualizationCaption = document.getElementById("visualization-caption");
 const visualizationScope = document.getElementById("visualization-scope");
@@ -97,6 +102,11 @@ const clearResults = () => {
   results.hidden = true;
   download.hidden = true;
   comparison.hidden = true;
+  tradeoffSurface.hidden = true;
+  tradeoffChart.replaceChildren();
+  tradeoffFrontierList.replaceChildren();
+  tradeoffDescription.textContent = "";
+  tradeoffSummary.textContent = "";
   visualization.hidden = true;
   visualization.dataset.state = "idle";
   visualizationImage.hidden = true;
@@ -197,6 +207,105 @@ const renderComparison = (payload) => {
   comparison.hidden = false;
 };
 
+const svgElement = (name, attributes = {}) => {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", name);
+  for (const [key, attribute] of Object.entries(attributes)) element.setAttribute(key, String(attribute));
+  return element;
+};
+
+const formatChartNumber = (number) => new Intl.NumberFormat(undefined, {maximumFractionDigits: 2}).format(number);
+
+const renderTradeoffSurface = (surface) => {
+  const points = (surface && Array.isArray(surface.points) ? surface.points : []).filter((point) =>
+    point && Number.isFinite(Number(point.latency_ms)) && Number.isFinite(Number(point.throughput_tokens_s))
+  );
+  const frontier = points.filter((point) => point.is_frontier).sort((left, right) =>
+    Number(left.latency_ms) - Number(right.latency_ms)
+  );
+  if (points.length === 0 || frontier.length === 0) return;
+
+  const width = 980;
+  const height = 500;
+  const margin = {top: 30, right: 28, bottom: 76, left: 96};
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const latencies = points.map((point) => Number(point.latency_ms));
+  const throughputs = points.map((point) => Number(point.throughput_tokens_s));
+  const minLatency = Math.min(...latencies);
+  const maxLatency = Math.max(...latencies);
+  const minThroughput = Math.min(...throughputs);
+  const maxThroughput = Math.max(...throughputs);
+  const xPad = Math.max((maxLatency - minLatency) * 0.08, 1);
+  const yPad = Math.max((maxThroughput - minThroughput) * 0.08, 1);
+  const xMin = minLatency - xPad;
+  const xMax = maxLatency + xPad;
+  const yMin = Math.max(0, minThroughput - yPad);
+  const yMax = maxThroughput + yPad;
+  const xScale = (value) => margin.left + ((value - xMin) / (xMax - xMin)) * plotWidth;
+  const yScale = (value) => margin.top + (1 - (value - yMin) / (yMax - yMin)) * plotHeight;
+  const svg = svgElement("svg", {viewBox: `0 0 ${width} ${height}`, focusable: "false"});
+  svg.setAttribute("aria-labelledby", "tradeoff-heading tradeoff-description");
+
+  for (let index = 0; index < 5; index += 1) {
+    const xValue = xMin + ((xMax - xMin) * index) / 4;
+    const yValue = yMin + ((yMax - yMin) * index) / 4;
+    const x = xScale(xValue);
+    const y = yScale(yValue);
+    svg.appendChild(svgElement("line", {x1: x, x2: x, y1: margin.top, y2: margin.top + plotHeight, class: "tradeoff-grid"}));
+    svg.appendChild(svgElement("line", {x1: margin.left, x2: margin.left + plotWidth, y1: y, y2: y, class: "tradeoff-grid"}));
+    const xTick = svgElement("text", {x, y: margin.top + plotHeight + 25, class: "tradeoff-tick", "text-anchor": "middle"});
+    xTick.textContent = formatChartNumber(xValue);
+    svg.appendChild(xTick);
+    const yTick = svgElement("text", {x: margin.left - 14, y: y + 4, class: "tradeoff-tick", "text-anchor": "end"});
+    yTick.textContent = formatChartNumber(yValue);
+    svg.appendChild(yTick);
+  }
+  svg.appendChild(svgElement("line", {x1: margin.left, x2: margin.left, y1: margin.top, y2: margin.top + plotHeight, class: "tradeoff-axis"}));
+  svg.appendChild(svgElement("line", {x1: margin.left, x2: margin.left + plotWidth, y1: margin.top + plotHeight, y2: margin.top + plotHeight, class: "tradeoff-axis"}));
+  const xLabel = svgElement("text", {x: margin.left + plotWidth / 2, y: height - 18, class: "tradeoff-axis-label", "text-anchor": "middle"});
+  xLabel.textContent = "Request latency (ms) — lower is better";
+  svg.appendChild(xLabel);
+  const yLabel = svgElement("text", {x: 22, y: margin.top + plotHeight / 2, class: "tradeoff-axis-label", transform: `rotate(-90 22 ${margin.top + plotHeight / 2})`, "text-anchor": "middle"});
+  yLabel.textContent = "Throughput (tokens/s) — higher is better";
+  svg.appendChild(yLabel);
+
+  const frontierLine = frontier.map((point) => `${xScale(Number(point.latency_ms))},${yScale(Number(point.throughput_tokens_s))}`).join(" ");
+  if (frontier.length > 1) svg.appendChild(svgElement("polyline", {points: frontierLine, class: "tradeoff-frontier-line"}));
+  for (const point of points) {
+    const circle = svgElement("circle", {
+      cx: xScale(Number(point.latency_ms)),
+      cy: yScale(Number(point.throughput_tokens_s)),
+      r: point.is_frontier ? 7 : 6,
+      class: point.is_frontier ? "tradeoff-point frontier-point" : "tradeoff-point dominated-point",
+      tabindex: "0",
+      role: "img",
+    });
+    const label = `${point.serving_mode} rank ${point.rank}: ${formatChartNumber(Number(point.throughput_tokens_s))} tokens/s at ${formatChartNumber(Number(point.latency_ms))} ms request latency${point.is_frontier ? ", Pareto frontier" : ", dominated candidate"}`;
+    circle.setAttribute("aria-label", label);
+    const title = svgElement("title");
+    title.textContent = label;
+    circle.appendChild(title);
+    svg.appendChild(circle);
+  }
+  tradeoffChart.replaceChildren(svg);
+  const candidateCount = Number(surface.candidate_count) || points.length;
+  const frontierCount = Number(surface.frontier_count) || frontier.length;
+  tradeoffDescription.textContent = "Throughput vs. request latency: points on the frontier have no other candidate that is both faster and higher-throughput.";
+  tradeoffSummary.textContent = `${frontierCount} of ${candidateCount} plotted candidates are on the Pareto frontier.`;
+  tradeoffFrontierList.replaceChildren();
+  for (const point of frontier.slice(0, 16)) {
+    const item = document.createElement("li");
+    item.textContent = `Rank ${point.rank} (${point.serving_mode}): ${formatChartNumber(Number(point.throughput_tokens_s))} tokens/s at ${formatChartNumber(Number(point.latency_ms))} ms request latency.`;
+    tradeoffFrontierList.appendChild(item);
+  }
+  if (frontier.length > 16) {
+    const item = document.createElement("li");
+    item.textContent = `${frontier.length - 16} additional frontier candidates are available in the exact-value table.`;
+    tradeoffFrontierList.appendChild(item);
+  }
+  tradeoffSurface.hidden = false;
+};
+
 const render = (payload) => {
   historyStatuses.set(payload.run_id, "completed");
   renderHistory();
@@ -219,6 +328,7 @@ const render = (payload) => {
     modes: {},
     metrics: [],
   });
+  renderTradeoffSurface(payload.tradeoff_surface);
   const asset = (payload.visualizations || [])[0];
   if (asset) {
     visualization.dataset.state = "available";

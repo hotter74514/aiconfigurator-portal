@@ -2,7 +2,10 @@
 
 ## Status
 
-**Accepted**
+**Superseded**
+
+ADR-009 supersedes this decision for the portal-owned trade-off surface; the
+verified SDK PNG remains the backwards-compatible fallback.
 
 ## Decision Owner
 

@@ -15,6 +15,7 @@ from uuid import uuid4
 from zipfile import BadZipFile, ZipFile
 
 from portal.adapters import ConfigurationRow, RunRequest, RunResult, VisualizationAsset
+from portal.tradeoff import TradeoffPoint, TradeoffSurface
 
 CACHE_SCHEMA_VERSION: Final[str] = "portal-cache-1"
 
@@ -57,6 +58,7 @@ class CachedResult:
     rows: tuple[ConfigurationRow, ...]
     source_version: str
     visualizations: tuple[VisualizationAsset, ...]
+    tradeoff_surface: TradeoffSurface | None
     artifact_zip: bytes
 
 
@@ -159,6 +161,7 @@ class BoundedResultCache:
             ),
             source_version=result.source_version,
             visualizations=tuple(result.visualizations),
+            tradeoff_surface=result.tradeoff_surface,
             artifact_zip=bytes(artifact_zip),
         )
         if key in self._entries:
@@ -258,6 +261,7 @@ def result_from_cached_bundle(bundle: CachedResult, output_dir: Path) -> RunResu
             )
             for asset in bundle.visualizations
         ),
+        tradeoff_surface=_copy_tradeoff_surface(bundle.tradeoff_surface),
     )
 
 
@@ -265,3 +269,27 @@ def _new_asset_id() -> str:
     """Create a fresh opaque visualization identifier without exposing cache keys."""
 
     return uuid4().hex
+
+
+def _copy_tradeoff_surface(surface: TradeoffSurface | None) -> TradeoffSurface | None:
+    """Copy immutable chart data so cached results have no shared mutable internals."""
+
+    if surface is None:
+        return None
+    points = tuple(
+        TradeoffPoint(
+            candidate_id=point.candidate_id,
+            serving_mode=point.serving_mode,
+            rank=point.rank,
+            latency_ms=point.latency_ms,
+            throughput_tokens_s=point.throughput_tokens_s,
+            is_frontier=point.is_frontier,
+        )
+        for point in surface.points
+    )
+    by_id = {point.candidate_id: point for point in points}
+    return TradeoffSurface(
+        points=points,
+        frontier=tuple(by_id[point.candidate_id] for point in surface.frontier),
+        source_modes=tuple(surface.source_modes),
+    )

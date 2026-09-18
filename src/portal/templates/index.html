@@ -65,6 +65,15 @@
           <p id="comparison-status" class="section-status"></p><p id="comparison-definition" class="fine-print"></p><p id="comparison-warning" class="warning-copy">No universal winner is declared. Compare each metric and validate the estimate with a real benchmark.</p>
           <div class="table-wrap"><table><caption class="sr-only">Rank-one comparison of aggregated and disaggregated serving modes</caption><thead><tr><th scope="col">Metric</th><th scope="col">agg</th><th scope="col">disagg</th><th scope="col">Absolute delta</th><th scope="col">Signed % delta</th><th scope="col">Availability</th></tr></thead><tbody id="comparison-rows"></tbody></table></div>
         </section>
+        <section id="tradeoff-surface" class="result-section tradeoff-section" hidden aria-labelledby="tradeoff-heading">
+          <div class="subsection-heading"><div><p class="eyebrow">Trade-off surface</p><h3 id="tradeoff-heading">Pareto frontier</h3></div><span class="comparison-tag">FULL SWEEP / SVG</span></div>
+          <p id="tradeoff-description" class="section-status"></p>
+          <div class="tradeoff-legend" aria-label="Trade-off surface legend"><span><i class="legend-dot frontier-dot" aria-hidden="true"></i>Pareto frontier</span><span><i class="legend-dot dominated-dot" aria-hidden="true"></i>Dominated candidate</span></div>
+          <div id="tradeoff-chart" class="tradeoff-chart" role="img" aria-labelledby="tradeoff-heading tradeoff-description"></div>
+          <p id="tradeoff-summary" class="tradeoff-summary"></p>
+          <ul id="tradeoff-frontier-list" class="tradeoff-frontier-list"></ul>
+          <p id="tradeoff-fallback" class="fine-print">The exact-value ranked table and dependency-generated PNG remain available below as fallback evidence.</p>
+        </section>
         <section id="visualization" class="result-section visualization-section" hidden aria-labelledby="visualization-heading">
           <div class="subsection-heading"><div><p class="eyebrow">Same-run artifact</p><h3 id="visualization-heading">Pareto frontier</h3></div><span class="comparison-tag">PNG / verified source</span></div>
           <p id="visualization-caption" class="section-status"></p><p id="visualization-scope" class="fine-print"></p><p id="visualization-axis" class="fine-print"></p>

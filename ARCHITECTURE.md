@@ -28,7 +28,7 @@ OpenTelemetry/Alloy/Grafana configuration extension.
 | Adapter boundary | Typed request/result protocol, visualization metadata, and deterministic fake | `portal.adapters.AiconfiguratorAdapter` | Repository owner |
 | Completed-result cache | Bounded process-local cache for successful normalized bundles, fresh run IDs, and artifact materialization | `portal.cache.BoundedResultCache`; run-manager internal | Repository owner |
 | Browser-local run history | Capped, status-revalidated convenience index for one browser profile | `localStorage`; `/api/runs/{id}` status endpoint | Repository owner |
-| Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts/verified Pareto output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |
+| Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts, complete Pareto frames, and verified PNG output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |
 | Deployment | Non-root single-replica container on Kubernetes with probes and bounded ephemeral storage | `Dockerfile`; `deploy/portal.yaml`; ClusterIP HTTP service | Repository owner |
 | Telemetry bootstrap | Owns OpenTelemetry providers, W3C carrier serialization, JSON log injection, and Prometheus-compatible metrics | `portal.observability`; `OTEL_*`; `/metrics` | Repository owner |
 | Alloy/Grafana delivery | Routes OTLP traces, selected pod logs, and scraped metrics; provisions stable data-source correlation | `deploy/observability/`; Tempo/Loki/Prometheus/Grafana endpoints | Platform operator |

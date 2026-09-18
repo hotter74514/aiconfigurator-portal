@@ -48,6 +48,8 @@ def _snapshot_payload(snapshot: RunSnapshot) -> dict[str, Any]:
             for row in snapshot.result.rows
         ]
         payload["comparison"] = build_comparison(snapshot.result.rows).to_payload()
+        if snapshot.result.tradeoff_surface is not None:
+            payload["tradeoff_surface"] = snapshot.result.tradeoff_surface.to_payload()
         payload["visualizations"] = [
             {
                 "id": asset.asset_id,

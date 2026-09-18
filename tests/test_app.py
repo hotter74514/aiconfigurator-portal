@@ -263,6 +263,11 @@ def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
             assert comparison["modes"]["disagg"]["rank"] == 1
             comparison_metrics = {metric["name"]: metric for metric in comparison["metrics"]}
             assert comparison_metrics["tokens/s"]["percentage_delta"] == 100.0
+            tradeoff = state["tradeoff_surface"]
+            assert tradeoff["candidate_count"] == 4
+            assert tradeoff["frontier_count"] == 3
+            assert tradeoff["x_direction"] == "lower is better"
+            assert tradeoff["y_direction"] == "higher is better"
             rendered_metrics = client.get("/metrics").text
             assert "portal_runs_submitted_total 1.0" in rendered_metrics
             assert "portal_runs_completed_total 1.0" in rendered_metrics

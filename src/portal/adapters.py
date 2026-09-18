@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Protocol
 from uuid import uuid4
 
+from portal.tradeoff import TradeoffPoint, TradeoffSurface
+
 
 @dataclass(frozen=True, slots=True)
 class RunRequest:
@@ -52,6 +54,7 @@ class RunResult:
     artifact_dir: Path
     source_version: str
     visualizations: tuple[VisualizationAsset, ...] = ()
+    tradeoff_surface: TradeoffSurface | None = None
 
 
 class AiconfiguratorAdapter(Protocol):
@@ -105,6 +108,17 @@ class FakeAiconfiguratorAdapter:
                 "tpot": max(request.tpot_ms - 1.0, 0.001),
             },
         )
+        fixture_points = (
+            TradeoffPoint("agg-1", "agg", 1, 22_000.0, 2_800.0, True),
+            TradeoffPoint("agg-2", "agg", 2, 24_500.0, 5_200.0, True),
+            TradeoffPoint("disagg-1", "disagg", 1, 28_000.0, 4_100.0, False),
+            TradeoffPoint("disagg-2", "disagg", 2, 30_000.0, 8_700.0, True),
+        )
+        tradeoff_surface = TradeoffSurface(
+            points=fixture_points,
+            frontier=(fixture_points[0], fixture_points[1], fixture_points[3]),
+            source_modes=("agg", "disagg"),
+        )
         return RunResult(
             rows=(agg_row, disagg_row),
             artifact_dir=output_dir,
@@ -128,4 +142,5 @@ class FakeAiconfiguratorAdapter:
                     ),
                 ),
             ),
+            tradeoff_surface=tradeoff_surface,
         )

@@ -15,8 +15,9 @@ target hardware before production use.
   GPU, and topology fields supplied by AIConfigurator.
 - A server-owned rank-one comparison with signed deltas, without declaring a
   universal winner.
-- The same run's AIConfigurator-generated Pareto PNG and an exact-value table
-  fallback.
+- A portal-owned latency/throughput trade-off surface from the same full SDK
+  sweep, plus the AIConfigurator-generated Pareto PNG and exact-value table
+  fallbacks.
 - A run-scoped ZIP containing the generated deployment files.
 - A TTL/count/byte-bounded process-local completed-result cache.
 - Browser-local recent-run convenience history and anonymous aggregate capacity
@@ -266,7 +267,8 @@ never applies them to Kubernetes.
 2. Open the page and call out the estimate/benchmark warning and default Qwen/H200
    request.
 3. Submit once, show the opaque run ID and running state, then inspect the ranked
-   rows, agg/disagg comparison, and same-run Pareto image.
+   rows, agg/disagg comparison, portal-owned Pareto trade-off surface, and same-run
+   SDK image fallback.
 4. Download the ZIP and list its generated CSV, YAML, JSON, shell, and image files.
 5. Submit the identical request again; show the fresh run ID and cache hit metric.
 6. Demonstrate a deliberate validation failure with an unsupported system and show
@@ -288,8 +290,10 @@ never applies them to Kubernetes.
 - Generated configurations use the dependency's default mapping. The verified run
   searched performance DB `1.3.0rc10` and generated the default TRT-LLM mapping for
   `1.3.0rc14`; validate target-version compatibility before deployment.
-- The Pareto image is dependency-generated and not interactive. The result table is
-  the accessible exact-value source.
+- The portal-owned trade-off surface is limited to request latency versus cluster
+  throughput and the bounded complete frontiers exposed by AIConfigurator. The
+  dependency-generated PNG remains non-interactive; the exact-value result table
+  remains the authoritative numeric fallback.
 - Local browser history is visible to anyone using the same browser profile.
 - TLS, production secrets management, autoscaling, durable queues/storage, and real
   GPU benchmark feedback are outside this repository's scope. The optional
@@ -299,6 +303,6 @@ never applies them to Kubernetes.
 
 - `docs/verification-checklist.md` is the granular acceptance index.
 - `docs/evidence/` records exact commands and observed results.
-- `docs/DESIGN_DECISIONS.md` indexes ADR-001 through ADR-008.
+- `docs/DESIGN_DECISIONS.md` indexes ADR-001 through ADR-009.
 - `ARCHITECTURE.md`, `ROADMAP.md`, `TASKS.md`, and `IMPLEMENTATION_PLAN.md` describe
   the system boundary and staged delivery history.

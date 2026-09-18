@@ -93,15 +93,28 @@ the existing `/metrics` contract.
   explicitly spawned AIConfigurator worker process.
 - [x] Route traces to Tempo, JSON pod logs to Loki, and scraped metrics to
   Prometheus through bounded Alloy pipelines.
-- [~] Provision stable Grafana data sources and prove Tempo-to-Loki and
+- [x] Provision stable Grafana data sources and prove Tempo-to-Loki and
   Loki-to-Tempo navigation with Playwright MCP.
-- [~] Complete container, Kubernetes, outage, cardinality, and documentation gates
+- [x] Complete container, Kubernetes, outage, cardinality, and documentation gates
   for TASK-014.
+
+## P8 — Portal-Owned Trade-off Surface
+
+Proceed under Accepted ADR-009 without changing the run, cache, artifact, or
+telemetry boundaries.
+
+- [x] Normalize complete SDK `pareto_fronts` frames with explicit latency and
+  throughput objective directions and bounded cross-mode dominance.
+- [x] Render the responsive native SVG, legend, frontier summary, and keyboard-
+  focusable point labels while retaining the SDK PNG and ranked table fallbacks.
+- [x] Verify deterministic fixtures, API/cache serialization, configured checks,
+  and Playwright MCP desktop/narrow browser behavior.
 
 ## Deferred
 
-- **Portal-owned Pareto recomputation:** use only if the generated artifact is
-  unsuitable and the SDK exposes the complete frontier data required for correctness.
+- **Additional Pareto dimensions:** require a new accepted ADR if users need
+  interactive axis selection or dimensions beyond request latency and cluster
+  throughput.
 - **In-flight request coalescing:** defer until duplicate concurrent traffic justifies
   the added cancellation, failure, and ownership semantics.
 - **Durable run history:** requires durable metadata and object/PVC storage first.

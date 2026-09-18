@@ -2,7 +2,7 @@
 
 ## Status
 
-**Proposed**
+**Accepted**
 
 ## Decision Owner
 
@@ -108,6 +108,7 @@ existing contained PNG endpoint remains backwards-compatible during migration.
 
 ## Links
 
-- Related requirements: `docs/project-brief.md`, TASK-007, TASK-014.
+- Related requirements: `docs/project-brief.md`, TASK-007, TASK-014, TASK-015.
 - Related decisions: ADR-003 (accepted source artifact), ADR-004.
-- Supersedes or superseded by: Proposed replacement of ADR-003's source choice.
+- Supersedes or superseded by: Supersedes ADR-003's source choice; the SDK PNG
+  remains the backwards-compatible fallback.
