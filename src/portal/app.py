@@ -11,12 +11,18 @@ from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from prometheus_client import CONTENT_TYPE_LATEST
 
 from portal import __version__
 from portal.artifacts import zip_directory
 from portal.comparison import build_comparison
-from portal.observability import PortalMetrics, configure_logging
+from portal.observability import (
+    PortalMetrics,
+    Telemetry,
+    configure_logging,
+    inject_trace_context,
+)
 from portal.runs import QueueFullError, RunManager, RunSnapshot
 from portal.schemas import RunSubmission
 
@@ -59,23 +65,40 @@ def _snapshot_payload(snapshot: RunSnapshot) -> dict[str, Any]:
     return payload
 
 
-def create_app(run_manager: RunManager | None = None) -> FastAPI:
+def create_app(
+    run_manager: RunManager | None = None,
+    telemetry: Telemetry | None = None,
+) -> FastAPI:
     """Build the application without importing the Linux-only estimator."""
 
+    telemetry = telemetry or Telemetry.create(service_version=__version__)
     manager = run_manager or RunManager(
-        Path(os.getenv("PORTAL_RUN_ROOT", "/tmp/serving-portal-runs"))
+        Path(os.getenv("PORTAL_RUN_ROOT", "/tmp/serving-portal-runs")),
+        tracer=telemetry.tracer,
     )
+    if run_manager is not None:
+        manager.set_tracer(telemetry.tracer)
     templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
-    metrics = PortalMetrics()
+    metrics = PortalMetrics(telemetry)
     configure_logging()
     logger = logging.getLogger("portal")
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        yield
-        manager.close()
+        try:
+            yield
+        finally:
+            manager.close()
+            telemetry.shutdown()
 
     app = FastAPI(title="Serving Configuration Portal", version=__version__, lifespan=lifespan)
+    FastAPIInstrumentor.instrument_app(
+        app,
+        tracer_provider=telemetry.tracer_provider,
+        meter_provider=telemetry.meter_provider,
+        excluded_urls=r"health/live,health/ready,metrics",
+        exclude_spans=["receive", "send"],
+    )
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
     @app.get("/health/live", tags=["health"])
@@ -118,37 +141,45 @@ def create_app(run_manager: RunManager | None = None) -> FastAPI:
     def submit_run(submission: RunSubmission) -> JSONResponse:
         """Admit one run and return a polling location immediately."""
 
-        try:
-            snapshot = manager.submit(submission.to_request())
-        except QueueFullError:
-            metrics.rejected.inc()
-            logger.warning(
-                "run rejected", extra={"event": "run_rejected", "error_category": "capacity"}
+        with telemetry.tracer.start_as_current_span("portal.run.submit") as span:
+            carrier = inject_trace_context()
+            try:
+                snapshot = manager.submit(submission.to_request(), trace_carrier=carrier)
+            except QueueFullError:
+                metrics.rejected.inc()
+                logger.warning(
+                    "run rejected", extra={"event": "run_rejected", "error_category": "capacity"}
+                )
+                return JSONResponse(
+                    status_code=429,
+                    content={"error": "run capacity is full; retry later"},
+                    headers={"Retry-After": "2"},
+                )
+            except RuntimeError as exc:
+                logger.warning(
+                    "run rejected", extra={"event": "run_rejected", "error_category": "shutdown"}
+                )
+                return JSONResponse(status_code=503, content={"error": str(exc)})
+            span.set_attribute("portal.run.id", snapshot.run_id)
+            span.set_attribute("portal.run.status", snapshot.status)
+            metrics.submitted.inc()
+            logger.info(
+                "run accepted",
+                extra={
+                    "event": "run_accepted",
+                    "run_id": snapshot.run_id,
+                    "status": snapshot.status,
+                },
             )
             return JSONResponse(
-                status_code=429,
-                content={"error": "run capacity is full; retry later"},
-                headers={"Retry-After": "2"},
+                status_code=202,
+                content={
+                    "run_id": snapshot.run_id,
+                    "status": snapshot.status,
+                    "status_url": f"/api/runs/{snapshot.run_id}",
+                    "poll_after_seconds": 2,
+                },
             )
-        except RuntimeError as exc:
-            logger.warning(
-                "run rejected", extra={"event": "run_rejected", "error_category": "shutdown"}
-            )
-            return JSONResponse(status_code=503, content={"error": str(exc)})
-        metrics.submitted.inc()
-        logger.info(
-            "run accepted",
-            extra={"event": "run_accepted", "run_id": snapshot.run_id, "status": snapshot.status},
-        )
-        return JSONResponse(
-            status_code=202,
-            content={
-                "run_id": snapshot.run_id,
-                "status": snapshot.status,
-                "status_url": f"/api/runs/{snapshot.run_id}",
-                "poll_after_seconds": 2,
-            },
-        )
 
     @app.get("/api/runs/{run_id}", tags=["runs"])
     def get_run(run_id: str) -> JSONResponse:

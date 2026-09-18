@@ -23,6 +23,8 @@ target hardware before production use.
   awareness.
 - Health, readiness, Prometheus metrics, JSON logs, a non-root container, and raw
   Kubernetes manifests.
+- OpenTelemetry traces and metrics with W3C propagation through queued work, plus
+  Alloy/Grafana provisioning for Tempo↔Loki correlation.
 
 ## Prerequisites
 
@@ -127,6 +129,10 @@ FastAPI + Jinja2 + native JavaScript
         +<-- status/results ------+
         |                         |
         +<-- run-scoped files ----+--> bounded emptyDir / local run root
+
+OpenTelemetry traces: FastAPI -> submit/queue callbacks -> spawned worker -> Alloy -> Tempo
+JSON stdout logs:     active trace IDs ---------------------------> Alloy -> Loki
+Prometheus metrics:   /metrics ----------------------------------> Alloy -> Prometheus
 ```
 
 One Uvicorn worker and one Kubernetes replica are intentional. Run state, cache
@@ -148,8 +154,39 @@ entries, and artifacts are local to that process/pod. See the accepted records i
 
 Readiness remains healthy when the bounded queue is busy. It becomes unavailable
 during shutdown. Capacity information is advisory and does not reserve a slot.
-Lifecycle logs are JSON and correlate accepted work by run ID; metrics do not use
-run IDs, model names, or user-derived labels.
+Lifecycle logs are JSON and include `trace_id`/`span_id` when a span is active. The
+run manager carries only W3C `traceparent` values across its queue and spawned
+worker boundary. Metrics do not use run IDs, trace IDs, model names, or user-derived
+labels.
+
+## OpenTelemetry, Alloy, and Grafana
+
+The application uses the OpenTelemetry API for traces and portal metrics while
+keeping JSON logs on stdout. Configure `OTEL_EXPORTER_OTLP_ENDPOINT` (gRPC) and
+`OTEL_SERVICE_NAME` in the deployment; `OTEL_SDK_DISABLED=true` leaves the business
+path available without remote telemetry. Exporter queues and shutdown are bounded,
+and exporter failures are not returned as API errors.
+
+The checked-in optional collector stack is under `deploy/observability/`:
+
+```sh
+kubectl kustomize deploy/observability
+kubectl apply --dry-run=client -k deploy/observability
+```
+
+Alloy receives OTLP traces, tails only portal pod logs, keeps `service_name` as a
+Loki stream label, and stores `trace_id`/`span_id` as structured metadata. It
+scrapes `/metrics` and forwards samples by remote write. `alloy.config.alloy`
+expects deployment-supplied `TEMPO_OTLP_ENDPOINT`, `LOKI_URL`, and
+`PROMETHEUS_REMOTE_WRITE_URL`; Grafana provisioning expects `TEMPO_QUERY_URL`,
+`LOKI_QUERY_URL`, and `PROMETHEUS_QUERY_URL`. Credentials, tenant headers, and TLS
+material are intentionally absent from the repository.
+
+Grafana data sources use stable UIDs `tempo`, `loki`, and `prometheus`. Tempo's
+`tracesToLogsV2` searches Loki by `service_name` and trace ID; Loki's `trace_id`
+derived field links back to the exact Tempo trace. A real Tempo/Loki/Prometheus/
+Grafana deployment is required to verify the clickable links; local repository
+checks validate the application path and configuration shape only.
 
 ## Cache, History, and Retention
 
@@ -255,12 +292,13 @@ never applies them to Kubernetes.
   the accessible exact-value source.
 - Local browser history is visible to anyone using the same browser profile.
 - TLS, production secrets management, autoscaling, durable queues/storage, and real
-  GPU benchmark feedback are outside this repository's scope.
+  GPU benchmark feedback are outside this repository's scope. The optional
+  observability stack still requires deployment-specific backend URLs and secrets.
 
 ## Evidence and Decisions
 
 - `docs/verification-checklist.md` is the granular acceptance index.
 - `docs/evidence/` records exact commands and observed results.
-- `docs/DESIGN_DECISIONS.md` indexes ADR-001 through ADR-007.
+- `docs/DESIGN_DECISIONS.md` indexes ADR-001 through ADR-008.
 - `ARCHITECTURE.md`, `ROADMAP.md`, `TASKS.md`, and `IMPLEMENTATION_PLAN.md` describe
   the system boundary and staged delivery history.

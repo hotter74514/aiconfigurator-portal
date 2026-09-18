@@ -1,0 +1,52 @@
+apiVersion: 1
+
+deleteDatasources:
+  - name: Portal Tempo
+    orgId: 1
+  - name: Portal Loki
+    orgId: 1
+  - name: Portal Prometheus
+    orgId: 1
+
+datasources:
+  - name: Portal Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: ${TEMPO_QUERY_URL}
+    isDefault: false
+    jsonData:
+      nodeGraph:
+        enabled: true
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: "-2m"
+        spanEndTimeShift: "2m"
+        filterByTraceID: true
+        filterBySpanID: false
+        tags:
+          - key: service.name
+            value: service_name
+
+  - name: Portal Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: ${LOKI_QUERY_URL}
+    isDefault: false
+    jsonData:
+      derivedFields:
+        - name: TraceID
+          matcherRegex: '"trace_id":"([0-9a-f]{32})"'
+          datasourceUid: tempo
+          url: '$${__value.raw}'
+          urlDisplayLabel: View trace
+
+  - name: Portal Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: ${PROMETHEUS_QUERY_URL}
+    isDefault: true
+    jsonData:
+      httpMethod: POST

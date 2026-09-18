@@ -200,7 +200,7 @@ must contain exact commands and observations, not only a checked box.
   - **Evidence:** See `docs/evidence/task-013-ui-refresh.md` and the pinned design
     brief in `docs/evidence/task-013-design-brief.md`.
 
-- [ ] **TASK-014 — Deliver correlated OpenTelemetry signals through Grafana Alloy**
+- [~] **TASK-014 — Deliver correlated OpenTelemetry signals through Grafana Alloy**
   - **Outcome:** Operators can follow one submitted run across the FastAPI request,
     queue, callback threads, and spawned AIConfigurator worker in Tempo; inspect
     trace-correlated JSON logs in Loki; query low-cardinality metrics in Prometheus;
@@ -225,9 +225,10 @@ must contain exact commands and observations, not only a checked box.
     trace's Loki logs and **View Trace** returns to the exact Tempo trace ID. Re-run
     the real container flow, configured repository checks, image build,
     `kubectl apply --dry-run=client`, and `git diff --check`.
-  - **Evidence:** Not started. Record exact commands, backend queries, trace ID,
-    Grafana navigation observations, cardinality checks, outage behavior, and real
-    worker timing in `docs/evidence/task-014-opentelemetry-alloy.md`.
+  - **Evidence:** Implementation and local validation are recorded in
+    `docs/evidence/task-014-opentelemetry-alloy.md`. Live backend queries, a real
+    trace ID, Grafana navigation, outage behavior, and resource-bound worker timing
+    remain environment-dependent gates.
 
 ## Status Rules
 

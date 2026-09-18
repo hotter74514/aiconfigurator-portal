@@ -2,8 +2,8 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-008 Accepted; Stages 1–14 and TASK-013 are complete; Stages
-15–19 and TASK-014 are planned and not started.** Planning, implementation,
+**ADR-001 through ADR-008 Accepted; Stages 1–16 and TASK-013 are complete; Stages
+17–18 are in progress and Stage 19 remains environment-dependent.** Planning, implementation,
 operations, and handoff evidence are recorded for completed work. The repository
 owner confirmed TASK-006 validation has no known issues. The optional extension in
 Stages 6–10 passed its final automated, container, cluster, and browser gates; the
@@ -729,7 +729,7 @@ metric/Loki labels, and can be tested without Tempo, Loki, or Prometheus.
 **Tests / Evidence:** Contract-focused unit tests written first; dependency-resolution
 record; narrow test command; `make check`; `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete.
 
 ### Stage 16: Instrument the Web Process and Preserve Metrics
 
@@ -757,7 +757,7 @@ result; existing operational metrics remain queryable without forbidden labels.
 compatibility and cardinality assertions; app-factory duplication and lifecycle
 tests; narrow checks followed by `make check` and `git diff --check`.
 
-**Status:** Not Started.
+**Status:** Complete.
 
 ### Stage 17: Propagate Context through the Run and Worker Boundary
 
@@ -785,7 +785,8 @@ the HTTP response; propagation does not leak between runs.
 against a local OTLP receiver; success, queue, cache, rejection, dependency failure,
 timeout, and shutdown cases; real AIConfigurator container observation.
 
-**Status:** Not Started.
+**Status:** In Progress. Thread-executor and deterministic worker propagation are
+complete; real OTLP receiver and resource-bound spawned-worker evidence remain.
 
 ### Stage 18: Configure Alloy and Grafana Correlation
 
@@ -815,7 +816,8 @@ resolve one another by stable UID.
 run, backend API queries using one known trace ID, label/cardinality inspection, and
 credential/generated-file review.
 
-**Status:** Not Started.
+**Status:** In Progress. Alloy and Grafana configuration is implemented and syntax/
+manifest checked; live backend delivery remains environment-dependent.
 
 ### Stage 19: Prove Failure Isolation and Bidirectional Navigation
 

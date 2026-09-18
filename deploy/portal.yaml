@@ -15,6 +15,10 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: serving-configuration-portal
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8080"
     spec:
       terminationGracePeriodSeconds: 30
       securityContext:
@@ -35,6 +39,14 @@ spec:
           env:
             - name: PORTAL_RUN_ROOT
               value: /var/lib/portal/runs
+            - name: OTEL_SERVICE_NAME
+              value: serving-configuration-portal
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://portal-alloy:4317
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: "true"
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

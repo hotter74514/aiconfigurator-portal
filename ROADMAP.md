@@ -87,11 +87,11 @@ Proceed under Accepted ADR-008 while preserving the single-pod run lifecycle and
 the existing `/metrics` contract.
 
 - [x] Accept the hybrid OpenTelemetry, Alloy, and Grafana correlation architecture.
-- [ ] Instrument FastAPI, Python logs, and portal metrics with an explicit,
+- [x] Instrument FastAPI, Python logs, and portal metrics with an explicit,
   lifecycle-owned OpenTelemetry bootstrap.
-- [ ] Propagate W3C Trace Context through queued work, callback threads, and the
+- [~] Propagate W3C Trace Context through queued work, callback threads, and the
   explicitly spawned AIConfigurator worker process.
-- [ ] Route traces to Tempo, JSON pod logs to Loki, and scraped metrics to
+- [~] Route traces to Tempo, JSON pod logs to Loki, and scraped metrics to
   Prometheus through bounded Alloy pipelines.
 - [ ] Provision stable Grafana data sources and prove Tempo-to-Loki and
   Loki-to-Tempo navigation with Playwright MCP.

@@ -2,10 +2,11 @@
 
 ## Status
 
-**Implemented baseline and optional extension; ADR-001 through ADR-007 are
+**Implemented baseline and optional extension; ADR-001 through ADR-008 are
 Accepted.** The repository contains the application, pinned dependency lock,
 container image definition, Kubernetes deployment manifest, result insight features,
-bounded cache, browser-local history, and anonymous capacity awareness.
+bounded cache, browser-local history, anonymous capacity awareness, and the
+OpenTelemetry/Alloy/Grafana configuration extension.
 
 ## Current System Context
 
@@ -13,7 +14,8 @@ bounded cache, browser-local history, and anonymous capacity awareness.
   Kubernetes and the HTTP observability endpoints.
 - **Primary outcome:** See `docs/project-brief.md`.
 - **External systems:** AIConfigurator and its packaged/profile data; a Kubernetes
-  API is only a deployment target for the portal and for downloaded artifacts.
+  API is a deployment target for the portal, Alloy log discovery, and downloaded
+  artifacts; Tempo, Loki, Prometheus, and Grafana are deployment-supplied backends.
 - **Trust boundaries:** Browser input is untrusted; generated files are downloadable
   output and are never automatically applied to a cluster.
 
@@ -28,6 +30,8 @@ bounded cache, browser-local history, and anonymous capacity awareness.
 | Browser-local run history | Capped, status-revalidated convenience index for one browser profile | `localStorage`; `/api/runs/{id}` status endpoint | Repository owner |
 | Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts/verified Pareto output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |
 | Deployment | Non-root single-replica container on Kubernetes with probes and bounded ephemeral storage | `Dockerfile`; `deploy/portal.yaml`; ClusterIP HTTP service | Repository owner |
+| Telemetry bootstrap | Owns OpenTelemetry providers, W3C carrier serialization, JSON log injection, and Prometheus-compatible metrics | `portal.observability`; `OTEL_*`; `/metrics` | Repository owner |
+| Alloy/Grafana delivery | Routes OTLP traces, selected pod logs, and scraped metrics; provisions stable data-source correlation | `deploy/observability/`; Tempo/Loki/Prometheus/Grafana endpoints | Platform operator |
 
 ## Implemented Data and Control Flow
 
@@ -41,6 +45,14 @@ The portal returns an opaque run ID immediately and the browser polls the status
 endpoint. Completed immutable bundles may be reused from the bounded in-process
 cache under a versioned canonical request key, but every cache hit receives a fresh
 run ID. Artifacts and run metadata remain local and ephemeral.
+
+The submission span injects W3C Trace Context into the run record. Callback spans
+reconstruct that context explicitly, and the spawned worker initializes its own
+provider before creating `portal.run.execute`. JSON logs retain trace and span IDs
+as fields; Alloy indexes only `service_name` and stores trace identifiers as Loki
+structured metadata. Grafana's provisioned Tempo and Loki data sources therefore
+support both trace-to-logs and log-to-trace navigation without high-cardinality
+stream labels.
 
 ## Verified Constraints
 
@@ -61,6 +73,9 @@ run ID. Artifacts and run metadata remain local and ephemeral.
   active and queued runs. It exposes no run IDs, request data, timestamps, IPs,
   cookies, or user labels; `admission_open` is informational and does not reserve
   a slot.
+- `deploy/observability/alloy.config.alloy` is syntax-checked with the pinned Alloy
+  image; a live Kubernetes API and reachable telemetry backends are required for
+  signal delivery and clickable Grafana validation.
 
 ## Quality Attributes
 
@@ -71,6 +86,8 @@ run ID. Artifacts and run metadata remain local and ephemeral.
 - **Reproducibility:** Pin dependencies and prove the documented smoke case in the
   built Linux image.
 - **Operability:** Correlated JSON logs and low-cardinality run/latency/queue metrics.
+- **Telemetry isolation:** OTLP/exporter outages do not fail business requests;
+  `OTEL_SDK_DISABLED=true` retains the HTTP path and stdout logging contract.
 - **Safety:** Never shell-interpolate user input or auto-apply generated manifests.
 - **Honest output:** Every result/download view says estimates require real benchmark
   validation.
@@ -84,4 +101,5 @@ run ID. Artifacts and run metadata remain local and ephemeral.
 
 - `docs/decisions/001-single-pod-async-execution.md` — Accepted.
 - `docs/decisions/002-ephemeral-run-storage.md` — Accepted.
+- `docs/decisions/008-opentelemetry-alloy-pipeline.md` — Accepted.
 - `docs/DESIGN_DECISIONS.md` indexes decision status.
