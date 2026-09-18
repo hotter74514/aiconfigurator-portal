@@ -32,20 +32,19 @@ Date: 2026-09-18 (Asia/Taipei)
 | `make build` | Linux/amd64 image built successfully; locked runtime includes OpenTelemetry API/SDK, OTLP gRPC exporter, Prometheus exporter, FastAPI, and logging instrumentation. |
 | `docker run ... -e OTEL_SDK_DISABLED=true ...` plus `curl /health/live` and `/health/ready` | Both probes returned `{"status":"ok"}` while remote telemetry was disabled. |
 
-## Not yet verified
+## Remaining verification
 
-This checkout has no reachable Tempo, Loki, Prometheus, Grafana, or Kubernetes
-observability workload, so the following are intentionally not claimed as passing:
+The Minikube deployment below verifies a real spawned worker exporting to an OTLP
+receiver, pod stdout ingestion and structured metadata queries in Loki, Prometheus
+scraping, and Grafana datasource-proxy correlation. The following gates remain
+intentionally open:
 
-- a real spawned worker exporting to an OTLP receiver and searchable in Tempo;
-- pod stdout ingestion and structured metadata queries in Loki;
-- remote-write samples visible in Prometheus;
-- Playwright MCP navigation from Tempo **Logs for this span** to Loki and Loki
-  **View Trace** back to the exact Tempo trace;
+- visible Playwright MCP navigation from Tempo **Logs for this span** to Loki and
+  Loki **View Trace** back to the exact Tempo trace;
 - Alloy/backend outage timing under the declared resource limits.
 
-These are Stage 19 environment-dependent gates. Backend URLs, tenant headers, TLS
-material, and credentials must be supplied by the deployment and are not committed.
+Backend URLs, tenant headers, TLS material, and credentials remain deployment inputs
+and are not committed.
 
 ## Minikube deployment verification
 
