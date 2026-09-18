@@ -2,12 +2,13 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-007 Accepted; Stages 1–14 and TASK-013 are complete.** Planning,
-implementation, operations, and handoff evidence are recorded. The repository owner
-confirmed TASK-006 validation has no known issues. The optional extension in Stages
-6–10 passed its final automated, container, cluster, and browser gates; the project
-scoped Playwright MCP server uses an isolated profile to avoid the observed Chrome
-download crash.
+**ADR-001 through ADR-008 Accepted; Stages 1–14 and TASK-013 are complete; Stages
+15–19 and TASK-014 are planned and not started.** Planning, implementation,
+operations, and handoff evidence are recorded for completed work. The repository
+owner confirmed TASK-006 validation has no known issues. The optional extension in
+Stages 6–10 passed its final automated, container, cluster, and browser gates; the
+project-scoped Playwright MCP server uses an isolated profile to avoid the observed
+Chrome download crash.
 
 ## Observable Outcome
 
@@ -697,6 +698,170 @@ and handoff evidence are recorded in `docs/evidence/task-013-ui-refresh.md`.
   use contained scrolling instead of collapsing or hiding decision data.
 - Each stage is a focused, reversible commit. Revert the stage if its visual gains
   cannot pass the same functional and accessibility checks as the baseline.
+
+## OpenTelemetry and Alloy Extension
+
+Implement Accepted ADR-008 as TASK-014. Keep application telemetry explicit and
+testable: traces use OTLP, logs remain JSON on stdout with injected trace context,
+and OpenTelemetry metrics preserve the Prometheus `/metrics` pull contract. Alloy
+routes the signals to Tempo, Loki, and Prometheus, while provisioned Grafana data
+sources provide bidirectional trace/log navigation.
+
+### Stage 15: Lock the Telemetry Contract and Test Seams
+
+**Goal:** Turn ADR-008 into executable signal, propagation, cardinality, and failure
+contracts before adding runtime dependencies.
+
+**Work:**
+
+1. Inventory the existing log fields and metric names that must remain compatible.
+2. Define resource attributes, span names, safe run attributes, metric instruments,
+   excluded probe routes, and environment configuration.
+3. Define injectable tracer, meter, exporter, and clock seams for deterministic
+   tests without a live backend.
+4. Specify the W3C carrier stored with a run and the expected HTTP, queue, worker,
+   completion, failure, timeout, rejection, and cache-hit relationships.
+
+**Success Criteria:** The contract identifies every emitted field and attribute,
+contains no request bodies, artifacts, credentials, baggage, or high-cardinality
+metric/Loki labels, and can be tested without Tempo, Loki, or Prometheus.
+
+**Tests / Evidence:** Contract-focused unit tests written first; dependency-resolution
+record; narrow test command; `make check`; `git diff --check`.
+
+**Status:** Not Started.
+
+### Stage 16: Instrument the Web Process and Preserve Metrics
+
+**Goal:** FastAPI requests emit spans and standard HTTP metrics, portal metrics use
+the OpenTelemetry API, and JSON logs contain valid active trace context.
+
+**Work:**
+
+1. Add compatible, locked OpenTelemetry SDK, OTLP, Prometheus, FastAPI, and logging
+   packages.
+2. Add an explicit telemetry bootstrap with stable resource attributes, bounded
+   batch export, disabled mode, dependency injection, force-flush, and shutdown.
+3. Instrument each app instance exactly once and exclude live, ready, and metrics
+   endpoints from tracing.
+4. Extend the JSON formatter with conditional `trace_id`, `span_id`, sampled state,
+   and service identity while preserving safe lifecycle fields.
+5. Replace custom metric instruments with OpenTelemetry counters, observable gauges,
+   and histograms while keeping the required `/metrics` names and semantics.
+
+**Success Criteria:** A request produces one server span; logs inside it contain the
+same valid trace and span IDs; disabled/exporter-failure modes do not affect the HTTP
+result; existing operational metrics remain queryable without forbidden labels.
+
+**Tests / Evidence:** In-memory span/metric tests; JSON log tests; `/metrics`
+compatibility and cardinality assertions; app-factory duplication and lifecycle
+tests; narrow checks followed by `make check` and `git diff --check`.
+
+**Status:** Not Started.
+
+### Stage 17: Propagate Context through the Run and Worker Boundary
+
+**Goal:** One trace remains causally connected across admission, queue delay,
+callback threads, and the isolated AIConfigurator child process.
+
+**Work:**
+
+1. Inject the current W3C Trace Context into a plain string carrier at submission
+   and retain it with the run record.
+2. Reconstruct context explicitly for start, completion, timeout, and failure work;
+   do not rely on callback-thread ambient context.
+3. Use an explicit `spawn` process context, initialize child telemetry independently,
+   extract the carrier, and wrap AIConfigurator in `portal.run.execute`.
+4. Correlate accepted, started, completed, failed, timed-out, rejected, and cache-hit
+   logs without changing run API or polling semantics.
+5. Re-measure real worker startup, runtime, memory, probe responsiveness, and
+   graceful shutdown under the container resource limit.
+
+**Success Criteria:** A known incoming `traceparent` yields the same trace ID in the
+HTTP, queued lifecycle, and worker spans and logs, including when work begins after
+the HTTP response; propagation does not leak between runs.
+
+**Tests / Evidence:** Thread-executor unit coverage plus a real spawned-process test
+against a local OTLP receiver; success, queue, cache, rejection, dependency failure,
+timeout, and shutdown cases; real AIConfigurator container observation.
+
+**Status:** Not Started.
+
+### Stage 18: Configure Alloy and Grafana Correlation
+
+**Goal:** Deliver each signal to its backend and provision deterministic two-way
+navigation between Tempo traces and Loki logs.
+
+**Work:**
+
+1. Add bounded Alloy OTLP trace reception and Tempo export with memory limiting,
+   batching, retry, and deployment-supplied backend configuration.
+2. Collect only selected portal pod logs, parse JSON, retain `service_name` as a
+   low-cardinality label, and attach trace/span IDs as structured metadata before
+   writing to Loki.
+3. Discover and scrape portal `/metrics`, apply a low-cardinality label policy, and
+   forward to the configured Prometheus-compatible destination.
+4. Provision stable Grafana UIDs `tempo`, `loki`, and `prometheus`; configure Tempo
+   `tracesToLogsV2` and the Loki `trace_id` derived internal link.
+5. Keep endpoint, tenant, TLS, and credential values outside committed configuration
+   and validate the Alloy and Kubernetes artifacts before deployment.
+
+**Success Criteria:** Tempo contains application and worker spans; Loki contains
+JSON lifecycle logs with searchable structured trace metadata but no trace-ID stream
+label; Prometheus contains the required metrics; provisioned Grafana data sources
+resolve one another by stable UID.
+
+**Tests / Evidence:** Alloy formatting/config validation, Kubernetes client-side dry
+run, backend API queries using one known trace ID, label/cardinality inspection, and
+credential/generated-file review.
+
+**Status:** Not Started.
+
+### Stage 19: Prove Failure Isolation and Bidirectional Navigation
+
+**Goal:** Demonstrate the complete operator workflow and hand off reproducible
+evidence without weakening the portal's functional path.
+
+**Work:**
+
+1. Submit a known `traceparent`, locate the complete trace in Tempo, and confirm its
+   corresponding web and worker logs and Prometheus metrics.
+2. With Playwright MCP, select **Logs for this span** in Tempo and confirm the Loki
+   results use the same trace ID; then select **View Trace** from a log and confirm
+   the exact original Tempo trace opens.
+3. Test absent, malformed, unsampled, failed, and delayed-ingestion cases without
+   broken links or misleading claims.
+4. Stop Alloy and each backend in turn and confirm portal traffic, probes, local
+   stdout logging, shutdown, memory, and exporter queues remain bounded.
+5. Reconcile README, architecture, roadmap, task, checklist, and evidence with the
+   observed implementation and limitations.
+
+**Success Criteria:** The two Grafana navigation directions work for the same real
+run; telemetry outages do not fail business behavior; every applicable configured,
+container, browser, and Kubernetes gate passes; only intentional files remain.
+
+**Tests / Evidence:** Record the trace ID, Tempo/LogQL/PromQL queries, Playwright MCP
+navigation observations, outage results, real container flow, full `make check`,
+image build, integration tests, manifest validation, and `git diff --check` in
+`docs/evidence/task-014-opentelemetry-alloy.md`.
+
+**Status:** Not Started.
+
+### OpenTelemetry Extension Risks and Rollback
+
+- Explicit `spawn` can change AIConfigurator startup latency and memory behavior;
+  retain the current execution contract and stop if the real container evidence
+  invalidates ADR-008's acceptable-overhead assumption.
+- Duplicate initialization can create duplicate spans or metric registration errors;
+  app-factory idempotence is a Stage 16 gate.
+- Unsampled traces can leave correlated log IDs without a stored Tempo trace. Keep
+  sampling explicit and document this expected outcome rather than fabricating a
+  link target.
+- Grafana correlation depends on exact field names, stable data-source UIDs, and an
+  adequate time window. Provision and test both navigation directions together.
+- Telemetry must remain optional to business correctness. Disable the SDK and remove
+  the additive Alloy/Grafana configuration to roll back without changing run API,
+  result, artifact, cache, history, or capacity behavior.
 
 ## References
 

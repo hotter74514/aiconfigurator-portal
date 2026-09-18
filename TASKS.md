@@ -200,6 +200,35 @@ must contain exact commands and observations, not only a checked box.
   - **Evidence:** See `docs/evidence/task-013-ui-refresh.md` and the pinned design
     brief in `docs/evidence/task-013-design-brief.md`.
 
+- [ ] **TASK-014 — Deliver correlated OpenTelemetry signals through Grafana Alloy**
+  - **Outcome:** Operators can follow one submitted run across the FastAPI request,
+    queue, callback threads, and spawned AIConfigurator worker in Tempo; inspect
+    trace-correlated JSON logs in Loki; query low-cardinality metrics in Prometheus;
+    and navigate in both directions between the same Tempo trace and Loki logs from
+    Grafana.
+  - **Scope:** Implement the Accepted ADR-008 hybrid pipeline: explicit OpenTelemetry
+    SDK bootstrap; FastAPI and logging instrumentation; OpenTelemetry metrics with a
+    Prometheus reader; W3C Trace Context propagation through the bounded run manager
+    and spawned worker; Alloy OTLP, Kubernetes-log, and Prometheus pipelines; stable
+    Grafana Tempo/Loki/Prometheus data-source provisioning; bounded shutdown and
+    outage behavior. Do not add OTLP log export, arbitrary baggage propagation,
+    trace/run/model metric labels, trace IDs as Loki stream labels, durable queues,
+    tail sampling, service graphs, or production credentials.
+  - **Dependencies:** TASK-013; Accepted ADR-008; reachable Tempo, Loki, Prometheus,
+    and Grafana endpoints for end-to-end verification.
+  - **Verify:** Tests cover telemetry bootstrap and disabled mode, FastAPI spans,
+    JSON trace/span injection, metric compatibility and cardinality, cache/rejection/
+    failure/timeout paths, and a real spawned-worker propagation path using a known
+    `traceparent`. Alloy and Kubernetes configurations validate; exporter/backend
+    outage does not fail business traffic; Tempo, Loki, and Prometheus contain the
+    expected signals. Playwright MCP proves **Logs for this span** opens the same
+    trace's Loki logs and **View Trace** returns to the exact Tempo trace ID. Re-run
+    the real container flow, configured repository checks, image build,
+    `kubectl apply --dry-run=client`, and `git diff --check`.
+  - **Evidence:** Not started. Record exact commands, backend queries, trace ID,
+    Grafana navigation observations, cardinality checks, outage behavior, and real
+    worker timing in `docs/evidence/task-014-opentelemetry-alloy.md`.
+
 ## Status Rules
 
 - `[ ]` Not started or blocked; add a blocker note when applicable.

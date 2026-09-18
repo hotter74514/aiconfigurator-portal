@@ -13,6 +13,7 @@ Create a record from decisions/000-template.md when a choice is consequential, d
 | [ADR-005](decisions/005-bounded-result-cache.md) | Bounded result cache | Accepted | Repository owner |
 | [ADR-006](decisions/006-browser-local-run-history.md) | Browser-local run history | Accepted | Repository owner |
 | [ADR-007](decisions/007-anonymous-capacity-awareness.md) | Anonymous multi-user capacity awareness | Accepted | Repository owner |
+| [ADR-008](decisions/008-opentelemetry-alloy-pipeline.md) | OpenTelemetry and Grafana Alloy telemetry pipeline | Accepted | Repository owner |
 
 ## Lifecycle
 
