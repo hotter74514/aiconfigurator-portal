@@ -36,11 +36,9 @@ Date: 2026-09-18 (Asia/Taipei)
 
 The Minikube deployment below verifies a real spawned worker exporting to an OTLP
 receiver, pod stdout ingestion and structured metadata queries in Loki, Prometheus
-scraping, and Grafana datasource-proxy correlation. The following gates remain
+scraping, and Grafana datasource-proxy correlation. The following gate remains
 intentionally open:
 
-- visible Playwright MCP navigation from Tempo **Logs for this span** to Loki and
-  Loki **View Trace** back to the exact Tempo trace;
 - Alloy/backend outage timing under the declared resource limits.
 
 Backend URLs, tenant headers, TLS material, and credentials remain deployment inputs
@@ -74,7 +72,21 @@ Commands and observations:
 | Prometheus `/api/v1/targets` and `/api/v1/query?query=portal_runs_submitted_total` | Portal `/metrics` target was `up`; Prometheus returned `portal_runs_submitted_total=1`. |
 | Grafana `/api/health` and datasource UID API | Grafana 12.3.1 healthy; UIDs `tempo`, `loki`, and `prometheus` resolve. Tempo has `tracesToLogsV2`; Loki has the `trace_id` derived field back to Tempo. |
 
-The repository's Playwright MCP/browser runtime was unavailable in this session, so
-the final visible **Logs for this span** and **View Trace** clicks were not exercised.
-The equivalent Grafana datasource-proxy and backend queries above verify the exact
-correlation inputs and outputs; UI-click evidence remains the only outstanding gate.
+## Playwright MCP Grafana navigation
+
+The project-scoped Playwright MCP was used against the port-forwarded Grafana UI
+(`http://127.0.0.1:13000/`) with the real trace ID
+`4f8f0e4c9a7b6d5c3e2f1a0b9c8d7e6f`:
+
+1. Grafana Explore → Tempo accepted the trace ID and rendered
+   `serving-configuration-portal: POST /api/runs` with four spans, including
+   `portal.run.submit`, `portal.run.execute`, and `portal.run_completed`.
+2. On the root span, **Explore the logs for this in split view** opened Loki with
+   the correlated time window and trace/span filters. The Loki result displayed
+   JSON records containing the same trace ID, including `run_started`.
+3. Opening a Loki record exposed the derived-field **View trace** action. Clicking
+   it opened a Tempo pane whose query and rendered trace both contained the exact
+   original trace ID.
+
+This proves both visible Grafana navigation directions for the same real run. The
+only remaining Stage 19 gate is outage timing under the declared resource limits.
