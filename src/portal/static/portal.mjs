@@ -1,4 +1,4 @@
-import {addHistoryEntry, parseHistory, pruneHistory} from "/static/history.mjs";
+import {addHistoryEntry, mergeHistory, parseHistory, pruneHistory} from "/static/history.mjs";
 
 const HISTORY_STORAGE_KEY = "serving-configuration-portal.history.v1";
 const form = document.getElementById("run-form");
@@ -33,6 +33,7 @@ let capacityTimer = null;
 let capacityRequestPending = false;
 let pollTimer = null;
 let pollGeneration = 0;
+let historyRevision = 0;
 
 const value = (id) => document.getElementById(id).value;
 
@@ -51,16 +52,32 @@ const readHistory = () => {
 
 const writeHistory = () => {
   try {
+    // Merge with the latest shared value so near-simultaneous submissions from
+    // different tabs do not overwrite one another's newly-created run.
+    historyEntries = mergeHistory(readHistory(), historyEntries);
     window.localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(historyEntries));
   } catch (_) {
     // Browser storage is an optional convenience; a quota or privacy error must not block runs.
   }
 };
 
+const replaceStoredHistory = (entries) => {
+  try {
+    window.localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(entries));
+  } catch (_) {
+    // Browser storage is an optional convenience; a quota or privacy error must not block runs.
+  }
+};
+
 const removeHistoryEntry = (runId) => {
+  historyRevision += 1;
   historyEntries = historyEntries.filter((entry) => entry.run_id !== runId);
   historyStatuses.delete(runId);
-  writeHistory();
+  historyEntries = mergeHistory(
+    readHistory().filter((entry) => entry.run_id !== runId),
+    historyEntries,
+  );
+  replaceStoredHistory(historyEntries);
   renderHistory();
 };
 
@@ -88,6 +105,7 @@ const renderHistory = () => {
 };
 
 const rememberRun = (runId, request) => {
+  historyRevision += 1;
   historyEntries = addHistoryEntry(historyEntries, {
     run_id: runId,
     created_at: new Date().toISOString(),
@@ -386,6 +404,7 @@ const restoreRun = (entry) => {
 };
 
 const revalidateHistory = async () => {
+  const revisionAtStart = historyRevision;
   historyEntries = pruneHistory(historyEntries, new Set(historyEntries.map((entry) => entry.run_id)));
   const entriesAtStart = historyEntries;
   const idsAtStart = new Set(entriesAtStart.map((entry) => entry.run_id));
@@ -413,13 +432,38 @@ const revalidateHistory = async () => {
   const entriesAddedDuringRevalidation = historyEntries.filter(
     (entry) => !idsAtStart.has(entry.run_id),
   );
-  historyEntries = pruneHistory(
+  const revalidatedEntries = pruneHistory(
     [...validEntries, ...entriesAddedDuringRevalidation],
     new Set([...retainedIds, ...entriesAddedDuringRevalidation.map((entry) => entry.run_id)]),
   );
-  writeHistory();
+  if (revisionAtStart !== historyRevision) {
+    renderHistory();
+    return;
+  }
+  historyEntries = revalidatedEntries;
+  replaceStoredHistory(historyEntries);
   renderHistory();
 };
+
+window.addEventListener("storage", (event) => {
+  if (event.key !== HISTORY_STORAGE_KEY) return;
+  historyRevision += 1;
+  if (event.newValue === null) {
+    historyEntries = [];
+    historyStatuses.clear();
+    renderHistory();
+    return;
+  }
+
+  const mergedEntries = mergeHistory(parseHistory(event.newValue), historyEntries);
+  const changed = JSON.stringify(mergedEntries) !== JSON.stringify(historyEntries);
+  historyEntries = mergedEntries;
+  if (changed) {
+    writeHistory();
+    renderHistory();
+    revalidateHistory();
+  }
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -441,6 +485,7 @@ form.addEventListener("submit", async (event) => {
 });
 
 clearHistory.addEventListener("click", () => {
+  historyRevision += 1;
   historyEntries = [];
   historyStatuses.clear();
   try {

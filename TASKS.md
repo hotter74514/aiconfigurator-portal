@@ -178,6 +178,7 @@ must contain exact commands and observations, not only a checked box.
     browser, `make check`, and `git diff --check` gates pass.
   - **Evidence:** Partial evidence is in
     `docs/evidence/task-012-handoff-reconciliation.md`.
+
   - **Resolution:** The Kubernetes architecture mismatch and all cluster gates are
     resolved with an architecture-matched local image. The Playwright MCP profile
     was changed to isolated mode after the Chrome native download crash; keyboard
@@ -266,6 +267,18 @@ must contain exact commands and observations, not only a checked box.
     browser console; `make check` and `git diff --check` pass.
   - **Evidence:** Record exact checks, visible panels, live values, and limitations
     in `docs/evidence/task-016-grafana-dashboard.md`.
+
+- [x] **TASK-017 — Synchronize browser-local history across tabs**
+  - **Outcome:** Same-origin tabs observe each other's browser-local submissions,
+    including near-simultaneous additions, without introducing server-wide history.
+  - **Scope:** Merge-on-write, `storage` event synchronization, and regression/browser
+    coverage. Preserve the existing cap, TTL, pruning, clear action, and local-only
+    privacy boundary.
+  - **Dependencies:** TASK-010; Accepted ADR-006 remains unchanged.
+  - **Verify:** Client merge tests, two-tab Playwright MCP submission flow, `make
+    check`, and `git diff --check` pass.
+  - **Evidence:** See `docs/evidence/task-017-browser-history-sync.md` for exact
+    client, Playwright MCP, and configured-check observations.
 
 ## Status Rules
 

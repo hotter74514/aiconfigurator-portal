@@ -114,6 +114,9 @@ Stage 1" describe the intended stable Make target, not a command already verifie
 - [x] TASK-011 Playwright MCP coverage: two isolated contexts observe the same
   aggregate pressure, the capacity banner shows saturation, visibility-aware polling
   pauses and resumes, and keyboard focus reaches and activates submission.
+- [x] Same-profile tabs submitting concurrently both display both new browser-local
+  history entries; a clear action during revalidation does not restore stale entries;
+  Playwright MCP observed zero browser console errors.
 - [x] Keyboard-only: labels, focus order, submission, status announcement, result
   navigation, retry, and download are usable. TASK-012 verified the labeled
   input-to-submit focus order, Enter submission, completed result, history controls,

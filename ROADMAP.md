@@ -119,6 +119,15 @@ telemetry boundaries.
 - [x] Validate every PromQL expression and render the dashboard in the local
   Grafana stack with Playwright MCP.
 
+## P10 — Browser-Local History Concurrency Correctness
+
+- [x] Merge same-origin tab additions through `localStorage` storage events without
+  introducing server-wide history or ownership semantics.
+- [x] Guard asynchronous history revalidation from writing stale entries after a
+  clear or concurrent local change.
+- [x] Verify simultaneous submissions and clear/revalidation behavior with client
+  tests and Playwright MCP.
+
 ## Deferred
 
 - **Additional Pareto dimensions:** require a new accepted ADR if users need

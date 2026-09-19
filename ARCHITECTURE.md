@@ -68,6 +68,7 @@ stream labels.
 - Browser validation is required to use the Playwright MCP configured in
   `.codex/config.toml`.
 - Browser-local history is capped at 20 entries and stores no server-wide index;
+  same-origin tabs merge local additions through `localStorage` storage events, and
   malformed, expired, and unknown IDs are pruned through the existing status API.
 - Anonymous capacity awareness is a read-only aggregate view of this process's
   active and queued runs. It exposes no run IDs, request data, timestamps, IPs,

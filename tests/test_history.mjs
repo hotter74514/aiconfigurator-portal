@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   HISTORY_LIMIT,
   addHistoryEntry,
+  mergeHistory,
   parseHistory,
   pruneHistory,
 } from "../src/portal/static/history.mjs";
@@ -43,6 +44,20 @@ test("addHistoryEntry deduplicates, orders newest first, and caps entries", () =
     entry("a".repeat(32), "2026-03-01T00:00:00.000Z"),
   );
   assert.deepEqual(updated.map((item) => item.run_id), ["a".repeat(32), "b".repeat(32)]);
+});
+
+test("mergeHistory preserves entries submitted concurrently by different tabs", () => {
+  const first = entry("a".repeat(32), "2026-02-01T00:00:00.000Z");
+  const second = entry("b".repeat(32), "2026-02-01T00:00:01.000Z");
+
+  assert.deepEqual(mergeHistory([first], [second]).map((item) => item.run_id), [
+    second.run_id,
+    first.run_id,
+  ]);
+  assert.deepEqual(mergeHistory([first], [first, second]).map((item) => item.run_id), [
+    second.run_id,
+    first.run_id,
+  ]);
 });
 
 test("pruneHistory removes expired and unknown entries", () => {

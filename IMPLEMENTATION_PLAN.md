@@ -928,6 +928,24 @@ MCP desktop validation, `make check`, and `git diff --check`.
 **Status:** Complete. Prometheus expressions, Grafana schema/import, and the local
 Playwright MCP render are recorded in `docs/evidence/task-016-grafana-dashboard.md`.
 
+### Stage 24: Synchronize Browser-Local History Across Tabs
+
+**Goal:** Keep the existing browser-local run history consistent when multiple
+same-origin tabs submit runs at nearly the same time.
+
+**Success Criteria:** A submission in one tab appears in the other open tabs without
+refreshing; concurrent additions are merged instead of overwritten; clear-history,
+expired-run pruning, and unknown-run removal continue to work; no server-wide
+history endpoint or ownership semantics are introduced.
+
+**Tests:** Add deterministic client tests for merging concurrent history entries;
+use Playwright MCP with two tabs sharing one browser profile to submit separate runs,
+observe both entries in both tabs, and verify the existing configured checks.
+
+**Status:** Complete. Merge-on-write, storage-event synchronization, stale
+revalidation protection, client regression coverage, and the two-tab Playwright MCP
+flow are recorded in `docs/evidence/task-017-browser-history-sync.md`.
+
 ### OpenTelemetry Extension Risks and Rollback
 
 - Explicit `spawn` can change AIConfigurator startup latency and memory behavior;

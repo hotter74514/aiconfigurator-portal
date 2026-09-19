@@ -213,10 +213,12 @@ A hit receives a fresh run ID. Failures and in-flight requests are not cached, a
 all cache state disappears on restart.
 
 The browser keeps at most 20 run summaries in `localStorage` and revalidates their
-opaque IDs. This is convenience history, not an account, authorization boundary,
-privacy boundary, audit log, or durable/cross-device history. Anyone sharing the
-browser profile can see it. Site-data clearing, one-hour server retention, or a
-portal restart can remove access to those runs.
+opaque IDs. Open same-origin tabs in the same browser profile merge new entries
+through the browser storage event; concurrent additions are not treated as a
+server-wide history. This is convenience history, not an account, authorization
+boundary, privacy boundary, audit log, or durable/cross-device history. Anyone
+sharing the browser profile can see it. Site-data clearing, one-hour server
+retention, or a portal restart can remove access to those runs.
 
 ## Kubernetes
 

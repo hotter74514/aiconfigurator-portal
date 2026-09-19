@@ -45,28 +45,31 @@ const newestFirst = (entries) => entries.toSorted((left, right) => {
   return Date.parse(right.created_at) - Date.parse(left.created_at);
 });
 
+export const mergeHistory = (...collections) => {
+  const unique = new Map();
+  for (const entries of collections) {
+    if (!Array.isArray(entries)) continue;
+    for (const item of entries) {
+      const normalized = normalizeEntry(item);
+      if (normalized) unique.set(normalized.run_id, normalized);
+    }
+  }
+  return newestFirst([...unique.values()]).slice(0, HISTORY_LIMIT);
+};
+
 export const parseHistory = (serialized) => {
   if (typeof serialized !== "string") return [];
   try {
     const parsed = JSON.parse(serialized);
     if (!Array.isArray(parsed)) return [];
-    const unique = new Map();
-    for (const item of parsed) {
-      const normalized = normalizeEntry(item);
-      if (normalized) unique.set(normalized.run_id, normalized);
-    }
-    return newestFirst([...unique.values()]).slice(0, HISTORY_LIMIT);
+    return mergeHistory(parsed);
   } catch (_) {
     return [];
   }
 };
 
 export const addHistoryEntry = (entries, value) => {
-  const normalized = normalizeEntry(value);
-  if (!normalized) return parseHistory(JSON.stringify(entries));
-  const validEntries = Array.isArray(entries) ? entries : [];
-  const withoutDuplicate = validEntries.filter((item) => item?.run_id !== normalized.run_id);
-  return newestFirst([...withoutDuplicate, normalized]).slice(0, HISTORY_LIMIT);
+  return mergeHistory(entries, [value]);
 };
 
 export const pruneHistory = (entries, knownRunIds, now = Date.now()) => {

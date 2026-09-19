@@ -73,7 +73,8 @@ limitations.
 1. Test cap, ordering, duplicate update, malformed JSON, invalid IDs, expiry pruning,
    storage exceptions, and clear action.
 2. Use Playwright MCP for refresh restore, expired pruning, clear history, narrow
-   viewport, keyboard use, and two browser contexts with separate local history.
+   viewport, keyboard use, two browser contexts with separate local history, and
+   same-profile tabs submitting concurrently.
 3. Verify no unsafe HTML insertion and no new server list-runs endpoint.
 
 ## What Would Change This Decision
