@@ -255,28 +255,111 @@ probes, two CPU/4 GiB requests and limits, a 1 GiB run `emptyDir`, and a 256 MiB
 temporary `emptyDir`. Generated serving manifests are downloads only; the portal
 never applies them to Kubernetes.
 
-## Design Discussion Areas
+## Design Decisions
 
-1. **User workflow:** one page covers request, progress, comparison, exact results,
-   visualization, and artifact download.
-2. **Dependency boundary:** a typed adapter contains the pinned SDK and normalized
-   portal-owned result contract.
-3. **Execution model:** immediate `202` plus polling avoids holding a request open;
-   CPU work runs in one isolated process.
-4. **Concurrency:** one active and four queued requests bound CPU and memory; excess
-   work gets retryable `429`.
-5. **Ranking and SLA:** the SDK performs strict SLA filtering and independently
-   ranks aggregated and disaggregated modes.
-6. **Artifacts and storage:** server-generated opaque IDs and contained paths scope
-   downloads to one ephemeral run root.
-7. **Resilience:** timeout, sanitized failure, graceful shutdown, TTL cleanup, and
-   startup orphan cleanup are explicit; restart recovery is deliberately absent.
-8. **Observability:** live/ready/capacity endpoints, structured logs, and bounded
-   metrics distinguish health, saturation, and failure.
-9. **Deployment and security:** a pinned non-root image and restrictive single-pod
-   manifest keep the take-home deployment inspectable; no shell evaluates input.
-10. **Evolution:** durable metadata/object storage and a dedicated queue/worker are
-    required before multiple replicas, private ownership, quotas, or durable history.
+The following is the short version of the discussion points in Section 6 of the
+assignment. Full alternatives, consequences, validation, and migration triggers are
+recorded in the accepted ADRs under `docs/decisions/`.
+
+### 6.1 Execution model
+
+**Chosen:** one FastAPI pod uses a bounded in-process queue and a spawned
+`ProcessPoolExecutor` worker for the CPU-bound sweep. There is one active run and
+four queued runs; a run has a 900-second timeout. **Rejected:** inline execution,
+Kubernetes Job per request, and a durable worker service were rejected because they
+either block HTTP or add queue/control-plane infrastructure outside this scope.
+**Change trigger:** runs that need retry/resume/cancel, multiple replicas, or strict
+per-job resource isolation would move execution to a durable queue and dedicated
+workers. See [ADR-001](docs/decisions/001-single-pod-async-execution.md).
+
+### 6.2 Synchronous versus asynchronous API
+
+**Chosen:** `POST /api/runs` returns `202`, an opaque run ID, a status URL, and a
+two-second polling hint. **Rejected:** SSE, WebSockets, and long polling were not
+needed for low-frequency lifecycle updates; polling has simpler reconnect and load
+balancer behavior. **Change trigger:** long-running jobs, progress streaming, or
+hundreds of concurrent browsers would justify backoff/jitter and possibly SSE.
+
+### 6.3 Artifact storage and lifecycle
+
+**Chosen:** metadata is process-local and generated files live under the server-owned
+run UUID on a size-limited `emptyDir`; terminal runs are retained for one hour and
+orphan directories are removed at startup. **Rejected:** PVC and object storage were
+deferred because they add durability, credentials, reconciliation, and retention
+systems that the take-home does not require. **Change trigger:** bookmarkable results,
+pod-replacement recovery, shared replicas, or larger artifacts require durable
+metadata plus object storage. See [ADR-002](docs/decisions/002-ephemeral-run-storage.md).
+
+### 6.4 Concurrency and resource contention
+
+**Chosen:** admission is capped at one active plus four queued runs; excess requests
+receive `429` with `Retry-After`. The pod requests and limits two CPUs and 4 GiB of
+memory, and probes remain separate from the sweep process. **Rejected:** unbounded
+in-process concurrency and making readiness fail whenever the queue is full were
+rejected because they either exhaust the pod or confuse saturation with failure.
+**Change trigger:** measured CFS throttling or probe latency would lead to numerical
+thread caps, more web headroom, or separate worker pods; higher concurrency would
+need shared queue admission.
+
+### 6.5 Caching and determinism
+
+**Chosen:** successful immutable bundles use a process-local LRU cache keyed by all
+request fields plus AIConfigurator, profile, generator, and normalization versions;
+the default bounds are one hour, 32 entries, and 64 MiB. Cache hits receive fresh run
+IDs. **Rejected:** durable/shared cache and in-flight coalescing were deferred to
+avoid making restart and multi-replica behavior appear durable. **Change trigger:**
+cross-replica reuse, restart persistence, larger artifacts, or high duplicate traffic
+would require shared storage or single-flight coordination.
+
+### 6.6 CLI subprocess versus Python SDK
+
+**Chosen:** call the pinned Python API (`cli_default`) inside the isolated worker so
+the adapter receives structured DataFrames and generated artifacts without parsing
+terminal output. **Rejected:** shelling out to the CLI was rejected because it adds
+output parsing and command-process overhead, although it remains a fallback if the
+SDK contract becomes unstable. **Change trigger:** a stable machine-readable CLI or
+hard cancellation requirements would justify per-run subprocesses or Kubernetes Jobs.
+
+### 6.7 Probes and lifecycle
+
+**Chosen:** liveness only checks that the web process answers; readiness checks that
+the run manager is initialized and not shutting down. The deployment uses startup,
+liveness, and readiness probes with explicit thresholds and a 30-second termination
+grace period. **Rejected:** probing AIConfigurator or telemetry backends from
+liveness/readiness was rejected because an external dependency outage should not
+restart a healthy web process. The rollout is intentionally `Recreate`, so an update
+does not claim to preserve in-flight work. **Change trigger:** zero-downtime updates
+or job preservation require durable state, draining, and multiple replicas.
+
+### 6.8 Observability
+
+**Chosen:** OpenTelemetry traces and metrics, JSON stdout logs, Alloy routing, and
+provisioned Tempo/Loki/Prometheus/Grafana data sources. Trace context crosses the
+HTTP request, queue callbacks, and spawned worker; trace IDs remain searchable log
+metadata rather than high-cardinality labels. **Rejected:** request bodies, artifact
+contents, user/model/run labels, OTLP log export, and unbounded telemetry were
+deliberately excluded. **Change trigger:** production SLOs would add queue-wait,
+resource-throttling, and carefully bounded service-level metrics.
+
+### 6.9 Multi-tenancy
+
+**Chosen:** this version is explicitly anonymous and shared; there is no ownership or
+authorization claim. Opaque IDs reduce accidental enumeration, but anyone who learns
+a run ID can request its status or download. **Rejected:** anonymous server-wide
+history and fake session ownership were rejected because they would expose data or
+create a misleading privacy boundary. **Change trigger:** multiple teams or
+sensitive models require identity at the HTTP boundary, owner-scoped durable
+metadata, authorization on every run endpoint, and shared per-team quotas.
+
+### 6.10 Trusting the output
+
+**Chosen:** the UI labels every result as an estimate, requires a real benchmark, and
+never applies generated manifests automatically; exact values and provenance remain
+visible. **Rejected:** presenting the top row as an authoritative recommendation or
+auto-deploying it was rejected because AIConfigurator estimates are not production
+evidence. **Change trigger:** production rollout would require benchmark/canary
+feedback, versioned hardware/runtime provenance, and a promotion policy gate. See
+the warning in the [result UI](src/portal/templates/index.html).
 
 ## Fifteen-Minute Demo
 
@@ -293,7 +376,16 @@ never applies them to Kubernetes.
    that no run is admitted.
 7. Show JSON logs, low-cardinality metrics, the one-replica Kubernetes shape, probe
    semantics, `emptyDir` limits, and restrictive security context.
-8. Close with the limitations below and the migration triggers in the ADRs.
+8. Open the provisioned Grafana dashboard `Serving Configuration Portal Status`
+   (UID `serving-configuration-portal-status`) and show availability, active/queued
+   saturation, outcomes, HTTP/run latency, and cache panels.
+9. From a portal log, copy the run's `trace_id` into Grafana Explore → Tempo. Show
+   the HTTP, submit, worker, and completion spans; use **Explore the logs for this
+   span** to jump to Loki, confirm the same trace ID in the JSON records, then use
+   Loki's **View trace** derived field to return to the exact Tempo trace. This step
+   requires the deployment-supplied Tempo, Loki, Prometheus, Grafana, and Alloy
+   services described above.
+10. Close with the limitations below and the migration triggers in the ADRs.
 
 ## Known Limitations
 
