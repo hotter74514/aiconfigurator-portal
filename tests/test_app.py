@@ -30,6 +30,11 @@ def _storage_failure_worker(request: RunRequest, output_dir: str) -> RunResult:
     raise OSError("No space left on device")
 
 
+def _system_exit_worker(request: RunRequest, output_dir: str) -> RunResult:
+    del request, output_dir
+    raise SystemExit(1)
+
+
 def _unsafe_visualization_worker(request: RunRequest, output_dir: str) -> RunResult:
     result = _fake_worker(request, output_dir)
     asset = result.visualizations[0]
@@ -223,6 +228,23 @@ def test_storage_failure_is_actionable_without_breaking_probes(tmp_path: Path) -
         manager.close()
 
 
+def test_system_exit_from_worker_becomes_terminal_failure(tmp_path: Path) -> None:
+    executor = ThreadPoolExecutor(max_workers=1)
+    manager = RunManager(tmp_path, worker=_system_exit_worker, executor=executor)
+    try:
+        snapshot = manager.submit(RunRequest("model", "h200_sxm", 1, 1000, 10))
+        deadline = time.monotonic() + 2
+        state = manager.snapshot(snapshot.run_id)
+        while state is not None and state.status == "running" and time.monotonic() < deadline:
+            time.sleep(0.01)
+            state = manager.snapshot(snapshot.run_id)
+        assert state is not None
+        assert state.status == "failed"
+        assert state.error == "SystemExit: 1"
+    finally:
+        manager.close()
+
+
 def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
     executor = ThreadPoolExecutor(max_workers=1)
     manager = RunManager(tmp_path, worker=_fake_worker, executor=executor)
@@ -278,6 +300,18 @@ def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
                 json={"model": "x", "system": "unknown", "total_gpus": 1, "ttft": 1, "tpot": 1},
             )
             assert invalid.status_code == 422
+            unsupported_a100_pcie = client.post(
+                "/api/runs",
+                json={
+                    "model": "x",
+                    "system": "a100_pcie",
+                    "total_gpus": 1,
+                    "ttft": 1,
+                    "tpot": 1,
+                },
+            )
+            assert unsupported_a100_pcie.status_code == 422
+            assert "unsupported system" in unsupported_a100_pcie.json()["detail"][0]["msg"]
             assert client.get("/api/runs/not-a-run").status_code == 404
     finally:
         manager.close()

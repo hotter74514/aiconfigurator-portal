@@ -6,19 +6,17 @@ from pydantic import BaseModel, Field, field_validator
 
 from portal.adapters import RunRequest
 
+# Keep this matrix aligned with the pinned SDK's default ``trtllm`` databases;
+# CLI help names such as ``a100_pcie`` are not proof that a sweep is available.
 SUPPORTED_SYSTEMS: Final[frozenset[str]] = frozenset(
     {
-        "h200_sxm",
-        "h100_sxm",
-        "h100_pcie",
+        "a100_sxm",
         "b200_sxm",
         "gb200",
-        "a100_sxm",
-        "a100_pcie",
-        "l40s",
-        "l4",
-        "a30",
         "gb300",
+        "h100_sxm",
+        "h200_sxm",
+        "l40s",
     }
 )
 

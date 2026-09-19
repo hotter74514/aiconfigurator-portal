@@ -110,6 +110,9 @@ path runs in the Linux/amd64 image.
 `make dev` starts the normal application entry point. On a host where the optional
 AIConfigurator dependency is unavailable, submissions fail with a sanitized
 dependency error while the page, probes, and other API endpoints remain available.
+The GPU system selector is limited to systems with a packaged default `trtllm`
+performance database in AIConfigurator 0.11.0; `a100_pcie` is not supported by
+that pinned dependency and is rejected during request validation.
 
 ## Architecture and Data Flow
 

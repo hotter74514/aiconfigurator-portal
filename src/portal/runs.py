@@ -333,7 +333,7 @@ class RunManager:
         artifact_zip: bytes | None = None
         try:
             result = future.result()
-        except Exception as exc:  # noqa: BLE001 - normalize dependency failures at the boundary
+        except BaseException as exc:  # noqa: BLE001 - normalize worker failures at the boundary
             status: RunStatus = "failed"
             error = f"{type(exc).__name__}: {str(exc)[:300]}"
             result = None
@@ -474,7 +474,7 @@ def execute_worker_with_context(
             )
             try:
                 result = worker(request, output_dir)
-            except Exception as exc:  # noqa: BLE001 - normalize at the process boundary
+            except BaseException as exc:  # noqa: BLE001 - normalize at the process boundary
                 category = type(exc).__name__
                 span.set_attribute("error.type", category)
                 span.set_status(Status(StatusCode.ERROR, category))
