@@ -263,103 +263,117 @@ recorded in the accepted ADRs under `docs/decisions/`.
 
 ### 6.1 Execution model
 
-**Chosen:** one FastAPI pod uses a bounded in-process queue and a spawned
-`ProcessPoolExecutor` worker for the CPU-bound sweep. There is one active run and
-four queued runs; a run has a 900-second timeout. **Rejected:** inline execution,
-Kubernetes Job per request, and a durable worker service were rejected because they
-either block HTTP or add queue/control-plane infrastructure outside this scope.
-**Change trigger:** runs that need retry/resume/cancel, multiple replicas, or strict
-per-job resource isolation would move execution to a durable queue and dedicated
-workers. See [ADR-001](docs/decisions/001-single-pod-async-execution.md).
+- **Chosen:** One FastAPI pod uses a bounded in-process queue and a spawned
+  `ProcessPoolExecutor` worker for the CPU-bound sweep. There is one active run and
+  four queued runs; a run has a 900-second timeout.
+- **Rejected:** Inline execution, a Kubernetes Job per request, and a durable worker
+  service were rejected because they either block HTTP or add queue/control-plane
+  infrastructure outside this scope.
+- **Change trigger:** Runs that need retry/resume/cancel, multiple replicas, or strict
+  per-job resource isolation would move execution to a durable queue and dedicated
+  workers. See [ADR-001](docs/decisions/001-single-pod-async-execution.md).
 
 ### 6.2 Synchronous versus asynchronous API
 
-**Chosen:** `POST /api/runs` returns `202`, an opaque run ID, a status URL, and a
-two-second polling hint. **Rejected:** SSE, WebSockets, and long polling were not
-needed for low-frequency lifecycle updates; polling has simpler reconnect and load
-balancer behavior. **Change trigger:** long-running jobs, progress streaming, or
-hundreds of concurrent browsers would justify backoff/jitter and possibly SSE.
+- **Chosen:** `POST /api/runs` returns `202`, an opaque run ID, a status URL, and a
+  two-second polling hint.
+- **Rejected:** SSE, WebSockets, and long polling were not needed for low-frequency
+  lifecycle updates; polling has simpler reconnect and load balancer behavior.
+- **Change trigger:** Long-running jobs, progress streaming, or hundreds of concurrent
+  browsers would justify backoff/jitter and possibly SSE.
 
 ### 6.3 Artifact storage and lifecycle
 
-**Chosen:** metadata is process-local and generated files live under the server-owned
-run UUID on a size-limited `emptyDir`; terminal runs are retained for one hour and
-orphan directories are removed at startup. **Rejected:** PVC and object storage were
-deferred because they add durability, credentials, reconciliation, and retention
-systems that the take-home does not require. **Change trigger:** bookmarkable results,
-pod-replacement recovery, shared replicas, or larger artifacts require durable
-metadata plus object storage. See [ADR-002](docs/decisions/002-ephemeral-run-storage.md).
+- **Chosen:** Metadata is process-local and generated files live under the
+  server-owned run UUID on a size-limited `emptyDir`; terminal runs are retained for
+  one hour and orphan directories are removed at startup.
+- **Rejected:** PVC and object storage were deferred because they add durability,
+  credentials, reconciliation, and retention systems that the take-home does not
+  require.
+- **Change trigger:** Bookmarkable results, pod-replacement recovery, shared replicas,
+  or larger artifacts require durable metadata plus object storage. See
+  [ADR-002](docs/decisions/002-ephemeral-run-storage.md).
 
 ### 6.4 Concurrency and resource contention
 
-**Chosen:** admission is capped at one active plus four queued runs; excess requests
-receive `429` with `Retry-After`. The pod requests and limits two CPUs and 4 GiB of
-memory, and probes remain separate from the sweep process. **Rejected:** unbounded
-in-process concurrency and making readiness fail whenever the queue is full were
-rejected because they either exhaust the pod or confuse saturation with failure.
-**Change trigger:** measured CFS throttling or probe latency would lead to numerical
-thread caps, more web headroom, or separate worker pods; higher concurrency would
-need shared queue admission.
+- **Chosen:** Admission is capped at one active plus four queued runs; excess
+  requests receive `429` with `Retry-After`. The pod requests and limits two CPUs and
+  4 GiB of memory, and probes remain separate from the sweep process.
+- **Rejected:** Unbounded in-process concurrency and making readiness fail whenever
+  the queue is full were rejected because they either exhaust the pod or confuse
+  saturation with failure.
+- **Change trigger:** Measured CFS throttling or probe latency would lead to numerical
+  thread caps, more web headroom, or separate worker pods; higher concurrency would
+  need shared queue admission.
 
 ### 6.5 Caching and determinism
 
-**Chosen:** successful immutable bundles use a process-local LRU cache keyed by all
-request fields plus AIConfigurator, profile, generator, and normalization versions;
-the default bounds are one hour, 32 entries, and 64 MiB. Cache hits receive fresh run
-IDs. **Rejected:** durable/shared cache and in-flight coalescing were deferred to
-avoid making restart and multi-replica behavior appear durable. **Change trigger:**
-cross-replica reuse, restart persistence, larger artifacts, or high duplicate traffic
-would require shared storage or single-flight coordination.
+- **Chosen:** Successful immutable bundles use a process-local LRU cache keyed by all
+  request fields plus AIConfigurator, profile, generator, and normalization versions;
+  the default bounds are one hour, 32 entries, and 64 MiB. Cache hits receive fresh
+  run IDs.
+- **Rejected:** Durable/shared cache and in-flight coalescing were deferred to avoid
+  making restart and multi-replica behavior appear durable.
+- **Change trigger:** Cross-replica reuse, restart persistence, larger artifacts, or
+  high duplicate traffic would require shared storage or single-flight coordination.
 
 ### 6.6 CLI subprocess versus Python SDK
 
-**Chosen:** call the pinned Python API (`cli_default`) inside the isolated worker so
-the adapter receives structured DataFrames and generated artifacts without parsing
-terminal output. **Rejected:** shelling out to the CLI was rejected because it adds
-output parsing and command-process overhead, although it remains a fallback if the
-SDK contract becomes unstable. **Change trigger:** a stable machine-readable CLI or
-hard cancellation requirements would justify per-run subprocesses or Kubernetes Jobs.
+- **Chosen:** Call the pinned Python API (`cli_default`) inside the isolated worker so
+  the adapter receives structured DataFrames and generated artifacts without parsing
+  terminal output.
+- **Rejected:** Shelling out to the CLI was rejected because it adds output parsing
+  and command-process overhead, although it remains a fallback if the SDK contract
+  becomes unstable.
+- **Change trigger:** A stable machine-readable CLI or hard cancellation requirements
+  would justify per-run subprocesses or Kubernetes Jobs.
 
 ### 6.7 Probes and lifecycle
 
-**Chosen:** liveness only checks that the web process answers; readiness checks that
-the run manager is initialized and not shutting down. The deployment uses startup,
-liveness, and readiness probes with explicit thresholds and a 30-second termination
-grace period. **Rejected:** probing AIConfigurator or telemetry backends from
-liveness/readiness was rejected because an external dependency outage should not
-restart a healthy web process. The rollout is intentionally `Recreate`, so an update
-does not claim to preserve in-flight work. **Change trigger:** zero-downtime updates
-or job preservation require durable state, draining, and multiple replicas.
+- **Chosen:** Liveness only checks that the web process answers; readiness checks that
+  the run manager is initialized and not shutting down. The deployment uses startup,
+  liveness, and readiness probes with explicit thresholds and a 30-second termination
+  grace period.
+- **Rejected:** Probing AIConfigurator or telemetry backends from liveness/readiness
+  was rejected because an external dependency outage should not restart a healthy web
+  process. The rollout is intentionally `Recreate`, so an update does not claim to
+  preserve in-flight work.
+- **Change trigger:** Zero-downtime updates or job preservation require durable state,
+  draining, and multiple replicas.
 
 ### 6.8 Observability
 
-**Chosen:** OpenTelemetry traces and metrics, JSON stdout logs, Alloy routing, and
-provisioned Tempo/Loki/Prometheus/Grafana data sources. Trace context crosses the
-HTTP request, queue callbacks, and spawned worker; trace IDs remain searchable log
-metadata rather than high-cardinality labels. **Rejected:** request bodies, artifact
-contents, user/model/run labels, OTLP log export, and unbounded telemetry were
-deliberately excluded. **Change trigger:** production SLOs would add queue-wait,
-resource-throttling, and carefully bounded service-level metrics.
+- **Chosen:** OpenTelemetry traces and metrics, JSON stdout logs, Alloy routing, and
+  provisioned Tempo/Loki/Prometheus/Grafana data sources. Trace context crosses the
+  HTTP request, queue callbacks, and spawned worker; trace IDs remain searchable log
+  metadata rather than high-cardinality labels.
+- **Rejected:** Request bodies, artifact contents, user/model/run labels, OTLP log
+  export, and unbounded telemetry were deliberately excluded.
+- **Change trigger:** Production SLOs would add queue-wait, resource-throttling, and
+  carefully bounded service-level metrics.
 
 ### 6.9 Multi-tenancy
 
-**Chosen:** this version is explicitly anonymous and shared; there is no ownership or
-authorization claim. Opaque IDs reduce accidental enumeration, but anyone who learns
-a run ID can request its status or download. **Rejected:** anonymous server-wide
-history and fake session ownership were rejected because they would expose data or
-create a misleading privacy boundary. **Change trigger:** multiple teams or
-sensitive models require identity at the HTTP boundary, owner-scoped durable
-metadata, authorization on every run endpoint, and shared per-team quotas.
+- **Chosen:** This version is explicitly anonymous and shared; there is no ownership
+  or authorization claim. Opaque IDs reduce accidental enumeration, but anyone who
+  learns a run ID can request its status or download.
+- **Rejected:** Anonymous server-wide history and fake session ownership were rejected
+  because they would expose data or create a misleading privacy boundary.
+- **Change trigger:** Multiple teams or sensitive models require identity at the HTTP
+  boundary, owner-scoped durable metadata, authorization on every run endpoint, and
+  shared per-team quotas.
 
 ### 6.10 Trusting the output
 
-**Chosen:** the UI labels every result as an estimate, requires a real benchmark, and
-never applies generated manifests automatically; exact values and provenance remain
-visible. **Rejected:** presenting the top row as an authoritative recommendation or
-auto-deploying it was rejected because AIConfigurator estimates are not production
-evidence. **Change trigger:** production rollout would require benchmark/canary
-feedback, versioned hardware/runtime provenance, and a promotion policy gate. See
-the warning in the [result UI](src/portal/templates/index.html).
+- **Chosen:** The UI labels every result as an estimate, requires a real benchmark,
+  and never applies generated manifests automatically; exact values and provenance
+  remain visible.
+- **Rejected:** Presenting the top row as an authoritative recommendation or
+  auto-deploying it was rejected because AIConfigurator estimates are not production
+  evidence.
+- **Change trigger:** Production rollout would require benchmark/canary feedback,
+  versioned hardware/runtime provenance, and a promotion policy gate. See the warning
+  in the [result UI](src/portal/templates/index.html).
 
 ## Fifteen-Minute Demo
 
