@@ -43,7 +43,7 @@ wheel is not available natively on Apple Silicon macOS.
 | kubectl | 1.37.0 client | Manifest validation/deployment |
 | Minikube | 1.39.0 | Optional local-cluster verification |
 
-Docker needs enough capacity for the declared two CPUs and 4 GiB memory. The release
+Docker needs enough capacity for the declared two CPUs and 2 GiB memory. The release
 image and checked-in manifest target x86-64. For local validation on an arm64
 Minikube node, build and load an architecture-matched image as shown below rather
 than relying on binfmt/qemu to select an amd64 OCI index.
@@ -60,7 +60,7 @@ Start the real portal:
 
 ```sh
 docker run --rm --name serving-configuration-portal-demo \
-  --platform linux/amd64 --cpus=2 --memory=4g \
+  --platform linux/amd64 --cpus=2 --memory=2g \
   -p 8080:8080 serving-configuration-portal:local
 ```
 
@@ -253,7 +253,7 @@ kubectl rollout status deployment/serving-configuration-portal --timeout=180s
 
 The manifest uses one `Recreate` replica, non-root UID/GID 10001, a read-only root
 filesystem, dropped capabilities, runtime-default seccomp, startup/live/ready
-probes, two CPU/4 GiB requests and limits, a 1 GiB run `emptyDir`, and a 256 MiB
+probes, two CPU/2 GiB requests and limits, a 1 GiB run `emptyDir`, and a 256 MiB
 temporary `emptyDir`. Generated serving manifests are downloads only; the portal
 never applies them to Kubernetes.
 
@@ -300,7 +300,11 @@ recorded in the accepted ADRs under `docs/decisions/`.
 
 - **Chosen:** Admission is capped at one active plus four queued runs; excess
   requests receive `429` with `Retry-After`. The pod requests and limits two CPUs and
-  4 GiB of memory, and probes remain separate from the sweep process.
+  2 GiB of memory, and probes remain separate from the sweep process.
+- **Sizing evidence:** Local cgroup sampling of representative warm runs kept sampled
+  memory below 1 GiB with no OOM events, so the 2 GiB value retains headroom while
+  preserving `Guaranteed` QoS. Re-measure the Linux x86-64 image after cold-start,
+  maximum-input, and queue-pressure tests before treating this as a production SLO.
 - **Rejected:** Unbounded in-process concurrency and making readiness fail whenever
   the queue is full were rejected because they either exhaust the pod or confuse
   saturation with failure.
