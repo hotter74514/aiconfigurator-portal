@@ -72,17 +72,17 @@ def test_dashboard_uses_stable_datasource_and_existing_metrics() -> None:
     ):
         assert metric in joined
     assert all('instance=~"$instance"' in expression for expression in expressions)
-    assert 'max by (instance) (increase(portal_runs_completed_total' in joined
-    assert 'max by (instance) (rate(portal_runs_completed_total' in joined
-    assert 'max by (instance, le) (rate(portal_run_duration_seconds_bucket' in joined
+    assert "max by (instance) (increase(portal_runs_completed_total" in joined
+    assert "max by (instance) (rate(portal_runs_completed_total" in joined
+    assert "max by (instance, le) (rate(portal_run_duration_seconds_bucket" in joined
     assert (
-        'max by (instance, http_method, http_status_code, http_target) '
-        '(rate(http_server_duration_milliseconds_count' in joined
+        "max by (instance, http_method, http_status_code, http_target) "
+        "(rate(http_server_duration_milliseconds_count" in joined
     )
-    assert ' or vector(0)' in joined
-    assert '[$__range]' in joined
-    assert '[$__rate_interval]' not in joined
-    assert '[5m]' in joined
+    assert " or vector(0)" in joined
+    assert "[$__range]" in joined
+    assert "[$__rate_interval]" not in joined
+    assert "[5m]" in joined
 
     portal_instance_query = (
         "label_values(portal_runs_active{"
