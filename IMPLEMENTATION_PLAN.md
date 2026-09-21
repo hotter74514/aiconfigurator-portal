@@ -2,7 +2,7 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-009 Accepted; Stages 1–25 and TASK-018 are complete.**
+**ADR-001 through ADR-010 Accepted; Stages 1–25 and TASK-018 are complete.**
 Planning, implementation,
 operations, and handoff evidence are recorded for completed work. The repository
 owner confirmed TASK-006 validation has no known issues. The optional extension in
@@ -963,6 +963,30 @@ Prometheus instance, Kustomize rendering, Grafana reload, and Minikube rollout.
 **Status:** Complete. The range-aware queries, portal-only instance selector,
 PromQL checks, Minikube Grafana import, and Playwright MCP validation are recorded
 in `docs/evidence/task-018-range-aware-grafana-dashboard.md`.
+
+### Stage 26: Expose Rank-One Topology and Kubernetes Guidance
+
+**Goal:** Show the rank-one `(p)worker`, `(d)worker`, `(p)tp`, and `(d)tp`
+values returned by the portal and explain their Kubernetes pod, GPU, network,
+and scheduling implications.
+
+**Prerequisites:** ADR-010 is Accepted by the repository owner.
+
+**Success Criteria:**
+
+- The completed-run contract selects rank 1 independently for `agg` and
+  `disagg` and preserves unavailable topology values honestly.
+- Worker counts are presented as pod replicas; TP values are presented as GPUs
+  per worker/pod, with no TP-to-replica inference.
+- The responsive comparison view includes the topology values and concise
+  network/scheduling guidance.
+- Configured checks and Playwright MCP desktop, narrow, and keyboard scenarios
+  pass.
+
+**Tests:** `tests/test_comparison.py`, `tests/test_app.py`, and the browser
+scenarios recorded in a new task evidence report.
+
+**Status:** In Progress.
 
 ### OpenTelemetry Extension Risks and Rollback
 

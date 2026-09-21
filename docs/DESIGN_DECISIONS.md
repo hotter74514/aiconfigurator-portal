@@ -15,6 +15,7 @@ Create a record from decisions/000-template.md when a choice is consequential, d
 | [ADR-007](decisions/007-anonymous-capacity-awareness.md) | Anonymous multi-user capacity awareness | Accepted | Repository owner |
 | [ADR-008](decisions/008-opentelemetry-alloy-pipeline.md) | OpenTelemetry and Grafana Alloy telemetry pipeline | Accepted | Repository owner |
 | [ADR-009](decisions/009-portal-owned-tradeoff-surface.md) | Portal-owned trade-off surface visualization | Accepted | Repository owner |
+| [ADR-010](decisions/010-rank-one-topology-and-kubernetes-guidance.md) | Rank-one topology fields and Kubernetes guidance | Accepted | Repository owner |
 
 ## Lifecycle
 
