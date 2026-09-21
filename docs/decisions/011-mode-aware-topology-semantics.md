@@ -2,7 +2,7 @@
 
 ## Status
 
-**Proposed**
+**Accepted**
 
 ## Decision Owner
 
@@ -83,7 +83,8 @@ Choose Option A and supersede ADR-010.
   where a TP worker group is known; KV-cache prefill/decode network advice
   applies to disagg; all estimates still require cluster benchmarking.
 
-This proposal is not approved until the status becomes **Accepted**.
+The repository owner approved this recommendation. Implementation may proceed
+within the scope and validation gates below.
 
 ## Consequences
 

@@ -16,7 +16,7 @@ Create a record from decisions/000-template.md when a choice is consequential, d
 | [ADR-008](decisions/008-opentelemetry-alloy-pipeline.md) | OpenTelemetry and Grafana Alloy telemetry pipeline | Accepted | Repository owner |
 | [ADR-009](decisions/009-portal-owned-tradeoff-surface.md) | Portal-owned trade-off surface visualization | Accepted | Repository owner |
 | [ADR-010](decisions/010-rank-one-topology-and-kubernetes-guidance.md) | Rank-one topology fields and Kubernetes guidance | Superseded by ADR-011 | Repository owner |
-| [ADR-011](decisions/011-mode-aware-topology-semantics.md) | Mode-aware topology semantics | Proposed | Repository owner |
+| [ADR-011](decisions/011-mode-aware-topology-semantics.md) | Mode-aware topology semantics | Accepted | Repository owner |
 
 ## Lifecycle
 
