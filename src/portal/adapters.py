@@ -96,6 +96,10 @@ class FakeAiconfiguratorAdapter:
                 "tokens/s": 1.0,
                 "ttft": request.ttft_ms,
                 "tpot": request.tpot_ms,
+                "(p)worker": 1,
+                "(d)worker": 1,
+                "(p)tp": 16,
+                "(d)tp": 16,
             },
         )
         disagg_row = ConfigurationRow(
@@ -106,6 +110,10 @@ class FakeAiconfiguratorAdapter:
                 "tokens/s": 2.0,
                 "ttft": request.ttft_ms + 1.0,
                 "tpot": max(request.tpot_ms - 1.0, 0.001),
+                "(p)worker": 4,
+                "(d)worker": 1,
+                "(p)tp": 4,
+                "(d)tp": 16,
             },
         )
         fixture_points = (

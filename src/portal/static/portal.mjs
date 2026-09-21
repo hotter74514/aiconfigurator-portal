@@ -14,6 +14,13 @@ const comparison = document.getElementById("comparison");
 const comparisonStatus = document.getElementById("comparison-status");
 const comparisonDefinition = document.getElementById("comparison-definition");
 const comparisonRows = document.getElementById("comparison-rows");
+const topology = document.getElementById("topology");
+const topologyStatus = document.getElementById("topology-status");
+const topologyPrinciple = document.getElementById("topology-principle");
+const topologyRows = document.getElementById("topology-rows");
+const topologySizing = document.getElementById("topology-sizing");
+const topologyNetwork = document.getElementById("topology-network");
+const topologyScheduling = document.getElementById("topology-scheduling");
 const tradeoffSurface = document.getElementById("tradeoff-surface");
 const tradeoffDescription = document.getElementById("tradeoff-description");
 const tradeoffChart = document.getElementById("tradeoff-chart");
@@ -120,6 +127,11 @@ const clearResults = () => {
   results.hidden = true;
   download.hidden = true;
   comparison.hidden = true;
+  topology.hidden = true;
+  topologyRows.replaceChildren();
+  topologySizing.replaceChildren();
+  topologyNetwork.replaceChildren();
+  topologyScheduling.replaceChildren();
   tradeoffSurface.hidden = true;
   tradeoffChart.replaceChildren();
   tradeoffFrontierList.replaceChildren();
@@ -196,6 +208,75 @@ const refreshCapacity = async () => {
 };
 
 const displayValue = (number, suffix = "") => number === null || number === undefined ? "Unavailable" : `${number}${suffix}`;
+const appendTextList = (list, values) => {
+  list.replaceChildren();
+  for (const value of values || []) {
+    const item = document.createElement("li");
+    item.textContent = String(value);
+    list.appendChild(item);
+  }
+};
+
+const renderTopologySizing = (kubernetes) => {
+  topologySizing.replaceChildren();
+  const modes = kubernetes && kubernetes.modes ? kubernetes.modes : {};
+  for (const mode of ["agg", "disagg"]) {
+    const panel = document.createElement("div");
+    panel.className = "sizing-panel";
+    const heading = document.createElement("h5");
+    heading.textContent = `${mode} rank 1`;
+    panel.appendChild(heading);
+    for (const workload of ["prefill", "decode"]) {
+      const sizing = modes[mode] && modes[mode][workload] ? modes[mode][workload] : null;
+      const line = document.createElement("p");
+      if (!sizing || sizing.unavailable_reason) {
+        line.textContent = `${workload}: Unavailable${sizing && sizing.unavailable_reason ? ` (${sizing.unavailable_reason})` : ""}`;
+      } else {
+        line.textContent = `${workload}: ${displayValue(sizing.replicas)} pod${sizing.replicas === 1 ? "" : "s"} × ${displayValue(sizing.gpus_per_pod)} GPU${sizing.gpus_per_pod === 1 ? "" : "s"}/pod = ${displayValue(sizing.total_gpus)} GPUs`;
+      }
+      panel.appendChild(line);
+    }
+    topologySizing.appendChild(panel);
+  }
+};
+
+const renderTopology = (payload) => {
+  if (!payload) {
+    topology.hidden = true;
+    return;
+  }
+  const modes = payload.modes || {};
+  topologyStatus.textContent = payload.available
+    ? "Rank-one worker and TP fields are available for both serving modes."
+    : `Topology partially unavailable: ${payload.unavailable_reason || "required fields are missing."}`;
+  const kubernetes = payload.kubernetes || {};
+  topologyPrinciple.textContent = kubernetes.principle || "Worker count maps to pod replicas; TP maps to GPUs per pod.";
+  topologyRows.replaceChildren();
+  for (const metric of payload.metrics || []) {
+    const row = document.createElement("tr");
+    const aggValue = modes.agg && modes.agg.metrics ? modes.agg.metrics[metric.name] : null;
+    const disaggValue = modes.disagg && modes.disagg.metrics ? modes.disagg.metrics[metric.name] : null;
+    const cells = [
+      `${metric.name} (${metric.unit})`,
+      displayValue(aggValue),
+      displayValue(disaggValue),
+      displayValue(metric.absolute_delta),
+      displayValue(metric.percentage_delta, metric.percentage_delta === null || metric.percentage_delta === undefined ? "" : "%"),
+      metric.unavailable_reason || "Available",
+    ];
+    for (const text of cells) {
+      const cell = document.createElement("td");
+      cell.textContent = String(text);
+      row.appendChild(cell);
+    }
+    topologyRows.appendChild(row);
+  }
+  renderTopologySizing(kubernetes);
+  appendTextList(topologyNetwork, kubernetes.network);
+  appendTextList(topologyScheduling, kubernetes.scheduling);
+  topology.hidden = false;
+};
+
 const renderComparison = (payload) => {
   const modes = payload.modes || {};
   comparisonStatus.textContent = payload.available
@@ -222,6 +303,7 @@ const renderComparison = (payload) => {
     }
     comparisonRows.appendChild(row);
   }
+  renderTopology(payload.topology);
   comparison.hidden = false;
 };
 
@@ -345,6 +427,7 @@ const render = (payload) => {
     delta_definition: "No comparison definition was provided.",
     modes: {},
     metrics: [],
+    topology: null,
   });
   renderTradeoffSurface(payload.tradeoff_surface);
   const asset = (payload.visualizations || [])[0];

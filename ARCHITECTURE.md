@@ -25,7 +25,7 @@ OpenTelemetry/Alloy/Grafana configuration extension.
 |---|---|---|---|
 | Engineering harness | Planning, decision, verification, and handoff workflow | Markdown and Make targets | Repository owner |
 | Application | FastAPI app factory, liveness, anonymous capacity awareness, and metadata boundary | `portal.app:create_app`; `/health/live`; `/api/capacity`; `/` | Repository owner |
-| Adapter boundary | Typed request/result protocol, visualization metadata, and deterministic fake | `portal.adapters.AiconfiguratorAdapter` | Repository owner |
+| Adapter boundary | Typed request/result protocol, visualization metadata, rank-one topology comparison, and deterministic fake | `portal.adapters.AiconfiguratorAdapter`; `portal.comparison` | Repository owner |
 | Completed-result cache | Bounded process-local cache for successful normalized bundles, fresh run IDs, and artifact materialization | `portal.cache.BoundedResultCache`; run-manager internal | Repository owner |
 | Browser-local run history | Capped, status-revalidated convenience index for one browser profile | `localStorage`; `/api/runs/{id}` status endpoint | Repository owner |
 | Real AIConfigurator adapter | Runs the pinned SDK in an isolated worker and normalizes results/artifacts, complete Pareto frames, and verified PNG output | `portal.aiconfigurator:run_ai_configurator` | Repository owner |

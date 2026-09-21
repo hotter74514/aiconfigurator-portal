@@ -126,6 +126,16 @@ input:disabled, select:disabled { cursor: not-allowed; opacity: 0.65; }
 .subsection-heading { align-items: center; margin-bottom: var(--space-3); }
 .comparison-tag { border: 1px solid var(--rule-strong); border-radius: 99px; padding: 0.25rem 0.5rem; white-space: nowrap; }
 .section-status { margin-bottom: var(--space-2); font-weight: 650; }
+.topology-block { margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px dashed var(--rule-strong); }
+.topology-heading { margin-bottom: var(--space-2); }
+.topology-heading h4 { margin: 0; font-size: 1.15rem; letter-spacing: -0.02em; }
+.kubernetes-guidance { margin-top: var(--space-4); padding: var(--space-4); border: 1px solid var(--rule); background: var(--panel-alt); }
+.sizing-grid, .guidance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.guidance-grid { margin-top: var(--space-4); }
+.sizing-panel, .guidance-grid > div { padding: var(--space-3); border-left: 3px solid var(--accent); background: white; }
+.sizing-panel h5, .guidance-grid h5 { margin: 0 0 var(--space-2); font-size: 0.9rem; }
+.sizing-panel p { margin: 0.35rem 0 0; color: var(--ink-muted); font-family: var(--mono); font-size: 0.76rem; line-height: 1.5; }
+.guidance-grid ul { display: grid; gap: var(--space-2); margin: 0; padding-left: 1.1rem; color: var(--ink-muted); font-size: 0.8rem; line-height: 1.5; }
 .warning-copy { margin: var(--space-3) 0; border-left: 3px solid var(--warning); background: var(--warning-soft); color: #694b17; padding: var(--space-2) var(--space-3); font-size: 0.85rem; }
 .table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius-sm); background: white; }
 table { width: 100%; min-width: 700px; border-collapse: collapse; font-size: 0.82rem; }
@@ -185,6 +195,7 @@ th span { font-family: var(--sans); font-size: 0.9em; letter-spacing: 0; text-tr
   .result-badge { text-align: left; }
   .subsection-heading { align-items: flex-start; }
   .comparison-tag { font-size: 0.6rem; }
+  .sizing-grid, .guidance-grid { grid-template-columns: 1fr; }
   .tradeoff-chart { margin-inline: -0.35rem; padding: 0.35rem; }
   .tradeoff-tick { font-size: 10px; }
   .tradeoff-axis-label { font-size: 11px; }

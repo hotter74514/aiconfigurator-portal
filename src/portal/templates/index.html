@@ -64,6 +64,18 @@
           <div class="subsection-heading"><div><p class="eyebrow">Trade-off view</p><h3 id="comparison-heading">Aggregated vs disaggregated</h3></div><span class="comparison-tag">Rank 1 / each mode</span></div>
           <p id="comparison-status" class="section-status"></p><p id="comparison-definition" class="fine-print"></p><p id="comparison-warning" class="warning-copy">No universal winner is declared. Compare each metric and validate the estimate with a real benchmark.</p>
           <div class="table-wrap"><table><caption class="sr-only">Rank-one comparison of aggregated and disaggregated serving modes</caption><thead><tr><th scope="col">Metric</th><th scope="col">agg</th><th scope="col">disagg</th><th scope="col">Absolute delta</th><th scope="col">Signed % delta</th><th scope="col">Availability</th></tr></thead><tbody id="comparison-rows"></tbody></table></div>
+          <div id="topology" class="topology-block" hidden>
+            <div class="subsection-heading topology-heading"><div><p class="eyebrow">Deployment shape</p><h4 id="topology-heading">Rank 1 topology → Kubernetes sizing</h4></div><span class="comparison-tag">WORKERS / TP</span></div>
+            <p id="topology-status" class="section-status"></p><p id="topology-principle" class="fine-print"></p>
+            <div class="table-wrap"><table><caption class="sr-only">Rank-one worker and tensor parallel topology values</caption><thead><tr><th scope="col">Topology field</th><th scope="col">agg</th><th scope="col">disagg</th><th scope="col">Absolute delta</th><th scope="col">Signed % delta</th><th scope="col">Availability</th></tr></thead><tbody id="topology-rows"></tbody></table></div>
+            <div class="kubernetes-guidance" aria-labelledby="topology-heading">
+              <div class="sizing-grid" id="topology-sizing"></div>
+              <div class="guidance-grid">
+                <div><h5>Network</h5><ul id="topology-network"></ul></div>
+                <div><h5>Scheduling</h5><ul id="topology-scheduling"></ul></div>
+              </div>
+            </div>
+          </div>
         </section>
         <section id="tradeoff-surface" class="result-section tradeoff-section" hidden aria-labelledby="tradeoff-heading">
           <div class="subsection-heading"><div><p class="eyebrow">Trade-off surface</p><h3 id="tradeoff-heading">Pareto frontier</h3></div><span class="comparison-tag">FULL SWEEP / SVG</span></div>

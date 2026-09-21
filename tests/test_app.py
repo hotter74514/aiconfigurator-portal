@@ -285,6 +285,14 @@ def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
             assert comparison["modes"]["disagg"]["rank"] == 1
             comparison_metrics = {metric["name"]: metric for metric in comparison["metrics"]}
             assert comparison_metrics["tokens/s"]["percentage_delta"] == 100.0
+            topology = comparison["topology"]
+            topology_metrics = {metric["name"]: metric for metric in topology["metrics"]}
+            assert topology_metrics["(p)worker"]["agg_value"] == 1
+            assert topology_metrics["(p)worker"]["disagg_value"] == 4
+            assert topology["kubernetes"]["modes"]["disagg"]["prefill"]["replicas"] == 4
+            assert topology["kubernetes"]["modes"]["disagg"]["prefill"]["gpus_per_pod"] == 4
+            assert topology["kubernetes"]["modes"]["disagg"]["decode"]["replicas"] == 1
+            assert topology["kubernetes"]["modes"]["disagg"]["decode"]["gpus_per_pod"] == 16
             tradeoff = state["tradeoff_surface"]
             assert tradeoff["candidate_count"] == 4
             assert tradeoff["frontier_count"] == 3

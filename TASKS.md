@@ -296,6 +296,20 @@ must contain exact commands and observations, not only a checked box.
     `docs/evidence/task-018-range-aware-grafana-dashboard.md` for exact commands,
     observed values, and the Grafana provisioning limitation.
 
+- [x] **TASK-019 — Show rank-one topology and Kubernetes sizing guidance**
+  - **Outcome:** The completed-run comparison shows rank-one `(p)worker`,
+    `(d)worker`, `(p)tp`, and `(d)tp` values for both modes and explains how
+    worker counts map to pod replicas while TP maps to GPUs per pod.
+  - **Scope:** Extend the server-owned comparison contract under Accepted
+    ADR-010; preserve missing values; add structured network and scheduling
+    guidance in the existing Jinja/native-JavaScript UI. Do not apply manifests,
+    claim cluster validation, or treat estimates as production guarantees.
+  - **Dependencies:** TASK-008; Accepted ADR-010.
+  - **Verify:** Comparison/API tests, `make check`, integration, client tests,
+    container build, `git diff --check`, and Playwright MCP desktop, 390 px,
+    keyboard, and console/network checks pass.
+  - **Evidence:** See `docs/evidence/task-019-rank-one-topology.md`.
+
 ## Status Rules
 
 - `[ ]` Not started or blocked; add a blocker note when applicable.

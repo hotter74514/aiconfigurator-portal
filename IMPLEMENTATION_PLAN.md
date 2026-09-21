@@ -2,7 +2,7 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-010 Accepted; Stages 1–25 and TASK-018 are complete.**
+**ADR-001 through ADR-010 Accepted; Stages 1–26 and TASK-019 are complete.**
 Planning, implementation,
 operations, and handoff evidence are recorded for completed work. The repository
 owner confirmed TASK-006 validation has no known issues. The optional extension in
@@ -986,7 +986,9 @@ and scheduling implications.
 **Tests:** `tests/test_comparison.py`, `tests/test_app.py`, and the browser
 scenarios recorded in a new task evidence report.
 
-**Status:** In Progress.
+**Status:** Complete. The additive topology contract, responsive comparison UI,
+configured checks, container build, and Playwright MCP evidence are recorded in
+`docs/evidence/task-019-rank-one-topology.md`.
 
 ### OpenTelemetry Extension Risks and Rollback
 

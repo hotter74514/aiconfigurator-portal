@@ -88,3 +88,66 @@ def test_comparison_marks_zero_baseline_percentage_unavailable() -> None:
     assert metric["absolute_delta"] == 5.0
     assert metric["percentage_delta"] is None
     assert metric["unavailable_reason"] == "percentage delta unavailable because agg value is zero"
+
+
+def test_topology_uses_rank_one_and_maps_workers_to_pods() -> None:
+    comparison = build_comparison(
+        (
+            _row(
+                2,
+                "agg",
+                **{"(p)worker": 99, "(d)worker": 99, "(p)tp": 99, "(d)tp": 99},
+            ),
+            _row(
+                1,
+                "agg",
+                **{"(p)worker": 2, "(d)worker": 1, "(p)tp": 4, "(d)tp": 8},
+            ),
+            _row(
+                1,
+                "disagg",
+                **{"(p)worker": 4, "(d)worker": 1, "(p)tp": 1, "(d)tp": 4},
+            ),
+        )
+    )
+
+    topology = comparison.to_payload()["topology"]
+    assert topology["available"] is True
+    fields = {metric["name"]: metric for metric in topology["metrics"]}
+    assert fields["(p)worker"]["agg_value"] == 2
+    assert fields["(p)worker"]["disagg_value"] == 4
+    assert fields["(p)tp"]["absolute_delta"] == -3.0
+
+    sizing = topology["kubernetes"]["modes"]
+    assert sizing["disagg"]["prefill"]["replicas"] == 4
+    assert sizing["disagg"]["prefill"]["gpus_per_pod"] == 1
+    assert sizing["disagg"]["prefill"]["total_gpus"] == 4
+    assert sizing["disagg"]["decode"]["replicas"] == 1
+    assert sizing["disagg"]["decode"]["gpus_per_pod"] == 4
+    assert sizing["disagg"]["decode"]["total_gpus"] == 4
+
+
+def test_topology_preserves_missing_and_invalid_values() -> None:
+    comparison = build_comparison(
+        (
+            _row(
+                1,
+                "agg",
+                **{"(p)worker": 2, "(p)tp": 4, "(d)worker": 1, "(d)tp": 4},
+            ),
+            ConfigurationRow(
+                rank=1,
+                serving_mode="disagg",
+                metrics={"(p)worker": "four", "(d)worker": 1, "(d)tp": 4},
+            ),
+        )
+    )
+
+    topology = comparison.to_payload()["topology"]
+    assert topology["available"] is False
+    fields = {metric["name"]: metric for metric in topology["metrics"]}
+    assert fields["(p)worker"]["unavailable_reason"] == ("disagg value for (p)worker is missing")
+    assert topology["kubernetes"]["modes"]["disagg"]["prefill"]["replicas"] is None
+    assert topology["kubernetes"]["modes"]["disagg"]["prefill"]["unavailable_reason"] == (
+        "(p)worker must be a positive integer"
+    )

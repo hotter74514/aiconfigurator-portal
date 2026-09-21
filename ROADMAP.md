@@ -128,6 +128,18 @@ telemetry boundaries.
 - [x] Verify simultaneous submissions and clear/revalidation behavior with client
   tests and Playwright MCP.
 
+## P11 — Rank-One Topology and Kubernetes Guidance
+
+- [x] Accept ADR-010 for the additive topology and guidance contract.
+- [x] Show `(p)worker`, `(d)worker`, `(p)tp`, and `(d)tp` from independently
+  selected rank-one rows in the comparison view.
+- [x] Derive Kubernetes replicas from worker counts and GPUs per pod from TP;
+  preserve missing or invalid source values as unavailable.
+- [x] Add concise KV-cache network and topology-aware scheduling guidance without
+  auto-applying manifests or claiming production benchmark evidence.
+- [x] Verify desktop, narrow, keyboard, API, configured checks, integration, and
+  container build behavior.
+
 ## Deferred
 
 - **Additional Pareto dimensions:** require a new accepted ADR if users need

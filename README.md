@@ -13,8 +13,9 @@ target hardware before production use.
   failed states.
 - Ranked aggregated and disaggregated configurations with throughput, TTFT, TPOT,
   GPU, and topology fields supplied by AIConfigurator.
-- A server-owned rank-one comparison with signed deltas, without declaring a
-  universal winner.
+- A server-owned rank-one comparison with signed deltas, topology fields, and
+  Kubernetes sizing guidance: worker counts become pod replicas and TP becomes
+  GPUs per pod, without declaring a universal winner.
 - A portal-owned latency/throughput trade-off surface from the same full SDK
   sweep, plus the AIConfigurator-generated Pareto PNG and exact-value table
   fallbacks.
