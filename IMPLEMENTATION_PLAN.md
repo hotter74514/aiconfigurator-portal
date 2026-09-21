@@ -2,7 +2,8 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-010 Accepted; Stages 1–26 and TASK-019 are complete.**
+**ADR-001 through ADR-009 Accepted; ADR-010 is superseded by Proposed ADR-011.
+Stages 1–25 are complete; Stage 26 requires correction.**
 Planning, implementation,
 operations, and handoff evidence are recorded for completed work. The repository
 owner confirmed TASK-006 validation has no known issues. The optional extension in
@@ -986,9 +987,29 @@ and scheduling implications.
 **Tests:** `tests/test_comparison.py`, `tests/test_app.py`, and the browser
 scenarios recorded in a new task evidence report.
 
-**Status:** Complete. The additive topology contract, responsive comparison UI,
-configured checks, container build, and Playwright MCP evidence are recorded in
-`docs/evidence/task-019-rank-one-topology.md`.
+**Status:** Requires correction under Proposed ADR-011. The previous evidence
+must not be treated as valid for aggregated Pod sizing.
+
+### Stage 27: Correct Mode-Aware Topology Semantics
+
+**Goal:** Remove fabricated aggregated `(p)/(d)` fields and keep Kubernetes
+sizing guidance limited to topology fields actually supplied by each mode.
+
+**Prerequisites:** ADR-011 must be Accepted by the repository owner.
+
+**Success Criteria:**
+
+- Aggregated rank-one rows show their actual `tp`, `pp`, `dp`, and GPU fields;
+  aggregated Pod replicas remain explicitly unavailable without a worker contract.
+- Disaggregated rank-one rows use `(p)/(d)worker` for replicas only when present,
+  and `(p)/(d)tp` for GPUs per worker Pod.
+- Fake fixtures no longer synthesize unsupported aggregated fields.
+- API, UI, Playwright MCP, and configured completion gates pass.
+
+**Tests:** `tests/test_comparison.py`, `tests/test_app.py`, and the corrected
+browser scenarios recorded in a new evidence report.
+
+**Status:** Blocked pending ADR-011 acceptance.
 
 ### OpenTelemetry Extension Risks and Rollback
 
