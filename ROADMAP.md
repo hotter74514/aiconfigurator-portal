@@ -131,10 +131,11 @@ telemetry boundaries.
 ## P11 — Rank-One Topology and Kubernetes Guidance
 
 - [x] Accept ADR-010 for the additive topology and guidance contract.
-- [x] Show `(p)worker`, `(d)worker`, `(p)tp`, and `(d)tp` from independently
-  selected rank-one rows in the comparison view.
-- [x] Derive Kubernetes replicas from worker counts and GPUs per pod from TP;
-  preserve missing or invalid source values as unavailable.
+- [x] Show mode-specific source fields from independently selected rank-one rows:
+  aggregated `tp/pp/dp` values and disaggregated `(p)/(d)` worker/TP fields.
+- [x] Derive Kubernetes replicas from disaggregated worker counts and GPUs per
+  worker Pod from TP; preserve missing or invalid source values as unavailable
+  and never infer aggregated replicas.
 - [x] Add concise KV-cache network and topology-aware scheduling guidance without
   auto-applying manifests or claiming production benchmark evidence.
 - [x] Verify desktop, narrow, keyboard, API, configured checks, integration, and

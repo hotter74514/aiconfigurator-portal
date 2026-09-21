@@ -3,7 +3,7 @@
 ## Plan Status
 
 **ADR-001 through ADR-009 and ADR-011 Accepted; ADR-010 is superseded.
-Stages 1–25 are complete; Stage 27 is in progress.**
+Stages 1–27 and TASK-020 are complete.**
 Planning, implementation,
 operations, and handoff evidence are recorded for completed work. The repository
 owner confirmed TASK-006 validation has no known issues. The optional extension in
@@ -1009,7 +1009,9 @@ sizing guidance limited to topology fields actually supplied by each mode.
 **Tests:** `tests/test_comparison.py`, `tests/test_app.py`, and the corrected
 browser scenarios recorded in a new evidence report.
 
-**Status:** In Progress.
+**Status:** Complete. Mode-aware source fields, corrected sizing semantics,
+configured checks, container build, and Playwright MCP evidence are recorded in
+`docs/evidence/task-020-mode-aware-topology.md`.
 
 ### OpenTelemetry Extension Risks and Rollback
 

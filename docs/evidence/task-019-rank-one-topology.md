@@ -1,4 +1,8 @@
-# TASK-019 Evidence: Rank-One Topology and Kubernetes Guidance
+# TASK-019 Historical Evidence: Superseded Topology Guidance
+
+> Superseded by TASK-020 and ADR-011. The implementation described below
+> incorrectly treated aggregated results as if they supplied disaggregated
+> worker fields. Do not use this evidence to size aggregated Kubernetes Pods.
 
 ## Decision and implementation
 

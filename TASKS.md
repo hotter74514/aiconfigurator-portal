@@ -308,9 +308,10 @@ must contain exact commands and observations, not only a checked box.
   - **Verify:** Comparison/API tests, `make check`, integration, client tests,
     container build, `git diff --check`, and Playwright MCP desktop, 390 px,
     keyboard, and console/network checks pass.
-  - **Evidence:** See `docs/evidence/task-019-rank-one-topology.md`.
+  - **Evidence:** Historical implementation superseded by TASK-020; see
+    `docs/evidence/task-019-rank-one-topology.md`.
 
-- [~] **TASK-020 — Correct mode-aware topology semantics**
+- [x] **TASK-020 — Correct mode-aware topology semantics**
   - **Outcome:** Aggregated results no longer receive fabricated prefill/decode
     worker fields or inferred Pod counts; disaggregated sizing remains available
     when the source fields exist.
@@ -320,7 +321,7 @@ must contain exact commands and observations, not only a checked box.
   - **Dependencies:** TASK-019; Accepted ADR-011.
   - **Verify:** Mode-aware fixtures, unavailable-state tests, Playwright MCP,
     configured checks, container build, and `git diff --check`.
-  - **Evidence:** To be recorded after ADR-011 acceptance.
+  - **Evidence:** See `docs/evidence/task-020-mode-aware-topology.md`.
 
 ## Status Rules
 

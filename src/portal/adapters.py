@@ -96,10 +96,10 @@ class FakeAiconfiguratorAdapter:
                 "tokens/s": 1.0,
                 "ttft": request.ttft_ms,
                 "tpot": request.tpot_ms,
-                "(p)worker": 1,
-                "(d)worker": 1,
-                "(p)tp": 16,
-                "(d)tp": 16,
+                "tp": 16,
+                "pp": 1,
+                "dp": 1,
+                "parallel": "tp16pp1dp1",
             },
         )
         disagg_row = ConfigurationRow(

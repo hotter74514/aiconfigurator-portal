@@ -12,10 +12,10 @@ target hardware before production use.
 - An asynchronous `202` run API with opaque IDs and queued, running, completed, and
   failed states.
 - Ranked aggregated and disaggregated configurations with throughput, TTFT, TPOT,
-  GPU, and topology fields supplied by AIConfigurator.
-- A server-owned rank-one comparison with signed deltas, topology fields, and
-  Kubernetes sizing guidance: worker counts become pod replicas and TP becomes
-  GPUs per pod, without declaring a universal winner.
+  GPU, and mode-specific topology fields supplied by AIConfigurator.
+- A server-owned rank-one comparison with signed deltas and mode-aware Kubernetes
+  guidance: disaggregated worker counts become Pod replicas and TP becomes GPUs
+  per worker Pod; aggregated TP/PP/DP values never become inferred Pod counts.
 - A portal-owned latency/throughput trade-off surface from the same full SDK
   sweep, plus the AIConfigurator-generated Pareto PNG and exact-value table
   fallbacks.

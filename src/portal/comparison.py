@@ -14,7 +14,14 @@ COMPARISON_METRICS: Final[tuple[tuple[str, str], ...]] = (
     ("tpot", "ms"),
     ("num_total_gpus", "GPUs"),
 )
-TOPOLOGY_FIELDS: Final[tuple[tuple[str, str], ...]] = (
+AGGREGATED_TOPOLOGY_FIELDS: Final[tuple[tuple[str, str], ...]] = (
+    ("tp", "Tensor parallel width"),
+    ("pp", "Pipeline parallel width"),
+    ("dp", "Data parallel width"),
+    ("num_total_gpus", "Allocated GPUs"),
+    ("parallel", "Parallel layout"),
+)
+DISAGGREGATED_TOPOLOGY_FIELDS: Final[tuple[tuple[str, str], ...]] = (
     ("(p)worker", "Prefill workers"),
     ("(d)worker", "Decode workers"),
     ("(p)tp", "Prefill TP"),
@@ -29,22 +36,23 @@ DELTA_DEFINITION: Final[str] = (
     "deltas are rounded half-up to two decimal places"
 )
 KUBERNETES_PRINCIPLE: Final[str] = (
-    "Worker count determines pod replicas; TP determines GPUs required by each worker pod."
+    "Disaggregated worker count determines Pod replicas; TP determines GPUs per worker Pod. "
+    "Aggregated TP/PP/DP values describe parallelism, not Pod replicas."
 )
 KUBERNETES_NETWORK_GUIDANCE: Final[tuple[str, ...]] = (
-    "Use the lowest-latency, highest-bandwidth path available for prefill-to-decode "
-    "KV-cache transfer.",
+    "Disaggregated serving needs the lowest-latency, highest-bandwidth path available "
+    "for prefill-to-decode KV-cache transfer.",
     "Same-node placement is only beneficial when the serving runtime can use the "
     "node's GPU interconnect or shared-memory path; otherwise use the supported "
     "high-speed network fabric.",
 )
 KUBERNETES_SCHEDULING_GUIDANCE: Final[tuple[str, ...]] = (
-    "Keep every TP worker's GPUs on one topology-compatible node; use node labels "
-    "and required or preferred affinity to express the constraint.",
-    "Spread independent prefill replicas when throughput and failure isolation "
-    "matter; do not force every prefill and decode pod onto one node by default.",
-    "Set each workload's nvidia.com/gpu limit to its TP value and validate the "
-    "generated estimate with a real cluster benchmark.",
+    "For disaggregated TP workers, keep each worker's GPUs on one topology-compatible "
+    "node; use node labels and required or preferred affinity.",
+    "Do not infer an aggregated Pod count from tp or num_total_gpus; use an explicit "
+    "deployment artifact or runtime contract.",
+    "Set nvidia.com/gpu from the verified TP width only where the result identifies "
+    "the worker group, then validate the estimate with a real cluster benchmark.",
 )
 
 
@@ -132,29 +140,62 @@ class KubernetesSizing:
 
 
 @dataclass(frozen=True, slots=True)
-class TopologySummary:
-    """Rank-one topology fields and Kubernetes deployment guidance."""
+class TopologyField:
+    """One mode-specific source field preserved without cross-mode inference."""
 
-    available: bool
-    agg_rank: int | None
-    disagg_rank: int | None
-    agg_metrics: Mapping[str, float | int] | None
-    disagg_metrics: Mapping[str, float | int] | None
-    metrics: tuple[ComparisonMetric, ...]
+    name: str
+    label: str
+    value: float | int | str | None
+    unavailable_reason: str | None
+
+    def to_payload(self) -> dict[str, object]:
+        """Return the source value and an explicit missing-value reason."""
+
+        return {
+            "name": self.name,
+            "label": self.label,
+            "value": self.value,
+            "unavailable_reason": self.unavailable_reason,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ModeTopology:
+    """Rank-one topology values for one serving mode."""
+
+    rank: int | None
+    fields: tuple[TopologyField, ...]
     kubernetes: Mapping[str, object]
     unavailable_reason: str | None
 
     def to_payload(self) -> dict[str, object]:
-        """Return the additive topology contract for completed runs."""
+        """Return one mode's topology and mode-specific deployment meaning."""
+
+        return {
+            "rank": self.rank,
+            "fields": [field.to_payload() for field in self.fields],
+            "kubernetes": dict(self.kubernetes),
+            "unavailable_reason": self.unavailable_reason,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TopologySummary:
+    """Mode-aware rank-one topology fields and Kubernetes guidance."""
+
+    available: bool
+    agg: ModeTopology
+    disagg: ModeTopology
+    kubernetes: Mapping[str, object]
+    unavailable_reason: str | None
+
+    def to_payload(self) -> dict[str, object]:
+        """Return the mode-aware topology contract for completed runs."""
 
         return {
             "available": self.available,
             "unavailable_reason": self.unavailable_reason,
-            "modes": {
-                "agg": _mode_payload(self.agg_rank, self.agg_metrics),
-                "disagg": _mode_payload(self.disagg_rank, self.disagg_metrics),
-            },
-            "metrics": [metric.to_payload() for metric in self.metrics],
+            "modes": {"agg": self.agg.to_payload(), "disagg": self.disagg.to_payload()},
             "kubernetes": dict(self.kubernetes),
         }
 
@@ -230,78 +271,95 @@ def build_comparison(rows: Sequence[ConfigurationRow]) -> ComparisonSummary:
 
 
 def build_topology_summary(rows: Sequence[ConfigurationRow]) -> TopologySummary:
-    """Build rank-one topology values and Kubernetes sizing guidance."""
+    """Build source-faithful topology values and Kubernetes guidance."""
 
-    agg_row = _rank_one(rows, "agg")
-    disagg_row = _rank_one(rows, "disagg")
-    agg_metrics = _numeric_metrics_for(agg_row, tuple(name for name, _ in TOPOLOGY_FIELDS))
-    disagg_metrics = _numeric_metrics_for(disagg_row, tuple(name for name, _ in TOPOLOGY_FIELDS))
-
-    reasons: list[str] = []
-    if agg_row is None:
-        reasons.append("agg rank 1 is unavailable")
-    if disagg_row is None:
-        reasons.append("disagg rank 1 is unavailable")
-
-    topology_metrics: list[ComparisonMetric] = []
-    for metric_name, label in TOPOLOGY_FIELDS:
-        agg_value = agg_metrics.get(metric_name) if agg_metrics is not None else None
-        disagg_value = disagg_metrics.get(metric_name) if disagg_metrics is not None else None
-        reason: str | None = None
-        absolute_delta: float | None = None
-        percentage_delta: float | None = None
-        if agg_row is None:
-            reason = "agg rank 1 is unavailable"
-        elif disagg_row is None:
-            reason = "disagg rank 1 is unavailable"
-        elif agg_value is None:
-            reason = f"agg value for {metric_name} is missing"
-        elif disagg_value is None:
-            reason = f"disagg value for {metric_name} is missing"
-        else:
-            absolute_delta = _round_delta(float(disagg_value) - float(agg_value))
-            if float(agg_value) == 0:
-                reason = f"percentage delta unavailable because agg {metric_name} is zero"
-            else:
-                percentage_delta = _round_delta(
-                    (float(disagg_value) - float(agg_value)) / abs(float(agg_value)) * 100
-                )
-        if reason is not None and reason not in reasons:
-            reasons.append(reason)
-        topology_metrics.append(
-            ComparisonMetric(
-                name=metric_name,
-                unit=label,
-                agg_value=agg_value,
-                disagg_value=disagg_value,
-                absolute_delta=absolute_delta,
-                percentage_delta=percentage_delta,
-                unavailable_reason=reason,
-            )
-        )
-
-    kubernetes_modes = {
-        mode: {
-            workload: _build_kubernetes_sizing(row, workload, worker_field, tp_field).to_payload()
-            for workload, worker_field, tp_field in KUBERNETES_WORKLOADS
-        }
-        for mode, row in (("agg", agg_row), ("disagg", disagg_row))
-    }
+    agg = _build_mode_topology(_rank_one(rows, "agg"), "agg")
+    disagg = _build_mode_topology(_rank_one(rows, "disagg"), "disagg")
+    reasons = [reason for reason in (agg.unavailable_reason, disagg.unavailable_reason) if reason]
     return TopologySummary(
         available=not reasons,
-        agg_rank=agg_row.rank if agg_row is not None else None,
-        disagg_rank=disagg_row.rank if disagg_row is not None else None,
-        agg_metrics=agg_metrics,
-        disagg_metrics=disagg_metrics,
-        metrics=tuple(topology_metrics),
+        agg=agg,
+        disagg=disagg,
         kubernetes={
             "principle": KUBERNETES_PRINCIPLE,
-            "modes": kubernetes_modes,
             "network": list(KUBERNETES_NETWORK_GUIDANCE),
             "scheduling": list(KUBERNETES_SCHEDULING_GUIDANCE),
         },
         unavailable_reason="; ".join(reasons) if reasons else None,
     )
+
+
+def _build_mode_topology(row: ConfigurationRow | None, mode: str) -> ModeTopology:
+    """Preserve only the fields documented for the selected serving mode."""
+
+    definitions = AGGREGATED_TOPOLOGY_FIELDS if mode == "agg" else DISAGGREGATED_TOPOLOGY_FIELDS
+    fields: list[TopologyField] = []
+    reasons: list[str] = []
+    for name, label in definitions:
+        value = row.metrics.get(name) if row is not None else None
+        reason = _topology_value_reason(value, name, mode, row is None)
+        if reason is not None:
+            reasons.append(reason)
+        fields.append(TopologyField(name, label, value if reason is None else None, reason))
+
+    kubernetes: dict[str, object]
+    if mode == "agg":
+        kubernetes = {
+            "available": False,
+            "prefill": None,
+            "decode": None,
+            "unavailable_reason": (
+                "agg result does not expose worker or replica fields; Pod replicas "
+                "cannot be derived from tp or num_total_gpus"
+            ),
+        }
+    else:
+        sizing = {
+            workload: _build_kubernetes_sizing(row, workload, worker_field, tp_field).to_payload()
+            for workload, worker_field, tp_field in KUBERNETES_WORKLOADS
+        }
+        sizing_reasons = [
+            str(item["unavailable_reason"])
+            for item in sizing.values()
+            if item["unavailable_reason"] is not None
+        ]
+        kubernetes = {
+            "available": not sizing_reasons,
+            **sizing,
+            "unavailable_reason": "; ".join(sizing_reasons) if sizing_reasons else None,
+        }
+
+    rank = row.rank if row is not None else None
+    if row is None:
+        reasons.insert(0, f"{mode} rank 1 is unavailable")
+    return ModeTopology(
+        rank=rank,
+        fields=tuple(fields),
+        kubernetes=kubernetes,
+        unavailable_reason="; ".join(reasons) if reasons else None,
+    )
+
+
+def _topology_value_reason(
+    value: float | int | str | None, name: str, mode: str, row_missing: bool
+) -> str | None:
+    """Validate one source topology value without inventing a replacement."""
+
+    if row_missing:
+        return f"{mode} rank 1 is unavailable"
+    if value is None:
+        return f"{mode} value for {name} is missing"
+    if isinstance(value, bool):
+        return f"{mode} value for {name} is invalid"
+    if mode == "disagg" and not isinstance(value, (float, int)):
+        return f"{mode} value for {name} is invalid"
+    if mode == "agg" and name != "parallel" and not isinstance(value, (float, int)):
+        return f"{mode} value for {name} is invalid"
+    if isinstance(value, (float, int)) and not math.isfinite(float(value)):
+        return f"{mode} value for {name} is not finite"
+    if isinstance(value, str) and not value.strip():
+        return f"{mode} value for {name} is blank"
+    return None
 
 
 def _rank_one(rows: Sequence[ConfigurationRow], mode: str) -> ConfigurationRow | None:

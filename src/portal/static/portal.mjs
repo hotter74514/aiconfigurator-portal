@@ -226,15 +226,23 @@ const renderTopologySizing = (kubernetes) => {
     const heading = document.createElement("h5");
     heading.textContent = `${mode} rank 1`;
     panel.appendChild(heading);
-    for (const workload of ["prefill", "decode"]) {
-      const sizing = modes[mode] && modes[mode][workload] ? modes[mode][workload] : null;
+    const modePayload = modes[mode] || {};
+    const modeSizing = modePayload.kubernetes || {};
+    if (!modeSizing.available) {
       const line = document.createElement("p");
-      if (!sizing || sizing.unavailable_reason) {
-        line.textContent = `${workload}: Unavailable${sizing && sizing.unavailable_reason ? ` (${sizing.unavailable_reason})` : ""}`;
-      } else {
-        line.textContent = `${workload}: ${displayValue(sizing.replicas)} pod${sizing.replicas === 1 ? "" : "s"} × ${displayValue(sizing.gpus_per_pod)} GPU${sizing.gpus_per_pod === 1 ? "" : "s"}/pod = ${displayValue(sizing.total_gpus)} GPUs`;
-      }
+      line.textContent = `Pod replicas: Unavailable${modeSizing.unavailable_reason ? ` (${modeSizing.unavailable_reason})` : ""}`;
       panel.appendChild(line);
+    } else {
+      for (const workload of ["prefill", "decode"]) {
+        const sizing = modeSizing[workload];
+        const line = document.createElement("p");
+        if (!sizing || sizing.unavailable_reason) {
+          line.textContent = `${workload}: Unavailable${sizing && sizing.unavailable_reason ? ` (${sizing.unavailable_reason})` : ""}`;
+        } else {
+          line.textContent = `${workload}: ${displayValue(sizing.replicas)} pod${sizing.replicas === 1 ? "" : "s"} × ${displayValue(sizing.gpus_per_pod)} GPU${sizing.gpus_per_pod === 1 ? "" : "s"}/pod = ${displayValue(sizing.total_gpus)} GPUs`;
+        }
+        panel.appendChild(line);
+      }
     }
     topologySizing.appendChild(panel);
   }
@@ -247,31 +255,40 @@ const renderTopology = (payload) => {
   }
   const modes = payload.modes || {};
   topologyStatus.textContent = payload.available
-    ? "Rank-one worker and TP fields are available for both serving modes."
-    : `Topology partially unavailable: ${payload.unavailable_reason || "required fields are missing."}`;
+    ? "Rank-one topology is shown using the fields supplied by each serving mode."
+    : `Some mode-specific topology fields are unavailable: ${payload.unavailable_reason || "check the source schema."}`;
   const kubernetes = payload.kubernetes || {};
-  topologyPrinciple.textContent = kubernetes.principle || "Worker count maps to pod replicas; TP maps to GPUs per pod.";
+  topologyPrinciple.textContent = kubernetes.principle || "Disaggregated workers map to Pods; aggregated parallelism does not define Pod replicas.";
   topologyRows.replaceChildren();
-  for (const metric of payload.metrics || []) {
-    const row = document.createElement("tr");
-    const aggValue = modes.agg && modes.agg.metrics ? modes.agg.metrics[metric.name] : null;
-    const disaggValue = modes.disagg && modes.disagg.metrics ? modes.disagg.metrics[metric.name] : null;
-    const cells = [
-      `${metric.name} (${metric.unit})`,
-      displayValue(aggValue),
-      displayValue(disaggValue),
-      displayValue(metric.absolute_delta),
-      displayValue(metric.percentage_delta, metric.percentage_delta === null || metric.percentage_delta === undefined ? "" : "%"),
-      metric.unavailable_reason || "Available",
-    ];
-    for (const text of cells) {
-      const cell = document.createElement("td");
-      cell.textContent = String(text);
-      row.appendChild(cell);
+  for (const mode of ["agg", "disagg"]) {
+    const modePayload = modes[mode] || {};
+    for (const field of modePayload.fields || []) {
+      const row = document.createElement("tr");
+      const meaning = mode === "agg"
+        ? "Parallelism setting; not a Pod replica count."
+        : field.name === "(p)worker"
+          ? "Prefill Pod replicas."
+          : field.name === "(d)worker"
+            ? "Decode Pod replicas."
+            : field.name === "(p)tp"
+              ? "GPUs per Prefill worker Pod."
+              : "GPUs per Decode worker Pod.";
+      const cells = [
+        mode,
+        `${field.name} (${field.label})`,
+        displayValue(field.value),
+        meaning,
+        field.unavailable_reason || "Available",
+      ];
+      for (const text of cells) {
+        const cell = document.createElement("td");
+        cell.textContent = String(text);
+        row.appendChild(cell);
+      }
+      topologyRows.appendChild(row);
     }
-    topologyRows.appendChild(row);
   }
-  renderTopologySizing(kubernetes);
+  renderTopologySizing({modes});
   appendTextList(topologyNetwork, kubernetes.network);
   appendTextList(topologyScheduling, kubernetes.scheduling);
   topology.hidden = false;

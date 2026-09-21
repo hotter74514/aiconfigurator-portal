@@ -64,10 +64,11 @@ Stage 1" describe the intended stable Make target, not a command already verifie
   `pareto_fronts` frames with explicit lower-latency/higher-throughput directions,
   cross-mode frontier classification, and safe fallback when the source contract
   is malformed or empty.
-- [x] The rank-one comparison shows `(p)worker`, `(d)worker`, `(p)tp`, and `(d)tp`
-  from each mode when supplied, maps workers to Kubernetes pod replicas and TP to
-  GPUs per pod, and explains network/scheduling considerations without claiming
-  production validation.
+- [x] The rank-one comparison shows mode-specific source fields: aggregated
+  `tp/pp/dp/num_total_gpus/parallel` values and disaggregated `(p)worker`,
+  `(d)worker`, `(p)tp`, and `(d)tp` when supplied. It maps only disaggregated
+  workers to Pod replicas and TP to GPUs per worker Pod, and never infers an
+  aggregated Pod count.
 - [x] One-hour TTL cleanup removes terminal metadata/files; active work is retained;
   startup removes or reconciles documented orphan state.
 - [x] Full/unwritable temporary storage fails the run clearly while live/ready remain

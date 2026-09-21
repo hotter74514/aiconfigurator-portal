@@ -96,12 +96,12 @@ def test_topology_uses_rank_one_and_maps_workers_to_pods() -> None:
             _row(
                 2,
                 "agg",
-                **{"(p)worker": 99, "(d)worker": 99, "(p)tp": 99, "(d)tp": 99},
+                **{"tp": 99, "pp": 99, "dp": 99, "num_total_gpus": 99, "parallel": "wrong"},
             ),
             _row(
                 1,
                 "agg",
-                **{"(p)worker": 2, "(d)worker": 1, "(p)tp": 4, "(d)tp": 8},
+                **{"tp": 4, "pp": 1, "dp": 1, "num_total_gpus": 4, "parallel": "tp4pp1dp1"},
             ),
             _row(
                 1,
@@ -113,18 +113,24 @@ def test_topology_uses_rank_one_and_maps_workers_to_pods() -> None:
 
     topology = comparison.to_payload()["topology"]
     assert topology["available"] is True
-    fields = {metric["name"]: metric for metric in topology["metrics"]}
-    assert fields["(p)worker"]["agg_value"] == 2
-    assert fields["(p)worker"]["disagg_value"] == 4
-    assert fields["(p)tp"]["absolute_delta"] == -3.0
+    agg_fields = {field["name"]: field for field in topology["modes"]["agg"]["fields"]}
+    assert agg_fields["tp"]["value"] == 4
+    assert agg_fields["parallel"]["value"] == "tp4pp1dp1"
+    assert "(p)worker" not in agg_fields
+    assert topology["modes"]["agg"]["kubernetes"]["available"] is False
+    assert "cannot be derived" in topology["modes"]["agg"]["kubernetes"]["unavailable_reason"]
 
-    sizing = topology["kubernetes"]["modes"]
-    assert sizing["disagg"]["prefill"]["replicas"] == 4
-    assert sizing["disagg"]["prefill"]["gpus_per_pod"] == 1
-    assert sizing["disagg"]["prefill"]["total_gpus"] == 4
-    assert sizing["disagg"]["decode"]["replicas"] == 1
-    assert sizing["disagg"]["decode"]["gpus_per_pod"] == 4
-    assert sizing["disagg"]["decode"]["total_gpus"] == 4
+    disagg_fields = {field["name"]: field for field in topology["modes"]["disagg"]["fields"]}
+    assert disagg_fields["(p)worker"]["value"] == 4
+    assert disagg_fields["(p)tp"]["value"] == 1
+
+    sizing = topology["modes"]["disagg"]["kubernetes"]
+    assert sizing["prefill"]["replicas"] == 4
+    assert sizing["prefill"]["gpus_per_pod"] == 1
+    assert sizing["prefill"]["total_gpus"] == 4
+    assert sizing["decode"]["replicas"] == 1
+    assert sizing["decode"]["gpus_per_pod"] == 4
+    assert sizing["decode"]["total_gpus"] == 4
 
 
 def test_topology_preserves_missing_and_invalid_values() -> None:
@@ -133,7 +139,7 @@ def test_topology_preserves_missing_and_invalid_values() -> None:
             _row(
                 1,
                 "agg",
-                **{"(p)worker": 2, "(p)tp": 4, "(d)worker": 1, "(d)tp": 4},
+                **{"tp": 4, "pp": 1, "dp": 1, "num_total_gpus": 4, "parallel": "tp4pp1dp1"},
             ),
             ConfigurationRow(
                 rank=1,
@@ -145,9 +151,9 @@ def test_topology_preserves_missing_and_invalid_values() -> None:
 
     topology = comparison.to_payload()["topology"]
     assert topology["available"] is False
-    fields = {metric["name"]: metric for metric in topology["metrics"]}
-    assert fields["(p)worker"]["unavailable_reason"] == ("disagg value for (p)worker is missing")
-    assert topology["kubernetes"]["modes"]["disagg"]["prefill"]["replicas"] is None
-    assert topology["kubernetes"]["modes"]["disagg"]["prefill"]["unavailable_reason"] == (
+    fields = {field["name"]: field for field in topology["modes"]["disagg"]["fields"]}
+    assert fields["(p)worker"]["unavailable_reason"] == "disagg value for (p)worker is invalid"
+    assert topology["modes"]["disagg"]["kubernetes"]["prefill"]["replicas"] is None
+    assert topology["modes"]["disagg"]["kubernetes"]["prefill"]["unavailable_reason"] == (
         "(p)worker must be a positive integer"
     )
