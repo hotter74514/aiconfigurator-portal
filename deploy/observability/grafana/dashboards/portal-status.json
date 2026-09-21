@@ -123,7 +123,7 @@
       "id": 4,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto", "wideLayout": true},
       "pluginVersion": "12.3.1",
-      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(increase(portal_runs_completed_total{instance=~\"$instance\"}[$__range]))", "instant": true, "legendFormat": "completed", "range": false, "refId": "A"}],
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "round(sum(increase(portal_runs_completed_total{instance=~\"$instance\"}[$__range])))", "instant": true, "legendFormat": "completed", "range": false, "refId": "A"}],
       "title": "Completed runs",
       "type": "stat"
     },
@@ -135,7 +135,7 @@
       "id": 5,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto", "wideLayout": true},
       "pluginVersion": "12.3.1",
-      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(increase(portal_runs_failed_total{instance=~\"$instance\"}[$__range]))", "instant": true, "legendFormat": "failed", "range": false, "refId": "A"}],
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "round(sum(increase(portal_runs_failed_total{instance=~\"$instance\"}[$__range])))", "instant": true, "legendFormat": "failed", "range": false, "refId": "A"}],
       "title": "Failed runs",
       "type": "stat"
     },
@@ -147,7 +147,7 @@
       "id": 6,
       "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto", "wideLayout": true},
       "pluginVersion": "12.3.1",
-      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(increase(portal_runs_rejected_total{instance=~\"$instance\"}[$__range]))", "instant": true, "legendFormat": "rejected", "range": false, "refId": "A"}],
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "round(sum(increase(portal_runs_rejected_total{instance=~\"$instance\"}[$__range])))", "instant": true, "legendFormat": "rejected", "range": false, "refId": "A"}],
       "title": "Rejected runs",
       "type": "stat"
     },
@@ -160,10 +160,10 @@
       "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
       "pluginVersion": "12.3.1",
       "targets": [
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_runs_completed_total{instance=~\"$instance\"}[$__rate_interval])) * 60", "legendFormat": "completed", "range": true, "refId": "A"},
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_runs_failed_total{instance=~\"$instance\"}[$__rate_interval])) * 60", "legendFormat": "failed", "range": true, "refId": "B"},
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_runs_rejected_total{instance=~\"$instance\"}[$__rate_interval])) * 60", "legendFormat": "rejected", "range": true, "refId": "C"},
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_runs_submitted_total{instance=~\"$instance\"}[$__rate_interval])) * 60", "legendFormat": "submitted", "range": true, "refId": "D"}
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_runs_completed_total{instance=~\"$instance\"}[5m])) * 60 or vector(0)", "legendFormat": "completed", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_runs_failed_total{instance=~\"$instance\"}[5m])) * 60 or vector(0)", "legendFormat": "failed", "range": true, "refId": "B"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_runs_rejected_total{instance=~\"$instance\"}[5m])) * 60 or vector(0)", "legendFormat": "rejected", "range": true, "refId": "C"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_runs_submitted_total{instance=~\"$instance\"}[5m])) * 60 or vector(0)", "legendFormat": "submitted", "range": true, "refId": "D"}
       ],
       "title": "Run outcomes",
       "type": "timeseries"
@@ -185,15 +185,15 @@
     },
     {
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "description": "Median and 95th percentile run duration from completed observations, plus the most recent duration gauge.",
+      "description": "Median and 95th percentile run duration from completed observations in the selected dashboard range, plus the most recent duration gauge.",
       "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "Duration", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 8, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "showPoints": "never", "spanNulls": false, "stacking": {"group": "A", "mode": "none"}}, "min": 0, "unit": "s"}, "overrides": []},
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 13},
       "id": 9,
       "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
       "pluginVersion": "12.3.1",
       "targets": [
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.50, sum by (le) (rate(portal_run_duration_seconds_bucket{instance=~\"$instance\"}[$__rate_interval])))", "legendFormat": "p50", "range": true, "refId": "A"},
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le) (rate(portal_run_duration_seconds_bucket{instance=~\"$instance\"}[$__rate_interval])))", "legendFormat": "p95", "range": true, "refId": "B"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.50, sum by (le) (rate(portal_run_duration_seconds_bucket{instance=~\"$instance\"}[$__range])))", "legendFormat": "p50", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le) (rate(portal_run_duration_seconds_bucket{instance=~\"$instance\"}[$__range])))", "legendFormat": "p95", "range": true, "refId": "B"},
         {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "max(portal_run_last_duration_seconds{instance=~\"$instance\"})", "legendFormat": "last run", "range": true, "refId": "C"}
       ],
       "title": "Run duration",
@@ -207,7 +207,7 @@
       "id": 10,
       "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
       "pluginVersion": "12.3.1",
-      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum by (http_target) (rate(http_server_duration_milliseconds_count{instance=~\"$instance\"}[$__rate_interval]))", "legendFormat": "{{http_target}}", "range": true, "refId": "A"}],
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum by (http_target) (rate(http_server_duration_milliseconds_count{instance=~\"$instance\"}[5m])) or vector(0)", "legendFormat": "{{http_target}}", "range": true, "refId": "A"}],
       "title": "HTTP request rate",
       "type": "timeseries"
     },
@@ -220,8 +220,8 @@
       "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
       "pluginVersion": "12.3.1",
       "targets": [
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(http_server_duration_milliseconds_count{instance=~\"$instance\",http_status_code=~\"4..\"}[$__rate_interval]))", "legendFormat": "4xx", "range": true, "refId": "A"},
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(http_server_duration_milliseconds_count{instance=~\"$instance\",http_status_code=~\"5..\"}[$__rate_interval]))", "legendFormat": "5xx", "range": true, "refId": "B"}
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(http_server_duration_milliseconds_count{instance=~\"$instance\",http_status_code=~\"4..\"}[5m])) or vector(0)", "legendFormat": "4xx", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(http_server_duration_milliseconds_count{instance=~\"$instance\",http_status_code=~\"5..\"}[5m])) or vector(0)", "legendFormat": "5xx", "range": true, "refId": "B"}
       ],
       "title": "HTTP error rate",
       "type": "timeseries"
@@ -235,8 +235,8 @@
       "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
       "pluginVersion": "12.3.1",
       "targets": [
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_duration_milliseconds_bucket{instance=~\"$instance\"}[$__rate_interval])))", "legendFormat": "p50", "range": true, "refId": "A"},
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_duration_milliseconds_bucket{instance=~\"$instance\"}[$__rate_interval])))", "legendFormat": "p95", "range": true, "refId": "B"}
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_duration_milliseconds_bucket{instance=~\"$instance\"}[$__range])))", "legendFormat": "p50", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_duration_milliseconds_bucket{instance=~\"$instance\"}[$__range])))", "legendFormat": "p95", "range": true, "refId": "B"}
       ],
       "title": "HTTP latency",
       "type": "timeseries"
@@ -250,9 +250,9 @@
       "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
       "pluginVersion": "12.3.1",
       "targets": [
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_cache_hits_total{instance=~\"$instance\"}[$__rate_interval])) * 60", "legendFormat": "hits", "range": true, "refId": "A"},
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_cache_misses_total{instance=~\"$instance\"}[$__rate_interval])) * 60", "legendFormat": "misses", "range": true, "refId": "B"},
-        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_cache_evictions_total{instance=~\"$instance\"}[$__rate_interval])) * 60", "legendFormat": "evictions", "range": true, "refId": "C"}
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_cache_hits_total{instance=~\"$instance\"}[5m])) * 60 or vector(0)", "legendFormat": "hits", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_cache_misses_total{instance=~\"$instance\"}[5m])) * 60 or vector(0)", "legendFormat": "misses", "range": true, "refId": "B"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(portal_cache_evictions_total{instance=~\"$instance\"}[5m])) * 60 or vector(0)", "legendFormat": "evictions", "range": true, "refId": "C"}
       ],
       "title": "Cache activity",
       "type": "timeseries"
@@ -291,14 +291,14 @@
         "allValue": ".*",
         "current": {"selected": true, "text": "All", "value": "$__all"},
         "datasource": {"type": "prometheus", "uid": "prometheus"},
-        "definition": "label_values(portal_runs_active, instance)",
+        "definition": "label_values(portal_runs_active{app_kubernetes_io_name=\"serving-configuration-portal\"}, instance)",
         "hide": 0,
         "includeAll": true,
         "label": "Portal instance",
         "multi": true,
         "name": "instance",
         "options": [],
-        "query": {"query": "label_values(portal_runs_active, instance)", "refId": "PrometheusVariableQueryEditor-VariableQuery"},
+        "query": {"query": "label_values(portal_runs_active{app_kubernetes_io_name=\"serving-configuration-portal\"}, instance)", "refId": "PrometheusVariableQueryEditor-VariableQuery"},
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,

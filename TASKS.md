@@ -280,6 +280,22 @@ must contain exact commands and observations, not only a checked box.
   - **Evidence:** See `docs/evidence/task-017-browser-history-sync.md` for exact
     client, Playwright MCP, and configured-check observations.
 
+- [x] **TASK-018 — Make the portal status dashboard range-aware**
+  - **Outcome:** A three-hour Grafana view preserves selected-range run counts and
+    latency observations, renders zero for quiet rate/error/cache panels, and
+    excludes unrelated or retired portal instances.
+  - **Scope:** Adjust dashboard-only PromQL and the instance variable; do not add
+    application metrics, alerts, credentials, or a new backend. Import the updated
+    dashboard into the existing Minikube Grafana deployment.
+  - **Dependencies:** TASK-016; the existing Prometheus-compatible metrics and
+    Grafana service in the `aiconfigurator` Minikube profile.
+  - **Verify:** Contract tests, `make check`, JSON/Kustomize validation, all 24
+    PromQL targets against Minikube Prometheus, Grafana API import, and Playwright
+    MCP at a three-hour range.
+  - **Evidence:** See
+    `docs/evidence/task-018-range-aware-grafana-dashboard.md` for exact commands,
+    observed values, and the Grafana provisioning limitation.
+
 ## Status Rules
 
 - `[ ]` Not started or blocked; add a blocker note when applicable.

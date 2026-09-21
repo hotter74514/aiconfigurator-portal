@@ -2,7 +2,7 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-009 Accepted; Stages 1–23 and TASK-016 are complete.**
+**ADR-001 through ADR-009 Accepted; Stages 1–25 and TASK-018 are complete.**
 Planning, implementation,
 operations, and handoff evidence are recorded for completed work. The repository
 owner confirmed TASK-006 validation has no known issues. The optional extension in
@@ -945,6 +945,24 @@ observe both entries in both tabs, and verify the existing configured checks.
 **Status:** Complete. Merge-on-write, storage-event synchronization, stale
 revalidation protection, client regression coverage, and the two-tab Playwright MCP
 flow are recorded in `docs/evidence/task-017-browser-history-sync.md`.
+
+### Stage 25: Make the Portal Status Dashboard Range-Aware
+
+**Goal:** Keep the portal status dashboard useful after a burst of requests has
+gone idle, while preserving the distinction between selected-range statistics and
+current active/queued work.
+
+**Success Criteria:** Three-hour completed/failed/rejected cards show integral
+counts; rate/error/cache panels render zero during quiet periods; duration and HTTP
+quantiles use the selected range; and the instance selector excludes unrelated or
+retired portal series.
+
+**Tests:** Dashboard contract tests, JSON parsing, PromQL checks against the running
+Prometheus instance, Kustomize rendering, Grafana reload, and Minikube rollout.
+
+**Status:** Complete. The range-aware queries, portal-only instance selector,
+PromQL checks, Minikube Grafana import, and Playwright MCP validation are recorded
+in `docs/evidence/task-018-range-aware-grafana-dashboard.md`.
 
 ### OpenTelemetry Extension Risks and Rollback
 

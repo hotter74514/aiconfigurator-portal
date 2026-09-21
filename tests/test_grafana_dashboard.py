@@ -72,14 +72,24 @@ def test_dashboard_uses_stable_datasource_and_existing_metrics() -> None:
     ):
         assert metric in joined
     assert all('instance=~"$instance"' in expression for expression in expressions)
+    assert 'round(sum(increase(portal_runs_completed_total' in joined
+    assert ' or vector(0)' in joined
+    assert '[$__range]' in joined
+    assert '[$__rate_interval]' not in joined
+    assert '[5m]' in joined
 
+    portal_instance_query = (
+        "label_values(portal_runs_active{"
+        'app_kubernetes_io_name="serving-configuration-portal"'
+        "}, instance)"
+    )
     variables = dashboard["templating"]["list"]
     assert variables == [
         {
             "allValue": ".*",
             "current": {"selected": True, "text": "All", "value": "$__all"},
             "datasource": {"type": "prometheus", "uid": "prometheus"},
-            "definition": "label_values(portal_runs_active, instance)",
+            "definition": portal_instance_query,
             "hide": 0,
             "includeAll": True,
             "label": "Portal instance",
@@ -87,7 +97,7 @@ def test_dashboard_uses_stable_datasource_and_existing_metrics() -> None:
             "name": "instance",
             "options": [],
             "query": {
-                "query": "label_values(portal_runs_active, instance)",
+                "query": portal_instance_query,
                 "refId": "PrometheusVariableQueryEditor-VariableQuery",
             },
             "refresh": 1,
