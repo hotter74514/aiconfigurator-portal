@@ -12,8 +12,8 @@ contract now preserves the source schema by serving mode:
   them from `tp`, `num_total_gpus`, or `parallel`.
 - Disaggregated sizing uses worker count as Pod replicas and TP as GPUs per
   worker Pod.
-- Network and Scheduling guidance is conditional and does not apply manifests
-  or claim benchmark validation.
+- Generic Network and Scheduling guidance is excluded; the portal only exposes
+  source-derived topology and Kubernetes sizing.
 
 The fake adapter no longer injects synthetic `(p)/(d)` fields into its agg row.
 

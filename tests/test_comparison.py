@@ -119,6 +119,8 @@ def test_topology_uses_rank_one_and_maps_workers_to_pods() -> None:
     assert "(p)worker" not in agg_fields
     assert topology["modes"]["agg"]["kubernetes"]["available"] is False
     assert "cannot be derived" in topology["modes"]["agg"]["kubernetes"]["unavailable_reason"]
+    assert "network" not in topology["kubernetes"]
+    assert "scheduling" not in topology["kubernetes"]
 
     disagg_fields = {field["name"]: field for field in topology["modes"]["disagg"]["fields"]}
     assert disagg_fields["(p)worker"]["value"] == 4

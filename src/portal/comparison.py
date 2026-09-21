@@ -39,21 +39,6 @@ KUBERNETES_PRINCIPLE: Final[str] = (
     "Disaggregated worker count determines Pod replicas; TP determines GPUs per worker Pod. "
     "Aggregated TP/PP/DP values describe parallelism, not Pod replicas."
 )
-KUBERNETES_NETWORK_GUIDANCE: Final[tuple[str, ...]] = (
-    "Disaggregated serving needs the lowest-latency, highest-bandwidth path available "
-    "for prefill-to-decode KV-cache transfer.",
-    "Same-node placement is only beneficial when the serving runtime can use the "
-    "node's GPU interconnect or shared-memory path; otherwise use the supported "
-    "high-speed network fabric.",
-)
-KUBERNETES_SCHEDULING_GUIDANCE: Final[tuple[str, ...]] = (
-    "For disaggregated TP workers, keep each worker's GPUs on one topology-compatible "
-    "node; use node labels and required or preferred affinity.",
-    "Do not infer an aggregated Pod count from tp or num_total_gpus; use an explicit "
-    "deployment artifact or runtime contract.",
-    "Set nvidia.com/gpu from the verified TP width only where the result identifies "
-    "the worker group, then validate the estimate with a real cluster benchmark.",
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -181,7 +166,7 @@ class ModeTopology:
 
 @dataclass(frozen=True, slots=True)
 class TopologySummary:
-    """Mode-aware rank-one topology fields and Kubernetes guidance."""
+    """Mode-aware rank-one topology fields and Kubernetes sizing."""
 
     available: bool
     agg: ModeTopology
@@ -282,8 +267,6 @@ def build_topology_summary(rows: Sequence[ConfigurationRow]) -> TopologySummary:
         disagg=disagg,
         kubernetes={
             "principle": KUBERNETES_PRINCIPLE,
-            "network": list(KUBERNETES_NETWORK_GUIDANCE),
-            "scheduling": list(KUBERNETES_SCHEDULING_GUIDANCE),
         },
         unavailable_reason="; ".join(reasons) if reasons else None,
     )

@@ -2,8 +2,8 @@
 
 ## Plan Status
 
-**ADR-001 through ADR-009 and ADR-011 Accepted; ADR-010 is superseded.
-Stages 1–27 and TASK-020 are complete.**
+**ADR-001 through ADR-009 and ADR-011–012 Accepted; ADR-010 is superseded.
+Stages 1–28 and TASK-021 are complete.**
 Planning, implementation,
 operations, and handoff evidence are recorded for completed work. The repository
 owner confirmed TASK-006 validation has no known issues. The optional extension in
@@ -1012,6 +1012,29 @@ browser scenarios recorded in a new evidence report.
 **Status:** Complete. Mode-aware source fields, corrected sizing semantics,
 configured checks, container build, and Playwright MCP evidence are recorded in
 `docs/evidence/task-020-mode-aware-topology.md`.
+
+### Stage 28: Repair SDK Worker Columns and Remove Generic K8s Guidance
+
+**Goal:** Normalize the SDK's plural disaggregated worker columns so real
+completed runs populate the canonical comparison fields, and remove generic
+network/scheduling recommendations from the topology result contract.
+
+**Prerequisites:** ADR-012 is Accepted by the repository owner.
+
+**Success Criteria:**
+
+- Real `(p)workers` and `(d)workers` source columns map to the canonical
+  `(p)worker` and `(d)worker` fields used by disaggregated sizing.
+- The comparison API and UI contain no generic `network` or `scheduling`
+  guidance fields.
+- Configured checks, container build, Minikube rollout, and a real completed-run
+  smoke test pass.
+
+**Tests:** Adapter normalization, comparison/API contract, and Minikube smoke
+evidence in `docs/evidence/task-021-worker-column-normalization.md`.
+
+**Status:** Complete. The source alias fix and guidance removal are implemented
+and verified against the deployed Minikube service.
 
 ### OpenTelemetry Extension Risks and Rollback
 

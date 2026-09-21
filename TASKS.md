@@ -315,13 +315,25 @@ must contain exact commands and observations, not only a checked box.
   - **Outcome:** Aggregated results no longer receive fabricated prefill/decode
     worker fields or inferred Pod counts; disaggregated sizing remains available
     when the source fields exist.
-  - **Scope:** Implement Proposed ADR-011, superseding the incorrect agg
-    assumptions in ADR-010. Update API, fake fixtures, UI, tests, evidence, and
-    guidance; do not infer Pod replicas from aggregated `tp` or GPU count.
+  - **Scope:** Implement Accepted ADR-011, superseding the incorrect agg
+    assumptions in ADR-010. Update API, fake fixtures, UI, tests, and evidence;
+    do not infer Pod replicas from aggregated `tp` or GPU count.
   - **Dependencies:** TASK-019; Accepted ADR-011.
   - **Verify:** Mode-aware fixtures, unavailable-state tests, Playwright MCP,
     configured checks, container build, and `git diff --check`.
   - **Evidence:** See `docs/evidence/task-020-mode-aware-topology.md`.
+
+- [x] **TASK-021 — Normalize SDK worker columns and remove generic K8s guidance**
+  - **Outcome:** Real SDK `(p)workers` and `(d)workers` columns populate the
+    canonical disaggregated worker fields; generic Network and Scheduling
+    recommendations are removed from the API, UI, tests, and documentation.
+  - **Scope:** Implement Accepted ADR-012 at the adapter and comparison
+    boundaries. Preserve worker/TP sizing and explicit unavailable states.
+  - **Dependencies:** TASK-020; Accepted ADR-012.
+  - **Verify:** Adapter normalization tests, API contract tests, configured
+    checks, container build, Minikube rollout, and a real completed-run smoke
+    test using the downloaded artifact's source columns.
+  - **Evidence:** See `docs/evidence/task-021-worker-column-normalization.md`.
 
 ## Status Rules
 

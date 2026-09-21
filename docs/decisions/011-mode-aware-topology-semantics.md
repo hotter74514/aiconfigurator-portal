@@ -2,7 +2,7 @@
 
 ## Status
 
-**Accepted**
+**Accepted; network and scheduling guidance superseded by ADR-012**
 
 ## Decision Owner
 
@@ -79,9 +79,8 @@ Choose Option A and supersede ADR-010.
   values from rank 1. Do not display synthetic `(p)/(d)` values and do not
   derive an aggregated Pod count. State that Pod replicas require an explicit
   worker/replica contract or deployment artifact.
-- Keep network and scheduling advice conditional: TP placement constraints apply
-  where a TP worker group is known; KV-cache prefill/decode network advice
-  applies to disagg; all estimates still require cluster benchmarking.
+- Keep the topology contract focused on source fields and sizing. The network and
+  scheduling guidance portion of this recommendation is superseded by ADR-012.
 
 The repository owner approved this recommendation. Implementation may proceed
 within the scope and validation gates below.

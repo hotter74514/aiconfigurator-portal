@@ -14,6 +14,10 @@ from portal.adapters import ConfigurationRow, RunRequest, RunResult, Visualizati
 from portal.tradeoff import normalize_tradeoff_surface
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+_TOPOLOGY_COLUMN_ALIASES = {
+    "(p)workers": "(p)worker",
+    "(d)workers": "(d)worker",
+}
 
 
 def _scalar(value: Any) -> float | int | str | None:
@@ -36,11 +40,16 @@ def _normalize_rows(best_configs: Mapping[str, Any]) -> tuple[ConfigurationRow, 
     rows: list[ConfigurationRow] = []
     for mode, frame in best_configs.items():
         for index, record in enumerate(frame.to_dict(orient="records"), start=1):
-            metrics = {
-                str(key): normalized
-                for key, value in record.items()
-                if key != "_per_ops_source" and (normalized := _scalar(value)) is not None
-            }
+            metrics: dict[str, float | int | str] = {}
+            for key, value in record.items():
+                if key == "_per_ops_source":
+                    continue
+                normalized = _scalar(value)
+                if normalized is None:
+                    continue
+                metric_name = _TOPOLOGY_COLUMN_ALIASES.get(str(key), str(key))
+                if metric_name not in metrics or metric_name == str(key):
+                    metrics[metric_name] = normalized
             rows.append(ConfigurationRow(rank=index, serving_mode=str(mode), metrics=metrics))
     return tuple(rows)
 

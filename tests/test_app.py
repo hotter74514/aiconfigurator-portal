@@ -11,7 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from portal.adapters import FakeAiconfiguratorAdapter, RunRequest, RunResult
-from portal.aiconfigurator import _discover_pareto_frontier
+from portal.aiconfigurator import _discover_pareto_frontier, _normalize_rows
 from portal.app import create_app
 from portal.runs import QueueFullError, RunManager
 
@@ -66,6 +66,39 @@ def _wait_for_completion(client: TestClient, run_id: str) -> dict[str, object]:
             return state
         time.sleep(0.01)
     return state
+
+
+class _FrameStub:
+    """Minimal DataFrame boundary used to test SDK column normalization."""
+
+    def __init__(self, records: list[dict[str, object]]) -> None:
+        self.records = records
+
+    def to_dict(self, *, orient: str) -> list[dict[str, object]]:
+        assert orient == "records"
+        return self.records
+
+
+def test_normalize_rows_maps_sdk_plural_worker_columns() -> None:
+    rows = _normalize_rows(
+        {
+            "disagg": _FrameStub(
+                [
+                    {
+                        "(p)workers": 2,
+                        "(d)workers": 1,
+                        "(p)tp": 1,
+                        "(d)tp": 4,
+                    }
+                ]
+            )
+        }
+    )
+
+    assert rows[0].metrics["(p)worker"] == 2
+    assert rows[0].metrics["(d)worker"] == 1
+    assert "(p)workers" not in rows[0].metrics
+    assert "(d)workers" not in rows[0].metrics
 
 
 @pytest.mark.integration
@@ -290,6 +323,8 @@ def test_run_api_returns_202_and_completed_rows(tmp_path: Path) -> None:
             assert agg_fields["tp"]["value"] == 16
             assert "(p)worker" not in agg_fields
             assert topology["modes"]["agg"]["kubernetes"]["available"] is False
+            assert "network" not in topology["kubernetes"]
+            assert "scheduling" not in topology["kubernetes"]
             disagg_fields = {
                 field["name"]: field for field in topology["modes"]["disagg"]["fields"]
             }

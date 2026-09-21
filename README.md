@@ -14,8 +14,9 @@ target hardware before production use.
 - Ranked aggregated and disaggregated configurations with throughput, TTFT, TPOT,
   GPU, and mode-specific topology fields supplied by AIConfigurator.
 - A server-owned rank-one comparison with signed deltas and mode-aware Kubernetes
-  guidance: disaggregated worker counts become Pod replicas and TP becomes GPUs
-  per worker Pod; aggregated TP/PP/DP values never become inferred Pod counts.
+  sizing: disaggregated worker counts become Pod replicas and TP becomes GPUs per
+  worker Pod; aggregated TP/PP/DP values never become inferred Pod counts. Generic
+  network and scheduling recommendations are intentionally excluded.
 - A portal-owned latency/throughput trade-off surface from the same full SDK
   sweep, plus the AIConfigurator-generated Pareto PNG and exact-value table
   fallbacks.

@@ -19,8 +19,6 @@ const topologyStatus = document.getElementById("topology-status");
 const topologyPrinciple = document.getElementById("topology-principle");
 const topologyRows = document.getElementById("topology-rows");
 const topologySizing = document.getElementById("topology-sizing");
-const topologyNetwork = document.getElementById("topology-network");
-const topologyScheduling = document.getElementById("topology-scheduling");
 const tradeoffSurface = document.getElementById("tradeoff-surface");
 const tradeoffDescription = document.getElementById("tradeoff-description");
 const tradeoffChart = document.getElementById("tradeoff-chart");
@@ -130,8 +128,6 @@ const clearResults = () => {
   topology.hidden = true;
   topologyRows.replaceChildren();
   topologySizing.replaceChildren();
-  topologyNetwork.replaceChildren();
-  topologyScheduling.replaceChildren();
   tradeoffSurface.hidden = true;
   tradeoffChart.replaceChildren();
   tradeoffFrontierList.replaceChildren();
@@ -208,15 +204,6 @@ const refreshCapacity = async () => {
 };
 
 const displayValue = (number, suffix = "") => number === null || number === undefined ? "Unavailable" : `${number}${suffix}`;
-const appendTextList = (list, values) => {
-  list.replaceChildren();
-  for (const value of values || []) {
-    const item = document.createElement("li");
-    item.textContent = String(value);
-    list.appendChild(item);
-  }
-};
-
 const renderTopologySizing = (kubernetes) => {
   topologySizing.replaceChildren();
   const modes = kubernetes && kubernetes.modes ? kubernetes.modes : {};
@@ -289,8 +276,6 @@ const renderTopology = (payload) => {
     }
   }
   renderTopologySizing({modes});
-  appendTextList(topologyNetwork, kubernetes.network);
-  appendTextList(topologyScheduling, kubernetes.scheduling);
   topology.hidden = false;
 };
 
