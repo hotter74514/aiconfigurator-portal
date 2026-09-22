@@ -173,14 +173,21 @@ keeping JSON logs on stdout. Configure `OTEL_EXPORTER_OTLP_ENDPOINT` (gRPC) and
 path available without remote telemetry. Exporter queues and shutdown are bounded,
 and exporter failures are not returned as API errors.
 
-The checked-in optional collector stack is under `deploy/observability/`:
+The checked-in observability configuration is under `deploy/observability/`. It
+provides Grafana provisioning artifacts and does not deploy a runtime Alloy
+collector; the active cluster uses the deployment-supplied `alloy` Service in the
+`observability` namespace:
+
+```text
+http://alloy.observability.svc.cluster.local:4317
+```
 
 ```sh
 kubectl kustomize deploy/observability
 kubectl apply --dry-run=client -k deploy/observability
 ```
 
-Alloy receives OTLP traces, tails only portal pod logs, keeps `service_name` as a
+The deployment-supplied Alloy receives OTLP traces, tails only portal pod logs, keeps `service_name` as a
 Loki stream label, and stores `trace_id`/`span_id` as structured metadata. It
 scrapes `/metrics` and forwards samples by remote write. `alloy.config.alloy`
 expects deployment-supplied `TEMPO_OTLP_ENDPOINT`, `LOKI_URL`, and
