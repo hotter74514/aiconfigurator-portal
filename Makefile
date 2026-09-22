@@ -1,15 +1,16 @@
 SHELL := /bin/sh
 
 # Populate these with commands already supported by the project.
-DEV_CMD ?=
-FORMAT_CMD ?=
-LINT_CMD ?=
-TYPECHECK_CMD ?=
-TEST_CMD ?=
-BUILD_CMD ?=
-INTEGRATION_CMD ?=
+DEV_CMD ?= uv run uvicorn portal.app:app --reload
+FORMAT_CMD ?= uv run ruff format --check .
+LINT_CMD ?= uv run ruff check .
+TYPECHECK_CMD ?= uv run mypy src
+TEST_CMD ?= uv run pytest
+CLIENT_TEST_CMD ?= node --test tests/test_history.mjs
+BUILD_CMD ?= docker build --platform linux/amd64 -t serving-configuration-portal:local .
+INTEGRATION_CMD ?= uv run pytest -m integration
 
-.PHONY: help status docs check mcp-check dev format lint typecheck test build integration ci
+.PHONY: help status docs check mcp-check dev format lint typecheck test client-test build integration ci
 
 help:
 	@echo "Available targets:"
@@ -22,6 +23,7 @@ help:
 	@echo "  make lint         Run LINT_CMD"
 	@echo "  make typecheck    Run TYPECHECK_CMD"
 	@echo "  make test         Run TEST_CMD"
+	@echo "  make client-test  Run browser-local history tests"
 	@echo "  make build        Run BUILD_CMD"
 	@echo "  make integration  Run INTEGRATION_CMD"
 	@echo "  make ci           Run checks, integration, and build when configured"
@@ -51,6 +53,7 @@ check: docs
 	$(if $(strip $(LINT_CMD)),$(LINT_CMD),@echo "LINT_CMD is not configured; skipping.")
 	$(if $(strip $(TYPECHECK_CMD)),$(TYPECHECK_CMD),@echo "TYPECHECK_CMD is not configured; skipping.")
 	$(if $(strip $(TEST_CMD)),$(TEST_CMD),@echo "TEST_CMD is not configured; skipping.")
+	$(if $(strip $(CLIENT_TEST_CMD)),$(CLIENT_TEST_CMD),@echo "CLIENT_TEST_CMD is not configured; skipping.")
 
 mcp-check:
 	@command -v node >/dev/null || (echo "Node.js 20+ is required for Playwright MCP."; exit 1)
@@ -78,6 +81,10 @@ typecheck:
 test:
 	@test -n "$(strip $(TEST_CMD))" || (echo "TEST_CMD is not configured."; exit 1)
 	$(TEST_CMD)
+
+client-test:
+	@test -n "$(strip $(CLIENT_TEST_CMD))" || (echo "CLIENT_TEST_CMD is not configured."; exit 1)
+	$(CLIENT_TEST_CMD)
 
 build:
 	@test -n "$(strip $(BUILD_CMD))" || (echo "BUILD_CMD is not configured."; exit 1)

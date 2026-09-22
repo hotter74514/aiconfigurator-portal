@@ -1,0 +1,133 @@
+// Grafana Alloy pipeline for the portal's three signals.
+//
+// Endpoints are deployment inputs. Do not put credentials, tenant IDs, or TLS
+// private keys in this file; inject them through the Alloy workload environment.
+
+otelcol.receiver.otlp "portal" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces = [otelcol.processor.memory_limiter.portal.input]
+  }
+}
+
+otelcol.processor.memory_limiter "portal" {
+  check_interval = "1s"
+  limit          = "256MiB"
+  spike_limit    = "64MiB"
+
+  output {
+    traces = [otelcol.processor.batch.portal.input]
+  }
+}
+
+otelcol.processor.batch "portal" {
+  send_batch_size = 512
+  timeout         = "5s"
+
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = sys.env("TEMPO_OTLP_ENDPOINT")
+
+    // Set insecure=false and provide the deployment's CA/auth configuration
+    // for production TLS. This local default keeps the sample stack simple.
+    tls {
+      insecure = true
+    }
+  }
+
+  retry_on_failure {
+    enabled         = true
+    initial_interval = "1s"
+    max_interval     = "10s"
+    max_elapsed_time = "30s"
+  }
+
+  sending_queue {
+    enabled       = true
+    num_consumers = 2
+    queue_size    = 512
+  }
+}
+
+discovery.kubernetes "portal_pods" {
+  role = "pod"
+
+  selectors {
+    role  = "pod"
+    label = "app.kubernetes.io/name=serving-configuration-portal"
+  }
+}
+
+// Keep only service_name as an indexed Loki label. Trace/span/run IDs are
+// structured metadata so they remain searchable without creating streams.
+loki.source.kubernetes "portal" {
+  targets    = discovery.kubernetes.portal_pods.targets
+  forward_to = [loki.process.portal.receiver]
+}
+
+loki.process "portal" {
+  forward_to = [loki.write.portal.receiver]
+
+  stage.json {
+    expressions = {
+      service_name  = "service_name",
+      trace_id      = "trace_id",
+      span_id       = "span_id",
+      trace_sampled = "trace_sampled",
+    }
+  }
+
+  stage.labels {
+    values = {
+      service_name = "",
+    }
+  }
+
+  stage.structured_metadata {
+    values = {
+      trace_id      = "",
+      span_id       = "",
+      trace_sampled = "",
+    }
+  }
+
+  stage.label_keep {
+    values = ["service_name"]
+  }
+}
+
+loki.write "portal" {
+  endpoint {
+    url = sys.env("LOKI_URL")
+  }
+}
+
+prometheus.scrape "portal" {
+  targets         = discovery.kubernetes.portal_pods.targets
+  metrics_path    = "/metrics"
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+  forward_to      = [prometheus.remote_write.portal.receiver]
+}
+
+prometheus.remote_write "portal" {
+  external_labels = {
+    service = "serving-configuration-portal",
+  }
+
+  endpoint {
+    url = sys.env("PROMETHEUS_REMOTE_WRITE_URL")
+  }
+}

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/static/portal.css">
+    <meta name="theme-color" content="#edf1ef">
+    <title>Serving Configuration Portal</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#config-heading">Skip to configuration inputs</a>
+    <main id="main-content" class="workspace">
+      <header class="masthead">
+        <div>
+          <p class="kicker">AIConfigurator / planning console</p>
+          <h1>Serving configuration portal</h1>
+          <p class="lede">Turn a model, GPU budget, and latency targets into a short list worth benchmarking.</p>
+        </div>
+        <div class="masthead-mark" aria-hidden="true"><span class="mark-line"></span><span class="mark-label">EST / 01</span></div>
+      </header>
+
+      <aside class="estimate-note" role="note">
+        <span class="note-symbol" aria-hidden="true">!</span>
+        <p><strong>Planning estimate.</strong> Generated artifacts are a starting point. Validate the selected configuration with a real benchmark before production use.</p>
+      </aside>
+
+      <div class="workspace-grid">
+        <section class="panel config-panel" aria-labelledby="config-heading">
+          <div class="panel-heading"><div><p class="eyebrow">01 / Define workload</p><h2 id="config-heading">Configuration inputs</h2></div><span class="panel-index" aria-hidden="true">A</span></div>
+          <p class="panel-intro">Use the documented defaults for a quick smoke estimate, or tune the targets to your serving plan.</p>
+          <form id="run-form" class="config-form">
+            <div class="field field-wide"><label for="model">Model</label><input id="model" name="model" value="Qwen/Qwen3-32B-FP8" required maxlength="256"><span class="field-help">Hugging Face model identifier</span></div>
+            <div class="field"><label for="system">GPU system</label><select id="system" name="system"><option value="h200_sxm" selected>H200 SXM</option><option value="h100_sxm">H100 SXM</option><option value="b200_sxm">B200 SXM</option><option value="gb200">GB200</option><option value="a100_sxm">A100 SXM</option><option value="l40s">L40S</option><option value="gb300">GB300</option></select></div>
+            <div class="field"><label for="total_gpus">Total GPUs</label><input id="total_gpus" name="total_gpus" type="number" min="1" max="512" value="32" required></div>
+            <div class="field"><label for="ttft">TTFT target <span>(ms)</span></label><input id="ttft" name="ttft" type="number" min="0.001" step="any" value="1000" required></div>
+            <div class="field"><label for="tpot">TPOT target <span>(ms)</span></label><input id="tpot" name="tpot" type="number" min="0.001" step="any" value="10" required></div>
+            <div class="field"><label for="isl">Input tokens</label><input id="isl" name="isl" type="number" min="1" value="3000" required></div>
+            <div class="field"><label for="osl">Output tokens</label><input id="osl" name="osl" type="number" min="1" value="512" required></div>
+            <div class="form-actions"><button id="submit" class="primary-action" type="submit"><span>Estimate configurations</span><span class="action-arrow" aria-hidden="true">↗</span></button><p class="action-help">One CPU-bound sweep · no GPU time consumed</p></div>
+          </form>
+        </section>
+
+        <div class="side-stack">
+          <section class="panel status-panel" aria-labelledby="status-heading">
+            <div class="panel-heading compact-heading"><div><p class="eyebrow">02 / Observe run</p><h2 id="status-heading">Run status</h2></div><span class="status-dot" aria-hidden="true"></span></div>
+            <div class="status-readout" aria-live="polite" aria-atomic="true"><p id="status" data-state="ready">Ready to estimate.</p><p id="error" role="alert"></p></div>
+          </section>
+          <section class="panel capacity-panel" aria-labelledby="capacity-heading">
+            <div class="panel-heading compact-heading"><div><p class="eyebrow">Shared resource</p><h2 id="capacity-heading">Shared capacity</h2></div><span class="capacity-pulse" aria-hidden="true"></span></div>
+            <p id="capacity" class="capacity-readout" role="status" aria-live="polite">Checking shared capacity…</p><p id="capacity-note" class="fine-print">This portal has no accounts, ownership, or reservation; capacity is shared and provides no fairness or quota.</p>
+          </section>
+          <section class="panel history-panel" aria-labelledby="history-heading">
+            <div class="panel-heading compact-heading"><div><p class="eyebrow">Browser-only index</p><h2 id="history-heading">Recent runs in this browser</h2></div><span class="history-count" aria-hidden="true">20 max</span></div>
+            <p class="fine-print">Up to 20 summaries stay in this browser. They may disappear after site data is cleared, a server restart, or one-hour retention. Shared profiles can see them; this is not an account or audit log.</p>
+            <p id="history-empty" class="empty-state">No saved runs yet.</p><ul id="history-list" class="history-list"></ul><button id="clear-history" class="quiet-action" type="button" disabled>Clear browser history</button>
+          </section>
+        </div>
+      </div>
+
+      <section id="results" class="results-workspace" hidden aria-labelledby="results-heading">
+        <div class="results-heading"><div><p class="eyebrow">03 / Compare and export</p><h2 id="results-heading">Ranked configurations</h2><p>Exact values from this run, ordered for review. Estimates still require a real benchmark.</p></div><p class="result-badge">ESTIMATE / NOT BENCHMARKED</p></div>
+        <section id="comparison" class="result-section comparison-section" hidden aria-labelledby="comparison-heading">
+          <div class="subsection-heading"><div><p class="eyebrow">Trade-off view</p><h3 id="comparison-heading">Aggregated vs disaggregated</h3></div><span class="comparison-tag">Rank 1 / each mode</span></div>
+          <p id="comparison-status" class="section-status"></p><p id="comparison-definition" class="fine-print"></p><p id="comparison-warning" class="warning-copy">No universal winner is declared. Compare each metric and validate the estimate with a real benchmark.</p>
+          <div class="table-wrap"><table><caption class="sr-only">Rank-one comparison of aggregated and disaggregated serving modes</caption><thead><tr><th scope="col">Metric</th><th scope="col">agg</th><th scope="col">disagg</th><th scope="col">Absolute delta</th><th scope="col">Signed % delta</th><th scope="col">Availability</th></tr></thead><tbody id="comparison-rows"></tbody></table></div>
+          <div id="topology" class="topology-block" hidden>
+            <div class="subsection-heading topology-heading"><div><p class="eyebrow">Deployment shape</p><h4 id="topology-heading">Rank 1 topology → Kubernetes sizing</h4></div><span class="comparison-tag">WORKERS / TP</span></div>
+            <p id="topology-status" class="section-status"></p><p id="topology-principle" class="fine-print"></p>
+            <div class="table-wrap"><table><caption class="sr-only">Mode-specific rank-one topology values</caption><thead><tr><th scope="col">Mode</th><th scope="col">Source field</th><th scope="col">Rank 1 value</th><th scope="col">Deployment meaning</th><th scope="col">Availability</th></tr></thead><tbody id="topology-rows"></tbody></table></div>
+            <div class="kubernetes-sizing" aria-labelledby="topology-heading">
+              <div class="sizing-grid" id="topology-sizing"></div>
+            </div>
+          </div>
+        </section>
+        <section id="tradeoff-surface" class="result-section tradeoff-section" hidden aria-labelledby="tradeoff-heading">
+          <div class="subsection-heading"><div><p class="eyebrow">Trade-off surface</p><h3 id="tradeoff-heading">Pareto frontier</h3></div><span class="comparison-tag">FULL SWEEP / SVG</span></div>
+          <p id="tradeoff-description" class="section-status"></p>
+          <div class="tradeoff-legend" aria-label="Trade-off surface legend"><span><i class="legend-dot frontier-dot" aria-hidden="true"></i>Pareto frontier</span><span><i class="legend-dot dominated-dot" aria-hidden="true"></i>Dominated candidate</span></div>
+          <div id="tradeoff-chart" class="tradeoff-chart" role="img" aria-labelledby="tradeoff-heading tradeoff-description"></div>
+          <p id="tradeoff-summary" class="tradeoff-summary"></p>
+          <ul id="tradeoff-frontier-list" class="tradeoff-frontier-list"></ul>
+          <p id="tradeoff-fallback" class="fine-print">The exact-value ranked table and dependency-generated PNG remain available below as fallback evidence.</p>
+        </section>
+        <section id="visualization" class="result-section visualization-section" hidden aria-labelledby="visualization-heading">
+          <div class="subsection-heading"><div><p class="eyebrow">Same-run artifact</p><h3 id="visualization-heading">Pareto frontier</h3></div><span class="comparison-tag">PNG / verified source</span></div>
+          <p id="visualization-caption" class="section-status"></p><p id="visualization-scope" class="fine-print"></p><p id="visualization-axis" class="fine-print"></p>
+          <figure class="visualization-frame"><img id="visualization-image" width="1" height="1" loading="lazy" alt="" hidden><figcaption id="visualization-fallback">The exact-value ranked table below is the fallback when the generated visualization is unavailable.</figcaption></figure>
+        </section>
+        <section class="result-section ranked-section" aria-labelledby="ranked-heading">
+          <div class="subsection-heading"><div><p class="eyebrow">Decision table</p><h3 id="ranked-heading">Top configurations</h3></div><a id="download" class="download-action" hidden>Download generated artifacts <span aria-hidden="true">↓</span></a></div>
+          <div class="table-wrap"><table><caption class="sr-only">Ranked serving configurations with estimated performance</caption><thead><tr><th scope="col">Rank</th><th scope="col">Mode</th><th scope="col">Throughput <span>(tokens/s)</span></th><th scope="col">TTFT <span>(ms)</span></th><th scope="col">TPOT <span>(ms)</span></th><th scope="col">GPUs</th></tr></thead><tbody id="result-rows"></tbody></table></div>
+        </section>
+      </section>
+    </main>
+    <script type="module" src="/static/portal.mjs"></script>
+  </body>
+</html>

@@ -205,6 +205,7 @@ tempCodeRunnerFile.py
 
 # Ruff stuff:
 .ruff_cache/
+.playwright-mcp/
 
 # PyPI configuration file
 .pypirc

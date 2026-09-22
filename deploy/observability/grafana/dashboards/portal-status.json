@@ -1,0 +1,317 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Operational status for the Serving Configuration Portal using its existing low-cardinality Prometheus metrics.",
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "1 means at least one selected portal instance is currently present in Prometheus; 0 means its portal metric series is absent or stale.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [
+            {
+              "options": {
+                "0": {"color": "red", "index": 0, "text": "Unavailable"},
+                "1": {"color": "green", "index": 1, "text": "Available"}
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 1}
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 0, "y": 0},
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "editorMode": "code",
+          "expr": "count(max by (instance) (portal_runs_active{instance=~\"$instance\"})) > bool 0",
+          "instant": true,
+          "legendFormat": "availability",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Portal availability",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Runs currently executing in the selected portal instances.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "blue", "value": 1}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 4, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto", "wideLayout": true},
+      "pluginVersion": "12.3.1",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (portal_runs_active{instance=~\"$instance\"}))", "instant": true, "legendFormat": "active", "range": false, "refId": "A"}],
+      "title": "Active runs",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Runs waiting behind the bounded active worker. A sustained non-zero value indicates pressure.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 4}]},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 4, "x": 8, "y": 0},
+      "id": 3,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto", "wideLayout": true},
+      "pluginVersion": "12.3.1",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (portal_runs_queued{instance=~\"$instance\"}))", "instant": true, "legendFormat": "queued", "range": false, "refId": "A"}],
+      "title": "Queued runs",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Completed runs during the selected dashboard time range.",
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}]}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 5, "w": 4, "x": 12, "y": 0},
+      "id": 4,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto", "wideLayout": true},
+      "pluginVersion": "12.3.1",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "round(sum(max by (instance) (increase(portal_runs_completed_total{instance=~\"$instance\"}[$__range]))))", "instant": true, "legendFormat": "completed", "range": false, "refId": "A"}],
+      "title": "Completed runs",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Failed runs during the selected dashboard time range.",
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 5, "w": 4, "x": 16, "y": 0},
+      "id": 5,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto", "wideLayout": true},
+      "pluginVersion": "12.3.1",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "round(sum(max by (instance) (increase(portal_runs_failed_total{instance=~\"$instance\"}[$__range]))))", "instant": true, "legendFormat": "failed", "range": false, "refId": "A"}],
+      "title": "Failed runs",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Admissions rejected because the bounded queue was full during the selected time range.",
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 5, "w": 4, "x": 20, "y": 0},
+      "id": 6,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showPercentChange": false, "textMode": "auto", "wideLayout": true},
+      "pluginVersion": "12.3.1",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "round(sum(max by (instance) (increase(portal_runs_rejected_total{instance=~\"$instance\"}[$__range]))))", "instant": true, "legendFormat": "rejected", "range": false, "refId": "A"}],
+      "title": "Rejected runs",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Terminal run throughput by outcome, expressed as runs per minute.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"axisCenteredZero": true, "axisColorMode": "text", "axisLabel": "Runs/min", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 12, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "showPoints": "never", "spanNulls": false, "stacking": {"group": "A", "mode": "none"}}, "unit": "rpm"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
+      "id": 7,
+      "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (rate(portal_runs_completed_total{instance=~\"$instance\"}[5m]))) * 60 or vector(0)", "legendFormat": "completed", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (rate(portal_runs_failed_total{instance=~\"$instance\"}[5m]))) * 60 or vector(0)", "legendFormat": "failed", "range": true, "refId": "B"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (rate(portal_runs_rejected_total{instance=~\"$instance\"}[5m]))) * 60 or vector(0)", "legendFormat": "rejected", "range": true, "refId": "C"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (rate(portal_runs_submitted_total{instance=~\"$instance\"}[5m]))) * 60 or vector(0)", "legendFormat": "submitted", "range": true, "refId": "D"}
+      ],
+      "title": "Run outcomes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Active and queued work. A sustained queue or repeated value of four means the single-worker service is near its configured admission limit.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "Runs", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 15, "lineInterpolation": "stepAfter", "lineWidth": 2, "pointSize": 5, "showPoints": "never", "spanNulls": false, "stacking": {"group": "A", "mode": "none"}}, "min": 0, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5},
+      "id": 8,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (portal_runs_active{instance=~\"$instance\"}))", "legendFormat": "active", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (portal_runs_queued{instance=~\"$instance\"}))", "legendFormat": "queued", "range": true, "refId": "B"}
+      ],
+      "title": "Work saturation",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Median and 95th percentile run duration from completed observations in the selected dashboard range, plus the most recent duration gauge.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "Duration", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 8, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "showPoints": "never", "spanNulls": false, "stacking": {"group": "A", "mode": "none"}}, "min": 0, "unit": "s"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 13},
+      "id": 9,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.50, sum by (le) (max by (instance, le) (rate(portal_run_duration_seconds_bucket{instance=~\"$instance\"}[$__range]))))", "legendFormat": "p50", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le) (max by (instance, le) (rate(portal_run_duration_seconds_bucket{instance=~\"$instance\"}[$__range]))))", "legendFormat": "p95", "range": true, "refId": "B"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "max(portal_run_last_duration_seconds{instance=~\"$instance\"})", "legendFormat": "last run", "range": true, "refId": "C"}
+      ],
+      "title": "Run duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Instrumented HTTP requests per second, grouped by normalized FastAPI route.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "Requests/s", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 10, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "showPoints": "never", "spanNulls": false, "stacking": {"group": "A", "mode": "none"}}, "min": 0, "unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 10, "x": 0, "y": 21},
+      "id": 10,
+      "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
+      "pluginVersion": "12.3.1",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum by (http_target) (max by (instance, http_method, http_status_code, http_target) (rate(http_server_duration_milliseconds_count{instance=~\"$instance\"}[5m]))) or vector(0)", "legendFormat": "{{http_target}}", "range": true, "refId": "A"}],
+      "title": "HTTP request rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "HTTP 4xx and 5xx responses per second. Validation 4xx responses are separated from server-side 5xx failures.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "Errors/s", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 12, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "showPoints": "never", "spanNulls": false, "stacking": {"group": "A", "mode": "none"}}, "min": 0, "unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 6, "x": 10, "y": 21},
+      "id": 11,
+      "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance, http_method, http_status_code, http_target) (rate(http_server_duration_milliseconds_count{instance=~\"$instance\",http_status_code=~\"4..\"}[5m]))) or vector(0)", "legendFormat": "4xx", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance, http_method, http_status_code, http_target) (rate(http_server_duration_milliseconds_count{instance=~\"$instance\",http_status_code=~\"5..\"}[5m]))) or vector(0)", "legendFormat": "5xx", "range": true, "refId": "B"}
+      ],
+      "title": "HTTP error rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Median and 95th percentile latency across instrumented business HTTP routes. Health and metrics endpoints are intentionally excluded from instrumentation.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "Latency", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 8, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "showPoints": "never", "spanNulls": false, "stacking": {"group": "A", "mode": "none"}}, "min": 0, "unit": "ms"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 21},
+      "id": 12,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.50, sum by (le) (max by (instance, http_method, http_status_code, http_target, le) (rate(http_server_duration_milliseconds_bucket{instance=~\"$instance\"}[$__range]))))", "legendFormat": "p50", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le) (max by (instance, http_method, http_status_code, http_target, le) (rate(http_server_duration_milliseconds_bucket{instance=~\"$instance\"}[$__range]))))", "legendFormat": "p95", "range": true, "refId": "B"}
+      ],
+      "title": "HTTP latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Cache outcomes and evictions per minute. Repeated evictions can indicate count, byte, or TTL pressure.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "custom": {"axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "Events/min", "axisPlacement": "auto", "drawStyle": "line", "fillOpacity": 12, "lineInterpolation": "smooth", "lineWidth": 2, "pointSize": 5, "showPoints": "never", "spanNulls": false, "stacking": {"group": "A", "mode": "none"}}, "min": 0, "unit": "rpm"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 16, "x": 0, "y": 29},
+      "id": 13,
+      "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"hideZeros": false, "mode": "multi", "sort": "desc"}},
+      "pluginVersion": "12.3.1",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (rate(portal_cache_hits_total{instance=~\"$instance\"}[5m]))) * 60 or vector(0)", "legendFormat": "hits", "range": true, "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (rate(portal_cache_misses_total{instance=~\"$instance\"}[5m]))) * 60 or vector(0)", "legendFormat": "misses", "range": true, "refId": "B"},
+        {"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(max by (instance) (rate(portal_cache_evictions_total{instance=~\"$instance\"}[5m]))) * 60 or vector(0)", "legendFormat": "evictions", "range": true, "refId": "C"}
+      ],
+      "title": "Cache activity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Cache hits as a percentage of hits plus misses during the selected time range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "thresholds"},
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 25}, {"color": "green", "value": 60}]},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 29},
+      "id": 14,
+      "options": {"minVizHeight": 75, "minVizWidth": 75, "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "showThresholdLabels": false, "showThresholdMarkers": true, "sizing": "auto"},
+      "pluginVersion": "12.3.1",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "100 * sum(max by (instance) (increase(portal_cache_hits_total{instance=~\"$instance\"}[$__range]))) / clamp_min(sum(max by (instance) (increase(portal_cache_hits_total{instance=~\"$instance\"}[$__range]))) + sum(max by (instance) (increase(portal_cache_misses_total{instance=~\"$instance\"}[$__range]))), 1)", "instant": true, "legendFormat": "hit ratio", "range": false, "refId": "A"}],
+      "title": "Cache hit ratio",
+      "type": "gauge"
+    }
+  ],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 41,
+  "tags": ["portal", "aiconfigurator", "operations"],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {"selected": true, "text": "All", "value": "$__all"},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "definition": "label_values(portal_runs_active{app_kubernetes_io_name=\"serving-configuration-portal\"}, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Portal instance",
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": {"query": "label_values(portal_runs_active{app_kubernetes_io_name=\"serving-configuration-portal\"}, instance)", "refId": "PrometheusVariableQueryEditor-VariableQuery"},
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Serving Configuration Portal Status",
+  "uid": "serving-configuration-portal-status",
+  "version": 1,
+  "weekStart": ""
+}
